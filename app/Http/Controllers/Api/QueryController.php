@@ -10,20 +10,23 @@ use App\Models\QueryHistory;
 use App\Services\Database\QueryExecutor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
+use Throwable;
 
 class QueryController extends Controller
 {
     public function execute(ExecuteQueryRequest $request, QueryExecutor $executor): JsonResponse
     {
-        $connection = DbConnection::query()->findOrFail($request->connection_id);
+        $connection = DbConnection::query()
+            ->where('user_id', $request->user()->id)
+            ->findOrFail($request->integer('connection_id'));
 
-        $sql = $request->selected_sql ?: $request->sql;
+        $sql = trim($request->input('selected_sql') ?: $request->input('sql'));
 
         $execution = QueryExecution::query()->create([
             'id' => (string)Str::uuid(),
             'user_id' => $request->user()->id,
             'db_connection_id' => $connection->id,
-            'query_tab_id' => $request->query_tab_id,
+            'query_tab_id' => $request->input('query_tab_id'),
             'sql_text' => $sql,
             'status' => 'running',
             'started_at' => now(),
@@ -33,7 +36,7 @@ class QueryController extends Controller
             $result = $executor->execute(
                 $connection,
                 $sql,
-                $request->input('max_rows', 500)
+                (int)$request->input('max_rows', 500)
             );
 
             $execution->update([
@@ -49,7 +52,7 @@ class QueryController extends Controller
                 QueryHistory::query()->create([
                     'user_id' => $request->user()->id,
                     'db_connection_id' => $connection->id,
-                    'query_tab_id' => $request->query_tab_id,
+                    'query_tab_id' => $request->input('query_tab_id'),
                     'sql_text' => $sql,
                     'statement_count' => 1,
                     'executed_at' => now(),
@@ -67,23 +70,25 @@ class QueryController extends Controller
                 'rows' => $result['rows'],
                 'row_count' => $result['row_count'],
             ]);
-        } catch (\Throwable$e) {
+        } catch (Throwable $e) {
             $execution->update([
                 'status' => 'error',
                 'finished_at' => now(),
                 'error_message' => $e->getMessage(),
             ]);
 
-            QueryHistory::query()->create([
-                'user_id' => $request->user()->id,
-                'db_connection_id' => $connection->id,
-                'query_tab_id' => $request->query_tab_id,
-                'sql_text' => $sql,
-                'statement_count' => 1,
-                'executed_at' => now(),
-                'status' => 'error',
-                'error_message' => $e->getMessage(),
-            ]);
+            if ($request->boolean('save_to_history', true)) {
+                QueryHistory::query()->create([
+                    'user_id' => $request->user()->id,
+                    'db_connection_id' => $connection->id,
+                    'query_tab_id' => $request->input('query_tab_id'),
+                    'sql_text' => $sql,
+                    'statement_count' => 1,
+                    'executed_at' => now(),
+                    'status' => 'error',
+                    'error_message' => $e->getMessage(),
+                ]);
+            }
 
             return response()->json([
                 'execution_id' => $execution->id,

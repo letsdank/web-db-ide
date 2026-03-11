@@ -19,7 +19,7 @@ class StoreQueryTabRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('db_connections', 'id')->where(
-                    fn ($query) => $query->where('user-id', $this->user()->id)
+                    fn($query) => $query->where('user_id', $this->user()->id)
                 ),
             ],
             'title' => ['nullable', 'string', 'max:255'],

@@ -10,7 +10,7 @@ class PostgresExplorer
     protected function pdo(DbConnection $connection): PDO
     {
         $dsn = sprintf(
-            "pgql:host=%s;port=%s;dbname=%s",
+            "pgsql:host=%s;port=%s;dbname=%s",
             $connection->host,
             $connection->port,
             $connection->database_name
@@ -60,11 +60,11 @@ class PostgresExplorer
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function columns(DbConnection$connection,string$schema,string$table):array
+    public function columns(DbConnection $connection, string $schema, string $table): array
     {
-        $pdo=$this->pdo($connection);
+        $pdo = $this->pdo($connection);
 
-        $stmt=$pdo->prepare("
+        $stmt = $pdo->prepare("
             SELECT
                 column_name,
                 data_type,
@@ -77,16 +77,16 @@ class PostgresExplorer
         ");
 
         $stmt->execute([
-            'schema'=>$schema,
-            'table'=>$table,
+            'schema' => $schema,
+            'table' => $table,
         ]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function indexes(DbConnection$connection,string$schema,string$table):array
+    public function indexes(DbConnection $connection, string $schema, string $table): array
     {
-        $pdo=$this->pdo($connection);
+        $pdo = $this->pdo($connection);
 
         $stmt = $pdo->prepare("
             SELECT

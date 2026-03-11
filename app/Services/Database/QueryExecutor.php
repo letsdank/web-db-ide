@@ -24,7 +24,7 @@ class QueryExecutor
                 $meta = $statement->getColumnMeta($i);
 
                 $columns[] = [
-                    'name' => $meta['name'],
+                    'name' => $meta['name'] ?? 'column_' . ($i + 1),
                     'native_type' => $meta['native_type'] ?? null,
                 ];
             }
@@ -52,7 +52,7 @@ class QueryExecutor
             "pgsql:host=%s;port=%s;dbname=%s",
             $connection->host,
             $connection->port,
-            $connection->database_name
+            $connection->database_name,
         );
 
         return new PDO(

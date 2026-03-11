@@ -19,10 +19,16 @@ class ExecuteQueryRequest extends FormRequest
                 'required',
                 'integer',
                 Rule::exists('db_connections', 'id')->where(
-                    fn ($query) => $query->where('user_id', $this->user()->id)
+                    fn($query) => $query->where('user_id', $this->user()->id)
                 ),
             ],
-            'query_tab_id' => ['nullable', 'integer', 'exists_query_tabs,id'],
+            'query_tab_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('query_tabs', 'id')->where(
+                    fn($query) => $query->where('user_id', $this->user()->id)
+                ),
+            ],
             'sql' => ['required', 'string'],
             'selected_sql' => ['nullable', 'string'],
             'max_rows' => ['nullable', 'integer', 'min:1', 'max:10000'],

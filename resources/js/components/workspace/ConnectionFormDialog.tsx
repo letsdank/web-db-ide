@@ -63,9 +63,11 @@ export function ConnectionFormDialog({
         await onSubmit({
             ...form,
             name: form.name.trim(),
-            host: form.driver.trim(),
+            driver: form.driver.trim(),
+            host: form.host.trim(),
             database_name: form.database_name.trim(),
             username: form.username.trim(),
+            password: form.password,
             schema_default: form.schema_default?.trim() || null,
             ssl_mode: form.ssl_mode?.trim() || null,
             color: form.color?.trim() || null,
