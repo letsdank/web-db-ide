@@ -1,75 +1,130 @@
-import {useEffect, useMemo, useState} from "react";
-import {ConnectionDto} from "../types/connection";
-import {QueryTabDto} from "../types/queryTab";
-import {ExecuteQueryResponse} from "../types/queryResult";
+import {useWorkspaceStore} from "../stores/workspaceStore";
+import {useEffect, useMemo} from "react";
 import {createConnection, CreateConnectionPayload, fetchConnections} from "../api/connections";
 import {createQueryTab, fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
+import {fetchQueryHistory} from "../api/queryHistory";
+import {createSavedQuery, fetchSavedQueries} from "../api/savedQueries";
 import {executeQuery} from "../api/queries";
+import {QueryHistoryDto} from "../types/queryHistory";
+import {SavedQueryDto} from "../types/savedQuery";
+import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {ConnectionsSidebar} from "../components/workspace/ConnectionsSidebar";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
 import {SqlEditorPane} from "../components/workspace/SqlEditorPane";
 import {ResultsPanel} from "../components/workspace/ResultsPanel";
-import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
+import {RightSidebarPanels} from "../components/workspace/RightSidebarPanels";
 
 export function WorkspacePage() {
-    const [connections, setConnections] = useState<ConnectionDto[]>([]);
-    const [tabs, setTabs] = useState<QueryTabDto[]>([]);
-    const [activeTabId, setActiveTabId] = useState<number | null>(null);
-    const [activeConnectionId, setActiveConnectionId] = useState<number | null>(null);
-    const [result, setResult] = useState<ExecuteQueryResponse | null>(null);
-    const [isExecuting, setIsExecuting] = useState(false);
-    const [isBooting, setIsBooting] = useState(true);
+    const {
+        isBooting,
+        setBooting,
 
-    const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false);
-    const [isCreatingConnection, setIsCreatingConnection] = useState(false);
-    const [connectionDialogError, setConnectionDialogError] = useState<string | null>(null);
+        connections,
+        setConnections,
+        addConnection,
+
+        tabs,
+        setTabs,
+        addTab,
+        upsertTab,
+
+        activeTabId,
+        setActiveTabId,
+        activeConnectionId,
+        setActiveConnectionId,
+
+        queryHistory,
+        setQueryHistory,
+        savedQueries,
+        setSavedQueries,
+        addSavedQuery,
+
+        rightPanel,
+        setRightPanel,
+
+        tabStateById,
+        setTabExecuting,
+        setTabResult,
+        ensureTabState,
+
+        isConnectionDialogOpen,
+        openConnectionDialog,
+        closeConnectionDialog,
+        isCreatingConnection,
+        setIsCreatingConnection,
+        connectionDialogError,
+        setConnectionDialogError,
+    } = useWorkspaceStore();
 
     const activeTab = useMemo(
         () => tabs.find((tab) => tab.id === activeTabId) ?? null,
         [tabs, activeTabId],
     );
 
+    const activeTabState = activeTabId ? tabStateById[activeTabId] ?? null : null;
+    const activeResult = activeTabState?.result ?? null;
+    const isExecuting = activeTabState?.isExecuting ?? false;
+
     useEffect(() => {
         async function boot() {
             try {
-                const [connectionsData, tabsData] = await Promise.all([
+                const [connectionsData, tabsData, historyData, savedQueriesData] = await Promise.all([
                     fetchConnections(),
                     fetchQueryTabs(),
+                    fetchQueryHistory(),
+                    fetchSavedQueries(),
                 ]);
 
                 setConnections(connectionsData);
                 setTabs(tabsData);
+                setQueryHistory(historyData);
+                setSavedQueries(savedQueriesData);
 
-                const initialTabId = tabsData[0]?.id ?? null;
-                setActiveTabId(initialTabId);
-
+                const initialTab = tabsData[0] ?? null;
                 const initialConnectionId =
-                    tabsData[0]?.db_connection_id ??
+                    initialTab?.db_connection_id ??
                     connectionsData[0]?.id ??
                     null;
 
+                setActiveTabId(initialTab?.id ?? null);
                 setActiveConnectionId(initialConnectionId);
+
+                if (initialTab?.id) {
+                    ensureTabState(initialTab.id);
+                }
             } catch (error) {
                 console.error(error);
             } finally {
-                setIsBooting(false);
+                setBooting(false);
             }
         }
 
         void boot();
-    }, []);
+    }, [
+        ensureTabState,
+        setActiveConnectionId,
+        setActiveTabId,
+        setBooting,
+        setConnections,
+        setQueryHistory,
+        setSavedQueries,
+        setTabs,
+    ]);
 
-    async function handleCreateTab() {
+    async function handleCreateTab(initial?: Partial<{
+        title: string;
+        sql_text: string;
+        db_connection_id: number | null;
+    }>) {
         try {
             const tab = await createQueryTab({
-                db_connection_id: activeConnectionId,
-                title: 'New Query',
-                sql_text: '',
+                db_connection_id: initial?.db_connection_id ?? activeConnectionId,
+                title: initial?.title ?? 'New Query',
+                sql_text: initial?.sql_text ?? '',
             });
 
-            setTabs((prev) => [...prev, tab]);
-            setActiveTabId(tab.id);
+            addTab(tab);
 
             if (tab.db_connection_id) {
                 setActiveConnectionId(tab.db_connection_id);
@@ -79,23 +134,29 @@ export function WorkspacePage() {
         }
     }
 
+    async function handleSelectTab(id: number) {
+        setActiveTabId(id);
+
+        const tab = tabs.find((item) => item.id === id);
+
+        if (tab?.db_connection_id !== undefined) {
+            setActiveConnectionId(tab.db_connection_id);
+        }
+
+        ensureTabState(id);
+    }
+
     async function handleChangeSql(value: string) {
         if (!activeTab) {
             return;
         }
 
-        const previousTabs = tabs;
+        const previousTab = activeTab;
 
-        setTabs((prev) =>
-            prev.map((tab) =>
-                tab.id === activeTab.id
-                    ? {
-                        ...tab,
-                        sql_text: value,
-                    }
-                    : tab,
-            ),
-        );
+        upsertTab({
+            ...activeTab,
+            sql_text: value,
+        });
 
         try {
             const updatedTab = await updateQueryTab(activeTab.id, {
@@ -103,56 +164,10 @@ export function WorkspacePage() {
                 db_connection_id: activeConnectionId,
             });
 
-            setTabs((prev) =>
-                prev.map((tab) => (tab.id === updatedTab.id ? updatedTab : tab))
-            );
+            upsertTab(updatedTab);
         } catch (error) {
             console.error(error);
-            setTabs(previousTabs);
-        }
-    }
-
-    async function handleSelectTab(id: number) {
-        setActiveTabId(id);
-
-        const tab = tabs.find((item) => item.id === id);
-
-        if (tab?.db_connection_id) {
-            setActiveConnectionId(tab.db_connection_id);
-        }
-    }
-
-    async function handleRun() {
-        if (!activeTab || !activeConnectionId) {
-            return;
-        }
-
-        setIsExecuting(true);
-
-        try {
-            const response = await executeQuery({
-                connection_id: activeConnectionId,
-                query_tab_id: activeTab.id,
-                sql: activeTab.sql_text,
-                selected_sql: null,
-                max_rows: 500,
-                save_to_history: true,
-            });
-
-            setResult(response);
-
-            const updatedTab = await updateQueryTab(activeTab.id, {
-                last_executed_at: new Date().toISOString(),
-                db_connection_id: activeConnectionId,
-            });
-
-            setTabs((prev) =>
-                prev.map((tab) => (tab.id === updatedTab.id ? updatedTab : tab))
-            );
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setIsExecuting(false);
+            upsertTab(previousTab);
         }
     }
 
@@ -168,26 +183,59 @@ export function WorkspacePage() {
                 db_connection_id: id,
             });
 
-            setTabs((prev) =>
-                prev.map((tab) => (tab.id === updatedTab.id ? updatedTab : tab))
-            );
+            upsertTab(updatedTab);
         } catch (error) {
             console.error(error);
         }
     }
 
-    function openConnectionDialog() {
-        setConnectionDialogError(null);
-        setIsConnectionDialogOpen(true);
-    }
-
-    function closeConnectionDialog() {
-        if (isCreatingConnection) {
+    async function handleRun() {
+        if (!activeTab || !activeConnectionId) {
             return;
         }
 
-        setIsConnectionDialogOpen(false);
-        setConnectionDialogError(null);
+        setTabExecuting(activeTab.id, true);
+
+        try {
+            const response = await executeQuery({
+                connection_id: activeConnectionId,
+                query_tab_id: activeTab.id,
+                sql: activeTab.sql_text,
+                selected_sql: activeTab.selected_text ?? null,
+                max_rows: 500,
+                save_to_history: true,
+            });
+
+            setTabResult(activeTab.id, response);
+
+            const [updatedTab, historyData] = await Promise.all([
+                updateQueryTab(activeTab.id, {
+                    last_executed_at: new Date().toISOString(),
+                    db_connection_id: activeConnectionId,
+                }),
+                fetchQueryHistory(),
+            ]);
+
+            upsertTab(updatedTab);
+            setQueryHistory(historyData);
+            setRightPanel('history');
+        } catch (error: any) {
+            console.error(error);
+
+            const responseData = error?.response?.data;
+
+            if (responseData?.status === 'error') {
+                setTabResult(activeTab.id, responseData);
+            } else {
+                setTabResult(activeTab.id, {
+                    execution_id: crypto.randomUUID(),
+                    status: 'error',
+                    error: responseData?.message || error?.message || 'Failed to execute query.',
+                });
+            }
+        } finally {
+            setTabExecuting(activeTab.id, false);
+        }
     }
 
     async function handleCreateConnection(payload: CreateConnectionPayload) {
@@ -197,32 +245,64 @@ export function WorkspacePage() {
         try {
             const created = await createConnection(payload);
 
-            setConnections((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+            addConnection(created);
             setActiveConnectionId(created.id);
-
-            setIsConnectionDialogOpen(false);
+            closeConnectionDialog();
 
             if (activeTab) {
                 const updatedTab = await updateQueryTab(activeTab.id, {
                     db_connection_id: created.id,
                 });
 
-                setTabs((prev) =>
-                    prev.map((tab) => (tab.id === updatedTab.id ? updatedTab : tab)),
-                );
+                upsertTab(updatedTab);
             }
         } catch (error: any) {
             console.error(error);
 
-            const message =
+            setConnectionDialogError(
                 error?.response?.data?.message ||
                 error?.message ||
-                'Failed to create connection.';
-
-            setConnectionDialogError(message);
+                'Failed to create connection.',
+            );
         } finally {
             setIsCreatingConnection(false);
         }
+    }
+
+    async function handleSaveCurrentQuery() {
+        if (!activeTab) {
+            return;
+        }
+
+        try {
+            const saved = await createSavedQuery({
+                db_connection_id: activeConnectionId,
+                title: activeTab.title || 'New Query',
+                sql_text: activeTab.sql_text,
+                folder: 'General',
+            });
+
+            addSavedQuery(saved);
+            setRightPanel('saved');
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function handleOpenHistoryItem(item: QueryHistoryDto) {
+        await handleCreateTab({
+            title: 'History Query',
+            sql_text: item.sql_text,
+            db_connection_id: item.db_connection_id,
+        });
+    }
+
+    async function handleOpenSavedQuery(item: SavedQueryDto) {
+        await handleCreateTab({
+            title: item.title,
+            sql_text: item.sql_text,
+            db_connection_id: item.db_connection_id,
+        });
     }
 
     if (isBooting) {
@@ -260,9 +340,9 @@ export function WorkspacePage() {
             >
                 <div
                     style={{
-                        height: 'calc(100vh-32px)',
+                        height: 'calc(100vh - 32px)',
                         display: 'grid',
-                        gridTemplateColumns: '200px 1fr',
+                        gridTemplateColumns: '280px minmax(0, 1fr) 320px',
                         gap: 16,
                     }}
                 >
@@ -273,18 +353,19 @@ export function WorkspacePage() {
                         onCreateClick={openConnectionDialog}
                     />
 
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateRows: '72px 72px 1fr 320px',
-                        gap: 16,
-                        minHeight: 0,
-                    }}
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateRows: '72px 72px minmax(0, 1fr) 320px',
+                            gap: 16,
+                            minHeight: 0,
+                        }}
                     >
                         <QueryTabsBar
                             tabs={tabs}
                             activeTabId={activeTabId}
                             onSelect={handleSelectTab}
-                            onCreate={handleCreateTab}
+                            onCreate={() => handleCreateTab()}
                         />
 
                         <EditorToolbar
@@ -303,9 +384,19 @@ export function WorkspacePage() {
                         </div>
 
                         <div style={{minHeight: 0}}>
-                            <ResultsPanel result={result}/>
+                            <ResultsPanel result={activeResult}/>
                         </div>
                     </div>
+
+                    <RightSidebarPanels
+                        panel={rightPanel}
+                        history={queryHistory}
+                        savedQueries={savedQueries}
+                        onChangePanel={setRightPanel}
+                        onOpenHistoryItem={handleOpenHistoryItem}
+                        onOpenSavedQuery={handleOpenSavedQuery}
+                        onSaveCurrentQuery={handleSaveCurrentQuery}
+                    />
                 </div>
             </div>
         </>
