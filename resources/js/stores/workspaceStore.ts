@@ -25,6 +25,7 @@ interface WorkspaceState {
     rightPanel: WorkspaceRightPanel;
 
     tabStateById: Record<number, TabExecutionState>;
+    dirtyTabIds: number[];
 
     isConnectionDialogOpen: boolean;
     isCreatingConnection: boolean;
@@ -36,8 +37,10 @@ interface WorkspaceState {
     addConnection: (connection: ConnectionDto) => void;
 
     setTabs: (tabs: QueryTabDto[]) => void;
+    replaceTabs: (tabs: QueryTabDto[]) => void;
     addTab: (tab: QueryTabDto) => void;
     upsertTab: (tab: QueryTabDto) => void;
+    removeTab: (tabId: number) => void;
 
     setActiveTabId: (id: number | null) => void;
     setActiveConnectionId: (id: number | null) => void;
@@ -51,6 +54,9 @@ interface WorkspaceState {
     setTabExecuting: (tabId: number, value: boolean) => void;
     setTabResult: (tabId: number, result: ExecuteQueryResponse | null) => void;
     ensureTabState: (tabId: number) => void;
+
+    markTabDirty: (tabId: number) => void;
+    clearTabDirty: (tabId: number) => void;
 
     openConnectionDialog: () => void;
     closeConnectionDialog: () => void;
@@ -75,6 +81,24 @@ function ensureTabStateRecord(
     };
 }
 
+function pickNextActiveTabId(tabs: QueryTabDto[], removedTabId: number, currentActiveTabId: number | null): number | null {
+    if (tabs.length === 0) {
+        return null;
+    }
+
+    if (currentActiveTabId !== removedTabId) {
+        return currentActiveTabId;
+    }
+
+    const removedIndex = tabs.findIndex((tab) => tab.id === removedTabId);
+
+    if (removedIndex === -1) {
+        return tabs[tabs.length - 1]?.id ?? null;
+    }
+
+    return tabs[Math.max(0, removedIndex - 1)]?.id ?? tabs[0].id ?? null;
+}
+
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     isBooting: true,
 
@@ -88,6 +112,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     rightPanel: 'history',
 
     tabStateById: {},
+    dirtyTabIds: [],
 
     isConnectionDialogOpen: false,
     isCreatingConnection: false,
@@ -118,6 +143,27 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
                 tabs,
                 activeTabId: state.activeTabId ?? tabs[0]?.id ?? null,
                 tabStateById: nextTabState,
+            };
+        }),
+
+    replaceTabs: (tabs) =>
+        set((state) => {
+            const nextTabState: Record<number, TabExecutionState> = {};
+
+            for (const tab of tabs) {
+                nextTabState[tab.id] = state.tabStateById[tab.id] ?? {
+                    isExecuting: false,
+                    result: null,
+                };
+            }
+
+            return {
+                tabs,
+                activeTabId: tabs.some((tab) => tab.id === state.activeTabId)
+                    ? state.activeTabId
+                    : tabs[0]?.id ?? null,
+                tabStateById: nextTabState,
+                dirtyTabIds: state.dirtyTabIds.filter((id) => tabs.some((tab) => tab.id === id)),
             };
         }),
 
@@ -158,6 +204,25 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             };
         }),
 
+    removeTab: (tabId) =>
+        set((state) => {
+            const previousTabs = state.tabs;
+            const nextTabs = previousTabs.filter((tab) => tab.id !== tabId);
+            const nextActiveTabId = pickNextActiveTabId(previousTabs, tabId, state.activeTabId);
+
+            const nextTabState = {...state.tabStateById};
+            delete nextTabState[tabId];
+
+            return {
+                tabs: nextTabs,
+                activeTabId: nextActiveTabId,
+                activeConnectionId:
+                    nextTabs.find((tab) => tab.id === nextActiveTabId)?.db_connection_id ?? state.activeConnectionId,
+                tabStateById: nextTabState,
+                dirtyTabIds: state.dirtyTabIds.filter((id) => id !== tabId),
+            };
+        }),
+
     setActiveTabId: (id) => set({activeTabId: id}),
     setActiveConnectionId: (id) => set({activeConnectionId: id}),
 
@@ -193,6 +258,18 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     ensureTabState: (tabId) =>
         set((state) => ({
             tabStateById: ensureTabStateRecord(state, tabId),
+        })),
+
+    markTabDirty: (tabId) =>
+        set((state) => ({
+            dirtyTabIds: state.dirtyTabIds.includes(tabId)
+                ? state.dirtyTabIds
+                : [...state.dirtyTabIds, tabId],
+        })),
+
+    clearTabDirty: (tabId) =>
+        set((state) => ({
+            dirtyTabIds: state.dirtyTabIds.filter((id) => id !== tabId),
         })),
 
     openConnectionDialog: () =>

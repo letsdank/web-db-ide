@@ -1,7 +1,7 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
 import {useCallback, useEffect, useMemo} from "react";
 import {createConnection, CreateConnectionPayload, fetchConnections} from "../api/connections";
-import {createQueryTab, fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
+import {createQueryTab, deleteQueryTab, fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
 import {fetchQueryHistory} from "../api/queryHistory";
 import {createSavedQuery, fetchSavedQueries} from "../api/savedQueries";
 import {executeQuery} from "../api/queries";
@@ -28,8 +28,10 @@ export function WorkspacePage() {
 
         tabs,
         setTabs,
+        replaceTabs,
         addTab,
         upsertTab,
+        removeTab,
 
         activeTabId,
         setActiveTabId,
@@ -49,6 +51,10 @@ export function WorkspacePage() {
         setTabExecuting,
         setTabResult,
         ensureTabState,
+
+        dirtyTabIds,
+        markTabDirty,
+        clearTabDirty,
 
         isConnectionDialogOpen,
         openConnectionDialog,
@@ -75,6 +81,7 @@ export function WorkspacePage() {
             try {
                 const updatedTab = await updateQueryTab(tabId, payload);
                 upsertTab(updatedTab);
+                clearTabDirty(tabId);
             } catch (error) {
                 console.error(error);
             }
@@ -177,6 +184,7 @@ export function WorkspacePage() {
         };
 
         upsertTab(nextTab);
+        markTabDirty(nextTab.id);
 
         scheduleTabDraftPersist(nextTab, {
             sql_text: value,
@@ -212,6 +220,7 @@ export function WorkspacePage() {
         };
 
         upsertTab(nextTab);
+        markTabDirty(nextTab.id);
 
         scheduleTabDraftPersist(nextTab, {
             sql_text: nextTab.sql_text,
@@ -248,6 +257,55 @@ export function WorkspacePage() {
             upsertTab(updatedTab);
         } catch (error) {
             console.error(error);
+        }
+    }
+
+    async function handleTogglePin(tab: QueryTabDto) {
+        const nextTab: QueryTabDto = {
+            ...tab,
+            is_pinned: !tab.is_pinned,
+        };
+
+        upsertTab(nextTab);
+
+        try {
+            const updatedTab = await updateQueryTab(tab.id, {
+                is_pinned: nextTab.is_pinned,
+            });
+
+            upsertTab(updatedTab);
+        } catch (error) {
+            console.error(error);
+            upsertTab(tab);
+        }
+    }
+
+    async function handleCloseTab(tabId: number) {
+        const tab = tabs.find((item) => item.id === tabId);
+
+        if (!tab || tab.is_pinned) {
+            return;
+        }
+
+        const previousTabs = tabs;
+
+        removeTab(tabId);
+
+        try {
+            await deleteQueryTab(tabId);
+
+            const remainingTabs = previousTabs.filter((item) => item.id !== tabId);
+
+            if (remainingTabs.length === 0) {
+                await handleCreateTab({
+                    title: 'New Query',
+                    sql_text: '',
+                    db_connection_id: activeConnectionId,
+                });
+            }
+        } catch (error) {
+            console.error(error);
+            replaceTabs(previousTabs);
         }
     }
 
@@ -290,6 +348,7 @@ export function WorkspacePage() {
             ]);
 
             upsertTab(updatedTab);
+            clearTabDirty(activeTab.id);
             setQueryHistory(historyData);
             setRightPanel('history');
         } catch (error: any) {
@@ -441,8 +500,11 @@ export function WorkspacePage() {
                         <QueryTabsBar
                             tabs={tabs}
                             activeTabId={activeTabId}
+                            dirtyTabIds={dirtyTabIds}
                             onSelect={handleSelectTab}
                             onCreate={() => handleCreateTab()}
+                            onClose={handleCloseTab}
+                            onTogglePin={handleTogglePin}
                         />
 
                         <EditorToolbar
