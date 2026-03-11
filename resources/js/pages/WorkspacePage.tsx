@@ -487,6 +487,7 @@ export function WorkspacePage() {
                         activeConnectionId={activeConnectionId}
                         onSelect={handleSelectConnection}
                         onCreateClick={openConnectionDialog}
+                        onOpenSql={handleCreateTab}
                     />
 
                     <div
