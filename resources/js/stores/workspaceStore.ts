@@ -1,7 +1,7 @@
 import {ConnectionDto} from "../types/connection";
 import {QueryTabDto} from "../types/queryTab";
 import {ExecuteQueryResponse} from "../types/queryResult";
-import {create} from "zustand/react";
+import {create} from "zustand";
 import {QueryHistoryDto} from "../types/queryHistory";
 import {SavedQueryDto} from "../types/savedQuery";
 
@@ -248,11 +248,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
     setTabResult: (tabId, result) =>
         set((state) => ({
-            ...ensureTabStateRecord(state, tabId),
-            [tabId]: {
-                ...(ensureTabStateRecord(state, tabId)[tabId]),
-                result,
-            },
+            tabStateById: {
+                ...ensureTabStateRecord(state, tabId),
+                [tabId]: {
+                    ...(ensureTabStateRecord(state, tabId)[tabId]),
+                    result,
+                },
+            }
         })),
 
     ensureTabState: (tabId) =>
