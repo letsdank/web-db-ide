@@ -1,5 +1,5 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
-import {useEffect, useMemo} from "react";
+import {useCallback, useEffect, useMemo} from "react";
 import {createConnection, CreateConnectionPayload, fetchConnections} from "../api/connections";
 import {createQueryTab, fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
 import {fetchQueryHistory} from "../api/queryHistory";
@@ -14,6 +14,8 @@ import {EditorToolbar} from "../components/workspace/EditorToolbar";
 import {SqlEditorPane} from "../components/workspace/SqlEditorPane";
 import {ResultsPanel} from "../components/workspace/ResultsPanel";
 import {RightSidebarPanels} from "../components/workspace/RightSidebarPanels";
+import {useDebouncedCallback} from "../hooks/useDebouncedCallback";
+import {QueryTabDto} from "../types/queryTab";
 
 export function WorkspacePage() {
     const {
@@ -65,6 +67,24 @@ export function WorkspacePage() {
     const activeTabState = activeTabId ? tabStateById[activeTabId] ?? null : null;
     const activeResult = activeTabState?.result ?? null;
     const isExecuting = activeTabState?.isExecuting ?? false;
+
+    const hasSelection = Boolean(activeTab?.selected_text?.trim());
+
+    const persistTabDraft = useDebouncedCallback(
+        async (tabId: number, payload: Partial<QueryTabDto>) => {
+            try {
+                const updatedTab = await updateQueryTab(tabId, payload);
+                upsertTab(updatedTab);
+            } catch (error) {
+                console.error(error);
+            }
+        },
+        500,
+    );
+
+    const scheduleTabDraftPersist = useCallback((tab: QueryTabDto, payload: Partial<QueryTabDto>) => {
+        persistTabDraft(tab.id, payload);
+    }, [persistTabDraft]);
 
     useEffect(() => {
         async function boot() {
@@ -151,24 +171,55 @@ export function WorkspacePage() {
             return;
         }
 
-        const previousTab = activeTab;
-
-        upsertTab({
+        const nextTab: QueryTabDto = {
             ...activeTab,
             sql_text: value,
+        };
+
+        upsertTab(nextTab);
+
+        scheduleTabDraftPersist(nextTab, {
+            sql_text: value,
+            db_connection_id: activeConnectionId,
+            selected_text: nextTab.selected_text,
+            cursor_position: nextTab.cursor_position,
+            selection_range: nextTab.selection_range,
         });
+    }
 
-        try {
-            const updatedTab = await updateQueryTab(activeTab.id, {
-                sql_text: value,
-                db_connection_id: activeConnectionId,
-            });
-
-            upsertTab(updatedTab);
-        } catch (error) {
-            console.error(error);
-            upsertTab(previousTab);
+    function handleEditorSelectionChange(payload: {
+        selectedText: string | null,
+        cursorPosition: {
+            lineNumber: number;
+            column: number;
+        } | null;
+        selectionRange: {
+            startLineNumber: number;
+            startColumn: number;
+            endLineNumber: number;
+            endColumn: number;
+        } | null;
+    }) {
+        if (!activeTab) {
+            return;
         }
+
+        const nextTab: QueryTabDto = {
+            ...activeTab,
+            selected_text: payload.selectedText,
+            cursor_position: payload.cursorPosition,
+            selection_range: payload.selectionRange,
+        };
+
+        upsertTab(nextTab);
+
+        scheduleTabDraftPersist(nextTab, {
+            sql_text: nextTab.sql_text,
+            db_connection_id: activeConnectionId,
+            selected_text: payload.selectedText,
+            cursor_position: payload.cursorPosition,
+            selection_range: payload.selectionRange,
+        });
     }
 
     async function handleSelectConnection(id: number | null) {
@@ -178,9 +229,20 @@ export function WorkspacePage() {
             return;
         }
 
+        const nextTab: QueryTabDto = {
+            ...activeTab,
+            db_connection_id: id,
+        };
+
+        upsertTab(nextTab);
+
         try {
             const updatedTab = await updateQueryTab(activeTab.id, {
                 db_connection_id: id,
+                sql_text: nextTab.sql_text,
+                selected_text: nextTab.selected_text,
+                cursor_position: nextTab.cursor_position,
+                selection_range: nextTab.selection_range,
             });
 
             upsertTab(updatedTab);
@@ -189,10 +251,18 @@ export function WorkspacePage() {
         }
     }
 
-    async function handleRun() {
+    async function handleRun(target: 'auto' | 'selection' | 'full' = 'auto') {
         if (!activeTab || !activeConnectionId) {
             return;
         }
+
+        const selectedSql = activeTab.selected_text?.trim() || null;
+        const sqlToExecute =
+            target === 'selection'
+                ? selectedSql
+                : target === 'full'
+                    ? null
+                    : selectedSql;
 
         setTabExecuting(activeTab.id, true);
 
@@ -201,7 +271,7 @@ export function WorkspacePage() {
                 connection_id: activeConnectionId,
                 query_tab_id: activeTab.id,
                 sql: activeTab.sql_text,
-                selected_sql: activeTab.selected_text ?? null,
+                selected_sql: sqlToExecute,
                 max_rows: 500,
                 save_to_history: true,
             });
@@ -212,6 +282,9 @@ export function WorkspacePage() {
                 updateQueryTab(activeTab.id, {
                     last_executed_at: new Date().toISOString(),
                     db_connection_id: activeConnectionId,
+                    selected_text: activeTab.selected_text,
+                    cursor_position: activeTab.cursor_position,
+                    selection_range: activeTab.selection_range,
                 }),
                 fetchQueryHistory(),
             ]);
@@ -236,6 +309,10 @@ export function WorkspacePage() {
         } finally {
             setTabExecuting(activeTab.id, false);
         }
+    }
+
+    async function handleRunSelection() {
+        await handleRun('selection');
     }
 
     async function handleCreateConnection(payload: CreateConnectionPayload) {
@@ -372,14 +449,18 @@ export function WorkspacePage() {
                             connections={connections}
                             activeConnectionId={activeConnectionId}
                             isExecuting={isExecuting}
+                            hasSelection={hasSelection}
                             onSelectConnection={handleSelectConnection}
-                            onRun={handleRun}
+                            onRun={() => handleRun('auto')}
+                            onRunSelection={handleRunSelection}
                         />
 
                         <div style={{minHeight: 0}}>
                             <SqlEditorPane
                                 value={activeTab?.sql_text ?? ''}
                                 onChange={handleChangeSql}
+                                onSelectionChange={handleEditorSelectionChange}
+                                onRun={() => handleRun('auto')}
                             />
                         </div>
 
