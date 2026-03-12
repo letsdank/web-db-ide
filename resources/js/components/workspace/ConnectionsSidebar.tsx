@@ -1,19 +1,29 @@
 import {ConnectionDto} from "../../types/connection";
-import {Button, Card, Label, Text} from "@gravity-ui/uikit";
+import {Button, Card, DropdownMenu, Icon, Label, Text} from "@gravity-ui/uikit";
 import {useEffect, useMemo, useState} from "react";
 import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../types/explorer";
 import {fetchSchemas, fetchTableDetails, fetchTables} from "../../api/explorer";
+import {useContextMenu} from "../../hooks/useContextMenu";
+import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
+import {Ellipsis} from "@gravity-ui/icons";
 
 interface Props {
     connections: ConnectionDto[];
     activeConnectionId: number | null;
-    onSelect: (id: number) => void;
+    onSelect: (id: number | null) => void;
     onCreateClick: () => void;
     onOpenSql: (payload: {
         title: string,
         sql_text: string,
         db_connection_id: number | null;
     }) => void;
+}
+
+interface ExplorerTablePayload {
+    connectionId: number;
+    schema: string;
+    table: ExplorerTableDto;
+    details?: ExplorerTableDetailsDto;
 }
 
 export function ConnectionsSidebar({
@@ -34,6 +44,14 @@ export function ConnectionsSidebar({
     const [loadingSchemasFor, setLoadingSchemasFor] = useState<number | null>(null);
     const [loadingTablesFor, setLoadingTablesFor] = useState<string | null>(null);
     const [loadingDetailsFor, setLoadingDetailsFor] = useState<string | null>(null);
+
+    const {
+        state: tableMenuState,
+        anchorRef: tableMenuAnchorRef,
+        anchorStyle: tableMenuAnchorStyle,
+        openContextMenu: openTableContextMenu,
+        closeContextMenu: closeTableContextMenu,
+    } = useContextMenu<ExplorerTablePayload>();
 
     const activeConnection = useMemo(
         () => connections.find((connection) => connection.id === activeConnectionId) ?? null,
@@ -161,7 +179,7 @@ export function ConnectionsSidebar({
 
     function buildDescribeSql(details: ExplorerTableDetailsDto) {
         const lines = details.columns.map((column) => {
-            const nullable = column.is_nullable === 'YES' ? 'NULL': 'NOT NULL';
+            const nullable = column.is_nullable === 'YES' ? 'NULL' : 'NOT NULL';
             const defaultValue = column.column_default ? ` DEFAULT ${column.column_default}` : '';
 
             return `-- ${column.column_name}: ${column.data_type} ${nullable}${defaultValue}`;
@@ -176,6 +194,16 @@ export function ConnectionsSidebar({
         ].join('\n');
     }
 
+    async function handleCopyFullName(schema: string, table: string) {
+        try {
+            await navigator.clipboard.writeText(`"${schema}"."${table}"`);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const contextTable = tableMenuState.payload;
+
     return (
         <Card
             view="filled"
@@ -186,6 +214,71 @@ export function ConnectionsSidebar({
                 boxSizing: 'border-box',
             }}
         >
+            <div ref={tableMenuAnchorRef} style={tableMenuAnchorStyle} />
+
+            <WorkspaceContextMenu
+                open={tableMenuState.open}
+                anchorElement={tableMenuAnchorRef.current}
+                onClose={closeTableContextMenu}
+                actions={
+                    contextTable
+                        ? [
+                            {
+                                key: 'select-top',
+                                text: 'Select top 100',
+                                onClick: () =>
+                                    onOpenSql({
+                                        title: `${contextTable.schema}.${contextTable.table.table_name}`,
+                                        sql_text: buildSelectSql(contextTable.schema, contextTable.table.table_name),
+                                        db_connection_id: contextTable.connectionId,
+                                    }),
+                            },
+                            {
+                                key: 'count',
+                                text: 'Count rows',
+                                onClick: () =>
+                                    onOpenSql({
+                                        title: `${contextTable?.schema}.${contextTable.table.table_name} count`,
+                                        sql_text: buildCountSql(contextTable.schema, contextTable.table.table_name),
+                                        db_connection_id: contextTable.connectionId,
+                                    }),
+                            },
+                            {
+                                key: 'metadata',
+                                text: 'Open metadata',
+                                onClick: async () => {
+                                    const details =
+                                        contextTable.details ??
+                                        await fetchTableDetails(
+                                            contextTable.connectionId,
+                                            contextTable.schema,
+                                            contextTable.table.table_name,
+                                        );
+
+                                    onOpenSql({
+                                        title: `${contextTable.schema}.${contextTable.table.table_name} meta`,
+                                        sql_text: buildDescribeSql(details),
+                                        db_connection_id: contextTable.connectionId,
+                                    });
+                                },
+                            },
+                            {
+                                key: 'separator-1',
+                            },
+                            {
+                                key: 'copy',
+                                text: 'Copy full name',
+                                onClick: () =>
+                                    handleCopyFullName(
+                                        contextTable.schema,
+                                        contextTable.table.table_name,
+                                    ),
+                            },
+                        ]
+                        : []
+                }
+            />
+
             <div
                 style={{
                     display: 'flex',
@@ -294,27 +387,92 @@ export function ConnectionsSidebar({
 
                                                                     return (
                                                                         <div key={tableKey}>
-                                                                            <button
-                                                                                onClick={() => handleToggleTable(connection.id, schema, table.table_name)}
+                                                                            <div
+                                                                                onContextMenu={(event) =>
+                                                                                    openTableContextMenu(event, {
+                                                                                        connectionId: connection.id,
+                                                                                        schema,
+                                                                                        table,
+                                                                                        details,
+                                                                                    })
+                                                                                }
                                                                                 style={{
-                                                                                    width: '100%',
-                                                                                    textAlign: 'left',
-                                                                                    border: 'none',
-                                                                                    background: 'transparent',
-                                                                                    padding: '4px 4px',
-                                                                                    cursor: 'pointer',
-                                                                                    color: 'inherit',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    justifyContent: 'space-between',
+                                                                                    gap: 8,
+                                                                                    borderRadius: 8,
+                                                                                    padding: '4px 4px 4px 0',
                                                                                 }}
                                                                             >
-                                                                                <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
-                                                                                    <Text variant="body-2">
-                                                                                        {table.table_name}
-                                                                                    </Text>
-                                                                                    <Label theme="unknown">
-                                                                                        {table.table_type}
-                                                                                    </Label>
-                                                                                </div>
-                                                                            </button>
+                                                                                <button
+                                                                                    onClick={() => handleToggleTable(connection.id, schema, table.table_name)}
+                                                                                    style={{
+                                                                                        flex: 1,
+                                                                                        textAlign: 'left',
+                                                                                        border: 'none',
+                                                                                        background: 'transparent',
+                                                                                        padding: '4px 4px',
+                                                                                        cursor: 'pointer',
+                                                                                        color: 'inherit',
+                                                                                    }}
+                                                                                >
+                                                                                    <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
+                                                                                        <Text variant="body-2">
+                                                                                            {table.table_name}
+                                                                                        </Text>
+                                                                                        <Label theme="unknown">
+                                                                                            {table.table_type}
+                                                                                        </Label>
+                                                                                    </div>
+                                                                                </button>
+
+                                                                                <DropdownMenu
+                                                                                    items={[
+                                                                                        {
+                                                                                            text: 'Select top 100',
+                                                                                            action: () =>
+                                                                                                onOpenSql({
+                                                                                                    title: `${schema}.${table.table_name}`,
+                                                                                                    sql_text: buildSelectSql(schema, table.table_name),
+                                                                                                    db_connection_id: connection.id,
+                                                                                                }),
+                                                                                        },
+                                                                                        {
+                                                                                            text: 'Count rows',
+                                                                                            action: () =>
+                                                                                                onOpenSql({
+                                                                                                    title: `${schema}.${table.table_name} count`,
+                                                                                                    sql_text: buildCountSql(schema, table.table_name),
+                                                                                                    db_connection_id: connection.id,
+                                                                                            }),
+                                                                                        },
+                                                                                        {
+                                                                                            text: 'Open metadata',
+                                                                                            action: async () => {
+                                                                                                const nextDetails =
+                                                                                                    details ??
+                                                                                                    await fetchTableDetails(
+                                                                                                        connection.id,
+                                                                                                        schema,
+                                                                                                        table.table_name,
+                                                                                                    );
+
+                                                                                                onOpenSql({
+                                                                                                    title: `${schema}.${table.table_name} meta`,
+                                                                                                    sql_text: buildDescribeSql(nextDetails),
+                                                                                                    db_connection_id: connection.id,
+                                                                                                });
+                                                                                            },
+                                                                                        },
+                                                                                    ]}
+                                                                                    renderSwitcher={(props) => (
+                                                                                        <Button {...props} size="s" view="flat-secondary">
+                                                                                            <Icon data={Ellipsis} size={16}/>
+                                                                                        </Button>
+                                                                                    )}
+                                                                                />
+                                                                            </div>
 
                                                                             {isTableExpanded ? (
                                                                                 <div
@@ -322,39 +480,9 @@ export function ConnectionsSidebar({
                                                                                         paddingLeft: 12,
                                                                                         paddingTop: 6,
                                                                                         display: 'grid',
-                                                                                        gap: 8,
+                                                                                        gap: 6,
                                                                                     }}
                                                                                 >
-                                                                                    <div style={{display: 'flex', gap: 6, flexWrap: 'wrap'}}>
-                                                                                        <Button
-                                                                                            size="s"
-                                                                                            view="outlined"
-                                                                                            onClick={() =>
-                                                                                                onOpenSql({
-                                                                                                    title: `${schema}.${table.table_name}`,
-                                                                                                    sql_text: buildSelectSql(schema, table.table_name),
-                                                                                                    db_connection_id: connection.id,
-                                                                                                })
-                                                                                            }
-                                                                                        >
-                                                                                            SELECT *
-                                                                                        </Button>
-
-                                                                                        <Button
-                                                                                            size="s"
-                                                                                            view="outlined"
-                                                                                            onClick={() =>
-                                                                                                onOpenSql({
-                                                                                                    title: `${schema}.${table.table_name} count`,
-                                                                                                    sql_text: buildCountSql(schema, table.table_name),
-                                                                                                    db_connection_id: connection.id,
-                                                                                                })
-                                                                                            }
-                                                                                        >
-                                                                                            COUNT(*)
-                                                                                        </Button>
-                                                                                    </div>
-
                                                                                     {loadingDetailsFor === tableKey ? (
                                                                                         <Text variant="body-2" color="secondary">
                                                                                             Loading columns...
@@ -371,19 +499,11 @@ export function ConnectionsSidebar({
                                                                                                 ))}
                                                                                             </div>
 
-                                                                                            <Button
-                                                                                                size="s"
-                                                                                                view="flat"
-                                                                                                onClick={() =>
-                                                                                                    onOpenSql({
-                                                                                                        title: `${schema}.${table.table_name} meta`,
-                                                                                                        sql_text: buildDescribeSql(details),
-                                                                                                        db_connection_id: connection.id,
-                                                                                                    })
-                                                                                                }
-                                                                                            >
-                                                                                                Open metadata tab
-                                                                                            </Button>
+                                                                                            {details.indexes.length > 0 ? (
+                                                                                                <Text variant="caption-2" color="secondary">
+                                                                                                    {details.indexes.length} indexes
+                                                                                                </Text>
+                                                                                            ) : null}
                                                                                         </>
                                                                                     ) : null}
                                                                                 </div>

@@ -326,8 +326,11 @@ export function WorkspacePage() {
         const tabsToClose = tabs.filter((tab) => tab.id !== tabId && !tab.is_pinned);
 
         for (const tab of tabsToClose) {
+            removeTab(tab.id);
+        }
+
+        for (const tab of tabsToClose) {
             try {
-                removeTab(tab.id);
                 await deleteQueryTab(tab.id);
             } catch (error) {
                 console.error(error);

@@ -1,11 +1,19 @@
 import {ExecuteQueryResponse} from "../../types/queryResult";
 import {Button, Card, Label, Text} from "@gravity-ui/uikit";
+import {useContextMenu} from "../../hooks/useContextMenu";
+import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
 
 interface Props {
     result: ExecuteQueryResponse | null;
     activeConnectionName?: string | null;
     activeDatabaseName?: string | null;
     activeTabTitle?: string | null;
+}
+
+interface ResultCellPayload {
+    cell: unknown;
+    row: unknown[];
+    columnName: string;
 }
 
 function escapeCsvValue(value: unknown): string {
@@ -44,6 +52,18 @@ function buildTsv(result: Extract<ExecuteQueryResponse, { status: 'success' }>):
     return [header, ...rows].join('\n');
 }
 
+function buildRowTsv(row: unknown[]): string {
+    return row.map((cell) => (cell === null ? 'NULL' : String(cell))).join('\t');
+}
+
+function buildRowJson(row: unknown[], columnNames: string[]): string {
+    const payload = Object.fromEntries(
+        columnNames.map((columnNames, index) => [columnNames, row[index] ?? null]),
+    );
+
+    return JSON.stringify(payload, null, 2);
+}
+
 function downloadFile(filename: string, content: string, mimeType: string) {
     const blob = new Blob([content], {type: mimeType});
     const url = URL.createObjectURL(blob);
@@ -56,31 +76,27 @@ function downloadFile(filename: string, content: string, mimeType: string) {
     URL.revokeObjectURL(url);
 }
 
+async function copyText(text: string) {
+    try {
+        await navigator.clipboard.writeText(text);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 export function ResultsPanel({
                                  result,
                                  activeConnectionName,
                                  activeDatabaseName,
                                  activeTabTitle,
                              }: Props) {
-    async function handleCopyCell(cell: unknown) {
-        try {
-            await navigator.clipboard.writeText(cell === null ? 'NULL' : String(cell));
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    async function handleCopyAllAsTsv() {
-        if (!result || result.status !== 'success') {
-            return;
-        }
-
-        try {
-            await navigator.clipboard.writeText(buildTsv(result));
-        } catch (error) {
-            console.error(error);
-        }
-    }
+    const {
+        state: cellMenuState,
+        anchorRef: cellMenuAnchorRef,
+        anchorStyle: cellMenuAnchorStyle,
+        openContextMenu: openCellContextMenu,
+        closeContextMenu: closeCellContextMenu,
+    } = useContextMenu<ResultCellPayload>();
 
     function handleExportCsv() {
         if (!result || result.status !== 'success') {
@@ -202,6 +218,9 @@ export function ResultsPanel({
         );
     }
 
+    const columnNames = result.columns.map((column) => column.name);
+    const contextCell = cellMenuState.payload;
+
     return (
         <Card
             view="filled"
@@ -215,6 +234,44 @@ export function ResultsPanel({
                 boxSizing: 'border-box',
             }}
         >
+            <div ref={cellMenuAnchorRef} style={cellMenuAnchorStyle}/>
+
+            <WorkspaceContextMenu
+                open={cellMenuState.open}
+                anchorElement={cellMenuAnchorRef.current}
+                onClose={closeCellContextMenu}
+                actions={
+                    contextCell
+                        ? [
+                            {
+                                key: 'copy',
+                                text: 'Copy cell',
+                                onClick: () =>
+                                    copyText(contextCell.cell === null ? 'NULL' : String(contextCell.cell)),
+                            },
+                            {
+                                key: 'copy-row-tsv',
+                                text: 'Copy row as TSV',
+                                onClick: () => copyText(buildRowTsv(contextCell.row)),
+                            },
+                            {
+                                key: 'copy-row-json',
+                                text: 'Copy row as JSON',
+                                onClick: () => copyText(buildRowJson(contextCell.row, columnNames)),
+                            },
+                            {
+                                key: 'separator-1',
+                            },
+                            {
+                                key: 'copy-column',
+                                text: 'Copy column name',
+                                onClick: () => copyText(contextCell.columnName),
+                            },
+                        ]
+                        : []
+                }
+            />
+
             <div
                 style={{
                     display: 'flex',
@@ -244,7 +301,13 @@ export function ResultsPanel({
                 </div>
 
                 <div style={{display: 'flex', gap: 8, flexWrap: 'wrap'}}>
-                    <Button size="m" view="outlined" onClick={handleCopyAllAsTsv}>
+                    <Button
+                        size="m"
+                        view="outlined"
+                        onClick={() => {
+                            void copyText(buildTsv(result));
+                        }}
+                    >
                         Copy all
                     </Button>
 
@@ -260,7 +323,7 @@ export function ResultsPanel({
                     overflow: 'auto',
                     border: '1px solid var(--g-color-line-generic)',
                     borderRadius: 10,
-            }}
+                }}
             >
                 <table
                     style={{
@@ -285,15 +348,8 @@ export function ResultsPanel({
                                     whiteSpace: 'nowrap',
                                 }}
                             >
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: 4,
-                                    }}
-                                >
+                                <div style={{display: 'flex', flexDirection: 'column', gap: 4}}>
                                     <span>{column.name}</span>
-
                                     {column.native_type ? (
                                         <Text variant="caption-2" color="secondary">
                                             {column.native_type}
@@ -312,8 +368,15 @@ export function ResultsPanel({
                                 <td
                                     key={cellIndex}
                                     onDoubleClick={() => {
-                                        void handleCopyCell(cell);
+                                        void copyText(cell === null ? 'NULL' : String(cell));
                                     }}
+                                    onContextMenu={(event) =>
+                                        openCellContextMenu(event, {
+                                            cell,
+                                            row,
+                                            columnName: result.columns[cellIndex]?.name ?? `column_${cellIndex + 1}`,
+                                        })
+                                    }
                                     title="Double click to copy cell"
                                     style={{
                                         padding: '10px 12px',

@@ -1,14 +1,15 @@
 import React from "react";
 import {Icon, Menu, Popup} from "@gravity-ui/uikit";
-import {ArrowsRotateRight, Bars, CirclePlus, Copy, Pin, Xmark} from "@gravity-ui/icons";
+import {ArrowsRotateRight, Bars, Calculator, CirclePlus, Copy, Eye, FileText, Pin, Xmark} from "@gravity-ui/icons";
 
 export interface WorkspaceContextAction {
     key: string;
-    text: string;
+    text?: string;
     icon?: React.ReactNode;
     danger?: boolean;
     disabled?: boolean;
-    onClick: () => void;
+    separatorTop?: boolean;
+    onClick?: () => void;
 }
 
 interface Props {
@@ -32,6 +33,14 @@ function fallbackIcon(key: string) {
             return <Icon data={Bars} size={16}/>;
         case 'refresh':
             return <Icon data={ArrowsRotateRight} size={16}/>;
+        case 'select-top':
+            return <Icon data={Eye} size={16}/>;
+        case 'count':
+            return <Icon data={Calculator} size={16}/>;
+        case 'metadata':
+            return <Icon data={FileText} size={16}/>;
+        case 'copy':
+            return <Icon data={Copy} size={16}/>;
         default:
             return null;
     }
@@ -51,27 +60,28 @@ export function WorkspaceContextMenu({
             hasArrow={false}
             onClose={onClose}
         >
-            <div
-                style={{
-                    minWidth: 220,
-                    padding: 4,
-                }}
-            >
+            <div style={{minWidth: 220, padding: 4}}>
                 <Menu size="m">
-                    {actions.map((action) => (
-                        <Menu.Item
+                    {actions.map((action) => {
+                        if (!action.text) {
+                            return <Menu.Separator key={action.key} />;
+                        }
+
+                        return <Menu.Item
                             key={action.key}
                             iconStart={action.icon ?? fallbackIcon(action.key)}
                             theme={action.danger ? 'danger' : 'normal'}
                             disabled={action.disabled}
+                            separatorTop={action.separatorTop}
                             onClick={() => {
-                                action.onClick();
+                                action.onClick?.();
                                 onClose();
                             }}
                         >
                             {action.text}
                         </Menu.Item>
-                    ))}
+
+                    })}
                 </Menu>
             </div>
         </Popup>
