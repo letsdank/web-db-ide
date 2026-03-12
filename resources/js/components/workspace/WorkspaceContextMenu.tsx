@@ -60,27 +60,44 @@ export function WorkspaceContextMenu({
             hasArrow={false}
             onClose={onClose}
         >
-            <div style={{minWidth: 220, padding: 4}}>
+            <div
+                style={{
+                    minWidth: 220,
+                    padding: 4,
+                    borderRadius: 8,
+                    background: "var(--g-color-base-float)",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.24)",
+                }}
+            >
                 <Menu size="m">
                     {actions.map((action) => {
                         if (!action.text) {
-                            return <Menu.Separator key={action.key} />;
+                            return (
+                                <div
+                                    key={action.key}
+                                    style={{
+                                        height: 1,
+                                        margin: "4px 8px",
+                                        background: "var(--g-color-line-generic)",
+                                    }}
+                                />
+                            );
                         }
 
-                        return <Menu.Item
-                            key={action.key}
-                            iconStart={action.icon ?? fallbackIcon(action.key)}
-                            theme={action.danger ? 'danger' : 'normal'}
-                            disabled={action.disabled}
-                            separatorTop={action.separatorTop}
-                            onClick={() => {
-                                action.onClick?.();
-                                onClose();
-                            }}
-                        >
-                            {action.text}
-                        </Menu.Item>
-
+                        return (
+                            <Menu.Item
+                                key={action.key}
+                                iconStart={action.icon ?? fallbackIcon(action.key)}
+                                theme={action.danger ? 'danger' : 'normal'}
+                                disabled={action.disabled}
+                                onClick={() => {
+                                    action.onClick?.();
+                                    onClose();
+                                }}
+                            >
+                                {action.text}
+                            </Menu.Item>
+                        );
                     })}
                 </Menu>
             </div>
