@@ -11,7 +11,7 @@ import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
 import {SqlEditorPane} from "../components/workspace/SqlEditorPane";
-import {ResultsPanel} from "../components/workspace/ResultsPanel";
+import {ResultsPanel} from "../features/results/components/ResultsPanel";
 import {RightSidebarPanels} from "../components/workspace/RightSidebarPanels";
 import {useDebouncedCallback} from "../hooks/useDebouncedCallback";
 import {QueryTabDto} from "../types/queryTab";
