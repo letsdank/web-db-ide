@@ -36,7 +36,7 @@ function escapeCsvValue(value: unknown): string {
         stringValue.includes(',') ||
         stringValue.includes('\n')
     ) {
-        return `"${stringValue.replace(/"/g, '""')}`;
+        return `"${stringValue.replace(/"/g, '""')}"`;
     }
 
     return stringValue;
