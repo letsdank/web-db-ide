@@ -1,0 +1,108 @@
+.explorer-sidebar {
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    &__list {
+        display: grid;
+        gap: 10px;
+    }
+}
+
+.explorer-connection-card {
+    border: 1px solid var(--g-color-line-generic);
+    border-radius: 12px;
+    background: var(--g-color-base-float);
+    overflow: hidden;
+
+    &--active {
+        border-color: var(--g-color-line-brand);
+        background: var(--g-color-base-selection);
+    }
+
+    &__header {
+        width: 100%;
+        text-align: left;
+        border: none;
+        background: transparent;
+        padding: 12px;
+        cursor: pointer;
+        color: inherit;
+    }
+
+    &__header-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    &__meta {
+        margin-top: 4px;
+    }
+
+    &__body {
+        border-top: 1px solid var(--g-color-line-generic);
+        padding: 10px;
+        display: grid;
+        gap: 8px;
+    }
+}
+
+.explorer-schema-node {
+    &__toggle {
+        width: 100%;
+        text-align: left;
+        border: none;
+        background: transparent;
+        padding: 6px 4px;
+        cursor: pointer;
+        color: inherit;
+    }
+
+    &__tables {
+        padding-left: 12px;
+        display: grid;
+        gap: 6px;
+    }
+}
+
+.explorer-table-node {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-radius: 8px;
+    padding: 4px 4px 4px 0;
+
+    &__toggle {
+        flex: 1;
+        text-align: left;
+        border: none;
+        background: transparent;
+        padding: 4px 4px;
+        cursor: pointer;
+        color: inherit;
+    }
+
+    &__title-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    &__details {
+        padding-left: 12px;
+        padding-top: 6px;
+        display: grid;
+        gap: 6px;
+    }
+
+    &__columns {
+        display: grid;
+        gap: 4px;
+    }
+}

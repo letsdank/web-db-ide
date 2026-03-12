@@ -8,7 +8,6 @@ import {executeQuery} from "../api/queries";
 import {QueryHistoryDto} from "../types/queryHistory";
 import {SavedQueryDto} from "../types/savedQuery";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
-import {ConnectionsSidebar} from "../components/workspace/ConnectionsSidebar";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
 import {SqlEditorPane} from "../components/workspace/SqlEditorPane";
@@ -21,6 +20,7 @@ import {Icon} from "@gravity-ui/uikit";
 import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magnifier} from "@gravity-ui/icons";
 import {CommandPalette} from "../components/workspace/CommandPalette";
 import {WorkspaceMainLayout} from "../features/workspace/components/WorkspaceMainLayout";
+import {ExplorerSidebar} from "../features/explorer/components/ExplorerSidebar";
 
 export function WorkspacePage() {
     const {
@@ -636,7 +636,7 @@ export function WorkspacePage() {
 
             <WorkspaceMainLayout
                 left={
-                    <ConnectionsSidebar
+                    <ExplorerSidebar
                         connections={connections}
                         activeConnectionId={activeConnectionId}
                         onSelect={handleSelectConnection}
