@@ -20,6 +20,7 @@ import {CommandPaletteItem} from "../types/commandPalette";
 import {Icon} from "@gravity-ui/uikit";
 import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magnifier} from "@gravity-ui/icons";
 import {CommandPalette} from "../components/workspace/CommandPalette";
+import {WorkspaceMainLayout} from "../features/workspace/components/WorkspaceMainLayout";
 
 export function WorkspacePage() {
     const {
@@ -633,22 +634,8 @@ export function WorkspacePage() {
                 onClose={() => setIsCommandPaletteOpen(false)}
             />
 
-            <div
-                style={{
-                    minHeight: '100vh',
-                    padding: 16,
-                    background: 'var(--g-color-base-background)',
-                    boxSizing: 'border-box',
-                }}
-            >
-                <div
-                    style={{
-                        height: 'calc(100vh - 32px)',
-                        display: 'grid',
-                        gridTemplateColumns: '280px minmax(0, 1fr) 320px',
-                        gap: 16,
-                    }}
-                >
+            <WorkspaceMainLayout
+                left={
                     <ConnectionsSidebar
                         connections={connections}
                         activeConnectionId={activeConnectionId}
@@ -656,77 +643,56 @@ export function WorkspacePage() {
                         onCreateClick={openConnectionDialog}
                         onOpenSql={handleCreateTab}
                     />
-
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateRows: '48px 72px 72px minmax(0, 1fr) 320px',
-                            gap: 16,
-                            minHeight: 0,
-                        }}
+                }
+                centerTop={
+                    <button
+                        className="workspace-page__palette-button"
+                        onClick={() => setIsCommandPaletteOpen(true)}
                     >
-                        <div
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'flex-end',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <button
-                                onClick={() => setIsCommandPaletteOpen(true)}
-                                style={{
-                                    border: '1px solid var(--g-color-line-generic)',
-                                    background: 'var(--g-color-base-float)',
-                                    color: 'inherit',
-                                    borderRadius: 10,
-                                    padding: '8px 12px',
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                Command Palette · Ctrl/Cmd + K
-                            </button>
-                        </div>
-                        <QueryTabsBar
-                            tabs={tabs}
-                            activeTabId={activeTabId}
-                            dirtyTabIds={dirtyTabIds}
-                            onSelect={handleSelectTab}
-                            onCreate={() => handleCreateTab()}
-                            onClose={handleCloseTab}
-                            onCloseOthers={handleCloseOtherTabs}
-                            onTogglePin={handleTogglePin}
-                            onDuplicate={handleDuplicateTab}
-                        />
-
-                        <EditorToolbar
-                            connections={connections}
-                            activeConnectionId={activeConnectionId}
-                            isExecuting={isExecuting}
-                            hasSelection={hasSelection}
-                            onSelectConnection={handleSelectConnection}
-                            onRun={() => handleRun('auto')}
-                            onRunSelection={handleRunSelection}
-                        />
-
-                        <div style={{minHeight: 0}}>
-                            <SqlEditorPane
-                                value={activeTab?.sql_text ?? ''}
-                                onChange={handleChangeSql}
-                                onSelectionChange={handleEditorSelectionChange}
-                                onRun={() => handleRun('auto')}
-                            />
-                        </div>
-
-                        <div style={{minHeight: 0}}>
-                            <ResultsPanel
-                                result={activeResult}
-                                activeConnectionName={activeConnection?.name ?? null}
-                                activeDatabaseName={activeConnection?.database_name ?? null}
-                                activeTabTitle={activeTab?.title ?? null}
-                            />
-                        </div>
-                    </div>
-
+                        Command Palette · Ctrl/Cmd + K
+                    </button>
+                }
+                tabs={
+                    <QueryTabsBar
+                        tabs={tabs}
+                        activeTabId={activeTabId}
+                        dirtyTabIds={dirtyTabIds}
+                        onSelect={handleSelectTab}
+                        onCreate={() => handleCreateTab()}
+                        onClose={handleCloseTab}
+                        onCloseOthers={handleCloseOtherTabs}
+                        onTogglePin={handleTogglePin}
+                        onDuplicate={handleDuplicateTab}
+                    />
+                }
+                toolbar={
+                    <EditorToolbar
+                        connections={connections}
+                        activeConnectionId={activeConnectionId}
+                        isExecuting={isExecuting}
+                        hasSelection={hasSelection}
+                        onSelectConnection={handleSelectConnection}
+                        onRun={() => handleRun('auto')}
+                        onRunSelection={handleRunSelection}
+                    />
+                }
+                editor={
+                    <SqlEditorPane
+                        value={activeTab?.sql_text ?? ''}
+                        onChange={handleChangeSql}
+                        onSelectionChange={handleEditorSelectionChange}
+                        onRun={() => handleRun('auto')}
+                    />
+                }
+                results={
+                    <ResultsPanel
+                        result={activeResult}
+                        activeConnectionName={activeConnection?.name ?? null}
+                        activeDatabaseName={activeConnection?.database_name ?? null}
+                        activeTabTitle={activeTab?.title ?? null}
+                    />
+                }
+                right={
                     <RightSidebarPanels
                         panel={rightPanel}
                         history={queryHistory}
@@ -736,8 +702,8 @@ export function WorkspacePage() {
                         onOpenSavedQuery={handleOpenSavedQuery}
                         onSaveCurrentQuery={handleSaveCurrentQuery}
                     />
-                </div>
-            </div>
+                }
+            />
         </>
     );
 }
