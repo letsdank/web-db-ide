@@ -31,7 +31,7 @@ class SshTunnelManager
             targetPort: (int)$connection->port,
         );
 
-        return $this->spawnTunnel($connection);
+        return $this->spawnTunnel($config);
     }
 
     protected function spawnTunnel(SshTunnelConfig $config): SshTunnelHandle
