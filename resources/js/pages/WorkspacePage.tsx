@@ -1,5 +1,5 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
-import {useCallback, useEffect, useMemo} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {createConnection, CreateConnectionPayload, fetchConnections} from "../api/connections";
 import {createQueryTab, deleteQueryTab, fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
 import {fetchQueryHistory} from "../api/queryHistory";
@@ -16,6 +16,10 @@ import {ResultsPanel} from "../components/workspace/ResultsPanel";
 import {RightSidebarPanels} from "../components/workspace/RightSidebarPanels";
 import {useDebouncedCallback} from "../hooks/useDebouncedCallback";
 import {QueryTabDto} from "../types/queryTab";
+import {CommandPaletteItem} from "../types/commandPalette";
+import {Icon} from "@gravity-ui/uikit";
+import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magnifier} from "@gravity-ui/icons";
+import {CommandPalette} from "../components/workspace/CommandPalette";
 
 export function WorkspacePage() {
     const {
@@ -65,6 +69,8 @@ export function WorkspacePage() {
         setConnectionDialogError,
     } = useWorkspaceStore();
 
+    const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
     const activeTab = useMemo(
         () => tabs.find((tab) => tab.id === activeTabId) ?? null,
         [tabs, activeTabId],
@@ -97,6 +103,132 @@ export function WorkspacePage() {
     const scheduleTabDraftPersist = useCallback((tab: QueryTabDto, payload: Partial<QueryTabDto>) => {
         persistTabDraft(tab.id, payload);
     }, [persistTabDraft]);
+
+    useEffect(() => {
+        function handleGlobalKeyDown(event: KeyboardEvent) {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                event.preventDefault();
+                setIsCommandPaletteOpen(true);
+            }
+        }
+
+        window.addEventListener('keydown', handleGlobalKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleGlobalKeyDown);
+        };
+    }, []);
+
+    const commandPaletteItems = useMemo<CommandPaletteItem[]>(() => {
+        const actionItems: CommandPaletteItem[] = [
+            {
+                id: 'action:new-tab',
+                title: 'New query tab',
+                subtitle: 'Create an empty SQL tab',
+                kind: 'action',
+                icon: <Icon data={CirclePlus} size={18}/>,
+                keywords: ['new tab create query sql'],
+                onSelect: () => handleCreateTab(),
+            },
+            {
+                id: 'action:open-connection-dialog',
+                title: 'New connection',
+                subtitle: 'Open connection creation dialog',
+                kind: 'action',
+                icon: <Icon data={Database} size={18}/>,
+                keywords: ['connection database create add'],
+                onSelect: () => openConnectionDialog(),
+            },
+            {
+                id: 'action:run-query',
+                title: 'Run current query',
+                subtitle: activeTab?.title ?? 'Active tab',
+                kind: 'action',
+                icon: <Icon data={Magnifier} size={18}/>,
+                keywords: ['run execute query sql current active'],
+                onSelect: () => handleRun('auto'),
+            },
+            {
+                id: 'action:show-history',
+                title: 'Open history panel',
+                subtitle: 'Switch right sidebar to History',
+                kind: 'action',
+                icon: <Icon data={ClockArrowRotateLeft} size={18}/>,
+                keywords: ['history sidebar panel'],
+                onSelect: () => setRightPanel('history'),
+            },
+            {
+                id: 'action:show-saved',
+                title: 'Open saved queries panel',
+                subtitle: 'Switch right sidebar to Saved',
+                kind: 'action',
+                icon: <Icon data={LayoutCells} size={18}/>,
+                keywords: ['saved queries sidebar panel'],
+                onSelect: () => setRightPanel('saved'),
+            },
+        ];
+
+        const tabItems: CommandPaletteItem[] = tabs.map((tab) => ({
+            id: `tab:${tab.id}`,
+            title: tab.title || 'New Query',
+            subtitle: tab.db_connection_id
+                ? connections.find((connection) => connection.id === tab.db_connection_id)?.name ?? 'Tab'
+                : 'Unbound tab',
+            kind: 'tab',
+            icon: <Icon data={FileText} size={18}/>,
+            keywords: [
+                'tab query editor',
+                tab.sql_text ?? '',
+                tab.db_connection_id ? String(tab.db_connection_id) : '',
+            ],
+            onSelect: () => handleSelectTab(tab.id),
+        }));
+
+        const connectionItems: CommandPaletteItem[] = connections.map((connection) => ({
+            id: `connection:${connection.id}`,
+            title: connection.name,
+            subtitle: `${connection.database_name} · ${connection.host}:${connection.port}`,
+            kind: 'connection',
+            icon: <Icon data={Database} size={18}/>,
+            keywords: [
+                connection.driver,
+                connection.database_name,
+                connection.host,
+                connection.username,
+            ],
+            onSelect: () => handleSelectConnection(connection.id),
+        }));
+
+        const savedQueryItems: CommandPaletteItem[] = savedQueries.map((item) => ({
+            id: `saved-query:${item.id}`,
+            title: item.title,
+            subtitle: item.connection
+                ? `${item.connection.name} · ${item.connection.database_name}`
+                : item.folder || 'Saved query',
+            kind: 'saved-query',
+            icon: <Icon data={FileText} size={18}/>,
+            keywords: [
+                item.sql_text,
+                item.folder ?? '',
+                item.description ?? '',
+            ],
+            onSelect: () => handleOpenSavedQuery(item),
+        }));
+
+        return [
+            ...actionItems,
+            ...tabItems,
+            ...connectionItems,
+            ...savedQueryItems,
+        ];
+    }, [
+        activeTab?.title,
+        connections,
+        openConnectionDialog,
+        savedQueries,
+        setRightPanel,
+        tabs,
+    ]);
 
     useEffect(() => {
         async function boot() {
@@ -495,6 +627,12 @@ export function WorkspacePage() {
                 onSubmit={handleCreateConnection}
             />
 
+            <CommandPalette
+                open={isCommandPaletteOpen}
+                items={commandPaletteItems}
+                onClose={() => setIsCommandPaletteOpen(false)}
+            />
+
             <div
                 style={{
                     minHeight: '100vh',
@@ -522,11 +660,32 @@ export function WorkspacePage() {
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateRows: '72px 72px minmax(0, 1fr) 320px',
+                            gridTemplateRows: '48px 72px 72px minmax(0, 1fr) 320px',
                             gap: 16,
                             minHeight: 0,
                         }}
                     >
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <button
+                                onClick={() => setIsCommandPaletteOpen(true)}
+                                style={{
+                                    border: '1px solid var(--g-color-line-generic)',
+                                    background: 'var(--g-color-base-float)',
+                                    color: 'inherit',
+                                    borderRadius: 10,
+                                    padding: '8px 12px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Command Palette · Ctrl/Cmd + K
+                            </button>
+                        </div>
                         <QueryTabsBar
                             tabs={tabs}
                             activeTabId={activeTabId}

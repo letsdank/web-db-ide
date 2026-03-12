@@ -67,7 +67,7 @@ export function RightSidebarPanels({
                         size="m"
                         value={panel}
                         options={[
-                            {value: 'History', content: 'History'},
+                            {value: 'history', content: 'History'},
                             {value: 'saved', content: 'Saved'},
                         ]}
                         onUpdate={(value) => onChangePanel(value as WorkspaceRightPanel)}
