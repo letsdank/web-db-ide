@@ -18,7 +18,7 @@ import {QueryTabDto} from "../types/queryTab";
 import {CommandPaletteItem} from "../types/commandPalette";
 import {Icon} from "@gravity-ui/uikit";
 import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magnifier} from "@gravity-ui/icons";
-import {CommandPalette} from "../components/workspace/CommandPalette";
+import {CommandPalette} from "../features/command-palette/components/CommandPalette";
 import {WorkspaceMainLayout} from "../features/workspace/components/WorkspaceMainLayout";
 import {ExplorerSidebar} from "../features/explorer/components/ExplorerSidebar";
 
