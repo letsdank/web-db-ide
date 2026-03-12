@@ -70,6 +70,11 @@ export function WorkspacePage() {
         [tabs, activeTabId],
     );
 
+    const activeConnection = useMemo(
+        () => connections.find((connection) => connection.id === activeConnectionId),
+        [connections, activeConnectionId],
+    );
+
     const activeTabState = activeTabId ? tabStateById[activeTabId] ?? null : null;
     const activeResult = activeTabState?.result ?? null;
     const isExecuting = activeTabState?.isExecuting ?? false;
@@ -528,7 +533,12 @@ export function WorkspacePage() {
                         </div>
 
                         <div style={{minHeight: 0}}>
-                            <ResultsPanel result={activeResult}/>
+                            <ResultsPanel
+                                result={activeResult}
+                                activeConnectionName={activeConnection?.name ?? null}
+                                activeDatabaseName={activeConnection?.database_name ?? null}
+                                activeTabTitle={activeTab?.title ?? null}
+                            />
                         </div>
                     </div>
 
