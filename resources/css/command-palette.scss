@@ -38,6 +38,19 @@
         justify-content: space-between;
         gap: 12px;
     }
+
+    &__badges {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    &__hints {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
 }
 
 .command-palette-list {

@@ -12,12 +12,14 @@ interface Props {
     item: CommandPaletteItem;
     selected: boolean;
     onSelect: () => void;
+    showKindBadge?: boolean;
 }
 
 export function CommandPaletteItemRow({
                                           item,
                                           selected,
                                           onSelect,
+                                          showKindBadge = true,
                                       }: Props) {
     return (
         <button
@@ -51,7 +53,9 @@ export function CommandPaletteItemRow({
                 </div>
             </div>
 
-            <Label theme="unknown">{KIND_LABELS[item.kind]}</Label>
+            {showKindBadge ? (
+                <Label theme="unknown">{KIND_LABELS[item.kind]}</Label>
+            ) : null}
         </button>
     );
 }

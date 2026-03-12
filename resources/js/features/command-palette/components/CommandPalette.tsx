@@ -23,6 +23,9 @@ export function CommandPalette({
         selectedIndex,
         setSelectedIndex,
         filteredItems,
+        recentItems,
+        forcedKind,
+        registerRecentItem,
     } = useCommandPalette(open, items);
 
     useEffect(() => {
@@ -60,6 +63,8 @@ export function CommandPalette({
                 const item = filteredItems[selectedIndex];
 
                 if (item) {
+                    registerRecentItem(item.id);
+
                     void Promise.resolve(item.onSelect()).finally(() => {
                         onClose();
                     });
@@ -72,19 +77,24 @@ export function CommandPalette({
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [filteredItems, onClose, open, selectedIndex, setSelectedIndex]);
+    }, [filteredItems, onClose, open, registerRecentItem, selectedIndex, setSelectedIndex]);
 
     return (
         <CommandPaletteOverlay open={open} onClose={onClose}>
             <CommandPaletteSearch
                 query={query}
+                forcedKind={forcedKind}
                 onUpdateQuery={setQuery}
             />
 
             <CommandPaletteList
                 items={filteredItems}
+                recentItems={recentItems}
                 selectedIndex={selectedIndex}
+                query={query}
                 onSelectItem={(item) => {
+                    registerRecentItem(item.id);
+
                     void Promise.resolve(item.onSelect()).finally(() => {
                         onClose();
                     });

@@ -121,6 +121,10 @@ export function WorkspacePage() {
     }, []);
 
     const commandPaletteItems = useMemo<CommandPaletteItem[]>(() => {
+        const activeConnection = activeConnectionId
+            ? connections.find((connection) => connection.id === activeConnectionId)
+            : null;
+
         const actionItems: CommandPaletteItem[] = [
             {
                 id: 'action:new-tab',
@@ -132,7 +136,7 @@ export function WorkspacePage() {
                 onSelect: () => handleCreateTab(),
             },
             {
-                id: 'action:open-connection-dialog',
+                id: 'action:new-connection',
                 title: 'New connection',
                 subtitle: 'Open connection creation dialog',
                 kind: 'action',
@@ -169,6 +173,53 @@ export function WorkspacePage() {
             },
         ];
 
+        if (activeTab) {
+            actionItems.push(
+                {
+                    id: 'action:duplicate-active-tab',
+                    title: 'Duplicate active tab',
+                    subtitle: activeTab.title || 'Current tab',
+                    kind: 'action',
+                    icon: <Icon data={FileText} size={18}/>,
+                    keywords: ['duplicate tab copy current'],
+                    onSelect: () => handleDuplicateTab(activeTab),
+                },
+                {
+                    id: 'action:toggle-pin-active-tab',
+                    title: activeTab.is_pinned ? 'Unpin active tab' : 'Pin active tab',
+                    subtitle: activeTab.title || 'Current tab',
+                    kind: 'action',
+                    icon: <Icon data={FileText} size={18}/>,
+                    keywords: ['pin unpin tab current'],
+                    onSelect: () => handleTogglePin(activeTab),
+                },
+            );
+
+            if (!activeTab.is_pinned) {
+                actionItems.push({
+                    id: 'action:close-active-tab',
+                    title: 'Close active tab',
+                    subtitle: activeTab.title || 'Current tab',
+                    kind: 'action',
+                    icon: <Icon data={FileText} size={18}/>,
+                    keywords: ['close tab current'],
+                    onSelect: () => handleCloseTab(activeTab.id),
+                });
+            }
+        }
+
+        if (activeConnection) {
+            actionItems.push({
+                id: 'action:select-active-connection',
+                title: 'Current connection',
+                subtitle: `${activeConnection.name} · ${activeConnection.database_name}`,
+                kind: 'action',
+                icon: <Icon data={Database} size={18}/>,
+                keywords: ['current connection active database'],
+                onSelect: () => handleSelectConnection(activeConnection.id),
+            });
+        }
+
         const tabItems: CommandPaletteItem[] = tabs.map((tab) => ({
             id: `tab:${tab.id}`,
             title: tab.title || 'New Query',
@@ -180,7 +231,7 @@ export function WorkspacePage() {
             keywords: [
                 'tab query editor',
                 tab.sql_text ?? '',
-                tab.db_connection_id ? String(tab.db_connection_id) : '',
+                tab.is_pinned ? 'pinned' : '',
             ],
             onSelect: () => handleSelectTab(tab.id),
         }));
@@ -223,12 +274,21 @@ export function WorkspacePage() {
             ...savedQueryItems,
         ];
     }, [
-        activeTab?.title,
+        activeConnectionId,
+        activeTab,
         connections,
         openConnectionDialog,
         savedQueries,
         setRightPanel,
         tabs,
+        handleCreateTab,
+        handleRun,
+        handleSelectTab,
+        handleSelectConnection,
+        handleOpenSavedQuery,
+        handleDuplicateTab,
+        handleCloseTab,
+        handleTogglePin,
     ]);
 
     useEffect(() => {

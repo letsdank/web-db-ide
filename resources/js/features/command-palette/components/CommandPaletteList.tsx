@@ -5,13 +5,17 @@ import {CommandPaletteGroup} from "./CommandPaletteGroup";
 
 interface Props {
     items: CommandPaletteItem[];
+    recentItems: CommandPaletteItem[];
     selectedIndex: number;
+    query: string;
     onSelectItem: (item: CommandPaletteItem) => void;
 }
 
 export function CommandPaletteList({
                                        items,
+                                       recentItems,
                                        selectedIndex,
+                                       query,
                                        onSelectItem,
                                    }: Props) {
     const groupedItems = useMemo(() => {
@@ -41,18 +45,41 @@ export function CommandPaletteList({
     }
 
     let offset = 0;
+    const showRecent = !query.trim() && recentItems.length > 0;
 
     return (
         <div className="command-palette-list">
+            {showRecent ? (
+                <CommandPaletteGroup
+                    kind="action"
+                    title="Recent"
+                    items={recentItems}
+                    selectedIndex={selectedIndex}
+                    startIndex={offset}
+                    onSelectItem={onSelectItem}
+                    showKindBadges
+                />
+            ) : null}
+
+            {showRecent ? (offset += recentItems.length) : offset}
+
             {Object.entries(groupedItems).map(([kind, group]) => {
+                const filteredGroup = showRecent
+                    ? group.filter((item) => !recentItems.some((recent) => recent.id === item.id))
+                    : group;
+
+                if (filteredGroup.length === 0) {
+                    return null;
+                }
+
                 const startIndex = offset;
-                offset += group.length;
+                offset += filteredGroup.length;
 
                 return (
                     <CommandPaletteGroup
                         key={kind}
                         kind={kind as CommandPaletteItem['kind']}
-                        items={group}
+                        items={filteredGroup}
                         selectedIndex={selectedIndex}
                         startIndex={startIndex}
                         onSelectItem={onSelectItem}

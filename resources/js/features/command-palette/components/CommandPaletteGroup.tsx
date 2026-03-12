@@ -15,6 +15,8 @@ interface Props {
     selectedIndex: number;
     startIndex: number;
     onSelectItem: (item: CommandPaletteItem) => void;
+    title?: string;
+    showKindBadges?: boolean;
 }
 
 export function CommandPaletteGroup({
@@ -23,12 +25,14 @@ export function CommandPaletteGroup({
                                         selectedIndex,
                                         startIndex,
                                         onSelectItem,
+                                        title,
+                                        showKindBadges = false,
                                     }: Props) {
     return (
         <div className="command-palette-group">
             <div className="command-palette-group__title">
                 <Text variant="caption-2" color="secondary">
-                    {KIND_LABELS[kind]}
+                    {title ?? KIND_LABELS[kind]}
                 </Text>
             </div>
 
@@ -37,6 +41,7 @@ export function CommandPaletteGroup({
                     key={item.id}
                     item={item}
                     selected={startIndex + index === selectedIndex}
+                    showKindBadge={showKindBadges}
                     onSelect={() => onSelectItem(item)}
                 />
             ))}
