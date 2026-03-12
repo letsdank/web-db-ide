@@ -2,6 +2,7 @@ import {ExecuteQueryResponse} from "../../types/queryResult";
 import {Button, Card, Label, Text} from "@gravity-ui/uikit";
 import {useContextMenu} from "../../hooks/useContextMenu";
 import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
+import {useMemo, useState} from "react";
 
 interface Props {
     result: ExecuteQueryResponse | null;
@@ -15,6 +16,13 @@ interface ResultCellPayload {
     row: unknown[];
     columnName: string;
 }
+
+interface ResultHeaderPayload {
+    columnName: string;
+    columnIndex: number;
+}
+
+type SortDirection = 'asc' | 'desc';
 
 function escapeCsvValue(value: unknown): string {
     if (value === null || value === undefined) {
@@ -34,22 +42,28 @@ function escapeCsvValue(value: unknown): string {
     return stringValue;
 }
 
-function buildCsv(result: Extract<ExecuteQueryResponse, { status: 'success' }>): string {
-    const header = result.columns.map((column) => escapeCsvValue(column.name)).join(',');
-    const rows = result.rows.map((row) =>
+function buildCsv(
+    columns: { name: string; native_type?: string | null }[],
+    rows: unknown[][],
+): string {
+    const header = columns.map((column) => escapeCsvValue(column.name)).join(',');
+    const dataRows = rows.map((row) =>
         row.map((cell) => escapeCsvValue(cell)).join(',')
     );
 
-    return [header, ...rows].join('\n');
+    return [header, ...dataRows].join('\n');
 }
 
-function buildTsv(result: Extract<ExecuteQueryResponse, { status: 'success' }>): string {
-    const header = result.columns.map((column) => column.name).join('\t');
-    const rows = result.rows.map((row) =>
+function buildTsv(
+    columns: { name: string; native_type?: string | null }[],
+    rows: unknown[][],
+): string {
+    const header = columns.map((column) => column.name).join('\t');
+    const dataRows = rows.map((row) =>
         row.map((cell) => (cell === null ? 'NULL' : String(cell))).join('\t')
     );
 
-    return [header, ...rows].join('\n');
+    return [header, ...dataRows].join('\n');
 }
 
 function buildRowTsv(row: unknown[]): string {
@@ -84,12 +98,48 @@ async function copyText(text: string) {
     }
 }
 
+function compareValues(a: unknown, b: unknown): number {
+    if (a === null && b === null) {
+        return 0;
+    }
+
+    if (a == null) {
+        return 1;
+    }
+
+    if (b === null) {
+        return -1;
+    }
+
+    if (typeof a === 'number' && typeof b === 'number') {
+        return a - b;
+    }
+
+    const aNum = Number(a);
+    const bNum = Number(b);
+
+    if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
+        return aNum - bNum;
+    }
+
+    return String(a).localeCompare(String(b), undefined, {
+        numeric: true,
+        sensitivity: 'base',
+    });
+}
+
 export function ResultsPanel({
                                  result,
                                  activeConnectionName,
                                  activeDatabaseName,
                                  activeTabTitle,
                              }: Props) {
+    const [hiddenColumnNames, setHiddenColumnNames] = useState<string[]>([]);
+    const [sortState, setSortState] = useState<{
+        columnName: string;
+        direction: SortDirection;
+    } | null>(null);
+
     const {
         state: cellMenuState,
         anchorRef: cellMenuAnchorRef,
@@ -98,8 +148,54 @@ export function ResultsPanel({
         closeContextMenu: closeCellContextMenu,
     } = useContextMenu<ResultCellPayload>();
 
-    function handleExportCsv() {
+    const {
+        state: headerMenuState,
+        anchorRef: headerMenuAnchorRef,
+        anchorStyle: headerMenuAnchorStyle,
+        openContextMenu: openHeaderContextMenu,
+        closeContextMenu: closeHeaderContextMenu,
+    } = useContextMenu<ResultHeaderPayload>();
+
+    const visibleResult = useMemo(() => {
         if (!result || result.status !== 'success') {
+            return null;
+        }
+
+        const visibleColumns = result.columns
+            .map((column, index) => ({...column, originalIndex: index}))
+            .filter((column) => !hiddenColumnNames.includes(column.name));
+
+        let nextRows = [...result.rows];
+
+        if (sortState) {
+            const sourceColumnIndex = result.columns.findIndex(
+                (column) => column.name === sortState.columnName,
+            );
+
+            if (sourceColumnIndex !== -1) {
+                nextRows.sort((leftRow, rightRow) => {
+                    const compared = compareValues(
+                        leftRow[sourceColumnIndex],
+                        rightRow[sourceColumnIndex],
+                    );
+
+                    return sortState.direction === 'asc' ? compared : -compared;
+                });
+            }
+        }
+
+        const projectedRows = nextRows.map((row) =>
+            visibleColumns.map((column) => row[column.originalIndex]),
+        );
+
+        return {
+            visibleColumns,
+            rows: projectedRows,
+        };
+    }, [result, hiddenColumnNames, sortState]);
+
+    function handleExportCsv() {
+        if (!result || result.status !== 'success' || !visibleResult) {
             return;
         }
 
@@ -110,7 +206,7 @@ export function ResultsPanel({
 
         downloadFile(
             `${fileBaseName || 'query-results'}.csv`,
-            buildCsv(result),
+            buildCsv(visibleResult.visibleColumns, visibleResult.rows),
             'text/csv;charset=utf-8',
         );
     }
@@ -218,8 +314,12 @@ export function ResultsPanel({
         );
     }
 
-    const columnNames = result.columns.map((column) => column.name);
+    const visibleColumns = visibleResult?.visibleColumns ?? [];
+    const visibleRows = visibleResult?.rows ?? [];
+    const visibleColumnNames = visibleColumns.map((column) => column.name);
+
     const contextCell = cellMenuState.payload;
+    const contextHeader = headerMenuState.payload;
 
     return (
         <Card
@@ -235,6 +335,7 @@ export function ResultsPanel({
             }}
         >
             <div ref={cellMenuAnchorRef} style={cellMenuAnchorStyle}/>
+            <div ref={headerMenuAnchorRef} style={headerMenuAnchorStyle}/>
 
             <WorkspaceContextMenu
                 open={cellMenuState.open}
@@ -257,7 +358,7 @@ export function ResultsPanel({
                             {
                                 key: 'copy-row-json',
                                 text: 'Copy row as JSON',
-                                onClick: () => copyText(buildRowJson(contextCell.row, columnNames)),
+                                onClick: () => copyText(buildRowJson(contextCell.row, visibleColumnNames)),
                             },
                             {
                                 key: 'separator-1',
@@ -266,6 +367,67 @@ export function ResultsPanel({
                                 key: 'copy-column',
                                 text: 'Copy column name',
                                 onClick: () => copyText(contextCell.columnName),
+                            },
+                        ]
+                        : []
+                }
+            />
+
+            <WorkspaceContextMenu
+                open={headerMenuState.open}
+                anchorElement={headerMenuAnchorRef.current}
+                onClose={closeHeaderContextMenu}
+                actions={
+                    contextHeader
+                        ? [
+                            {
+                                key: 'sort-asc',
+                                text: 'Sort ascending',
+                                onClick: () =>
+                                    setSortState({
+                                        columnName: contextHeader.columnName,
+                                        direction: 'asc',
+                                    }),
+                            },
+                            {
+                                key: 'sort-desc',
+                                text: 'Sort descending',
+                                onClick: () =>
+                                    setSortState({
+                                        columnName: contextHeader.columnName,
+                                        direction: 'desc',
+                                    }),
+                            },
+                            {
+                                key: 'separator-1',
+                            },
+                            {
+                                key: 'copy-column',
+                                text: 'Copy column name',
+                                onClick: () => copyText(contextHeader.columnName),
+                            },
+                            {
+                                key: 'separator-2',
+                            },
+                            {
+                                key: 'hide-column',
+                                text: 'Hide column',
+                                onClick: () =>
+                                    setHiddenColumnNames((prev) =>
+                                        prev.includes(contextHeader.columnName)
+                                            ? prev
+                                            : [...prev, contextHeader.columnName],
+                                    ),
+                            },
+                            {
+                                key: 'reset-columns',
+                                text: 'Reset hidden columns',
+                                onClick: () => setHiddenColumnNames([]),
+                            },
+                            {
+                                key: 'reset-sort',
+                                text: 'Reset sorting',
+                                onClick: () => setSortState(null),
                             },
                         ]
                         : []
@@ -287,6 +449,18 @@ export function ResultsPanel({
                     <Label theme="info">{result.row_count} rows</Label>
                     <Label theme="utility">{result.duration_ms} ms</Label>
 
+                    {sortState ? (
+                        <Label theme="warning">
+                            sorted: {sortState.columnName} {sortState.direction}
+                        </Label>
+                    ) : null}
+
+                    {hiddenColumnNames.length > 0 ? (
+                        <Label theme="unknown">
+                            hidden: {hiddenColumnNames.length}
+                        </Label>
+                    ) : null}
+
                     {activeConnectionName ? (
                         <Label theme="utility">{activeConnectionName}</Label>
                     ) : null}
@@ -305,10 +479,22 @@ export function ResultsPanel({
                         size="m"
                         view="outlined"
                         onClick={() => {
-                            void copyText(buildTsv(result));
+                            void copyText(buildTsv(visibleColumns, visibleRows));
                         }}
                     >
                         Copy all
+                    </Button>
+
+                    <Button
+                        size="m"
+                        view="outlined"
+                        disabled={hiddenColumnNames.length === 0 && !sortState}
+                        onClick={() => {
+                            setHiddenColumnNames([]);
+                            setSortState(null);
+                        }}
+                    >
+                        Reset view
                     </Button>
 
                     <Button size="m" view="action" onClick={handleExportCsv}>
@@ -334,35 +520,54 @@ export function ResultsPanel({
                 >
                     <thead>
                     <tr>
-                        {result.columns.map((column) => (
-                            <th
-                                key={column.name}
-                                style={{
-                                    textAlign: 'left',
-                                    padding: '10px 12px',
-                                    borderBottom: '1px solid var(--g-color-line-generic)',
-                                    position: 'sticky',
-                                    top: 0,
-                                    background: 'var(--g-color-base-background)',
-                                    zIndex: 1,
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                <div style={{display: 'flex', flexDirection: 'column', gap: 4}}>
-                                    <span>{column.name}</span>
-                                    {column.native_type ? (
-                                        <Text variant="caption-2" color="secondary">
-                                            {column.native_type}
-                                        </Text>
-                                    ) : null}
-                                </div>
-                            </th>
-                        ))}
+                        {visibleColumns.map((column, columnIndex) => {
+                            const isSorted = sortState?.columnName === column.name;
+
+                            return (
+                                <th
+                                    key={column.name}
+                                    onContextMenu={(event) =>
+                                        openHeaderContextMenu(event, {
+                                            columnName: column.name,
+                                            columnIndex,
+                                        })
+                                }
+                                    style={{
+                                        textAlign: 'left',
+                                        padding: '10px 12px',
+                                        borderBottom: '1px solid var(--g-color-line-generic)',
+                                        position: 'sticky',
+                                        top: 0,
+                                        background: 'var(--g-color-base-background)',
+                                        zIndex: 1,
+                                        whiteSpace: 'nowrap',
+                                        cursor: 'context-menu',
+                                    }}
+                                >
+                                    <div style={{display: 'flex', flexDirection: 'column', gap: 4}}>
+                                        <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
+                                            <span>{column.name}</span>
+                                            {isSorted ? (
+                                                <Label theme="warning" size="xs">
+                                                    {sortState?.direction === 'asc' ? 'ASC' : 'DESC'}
+                                                </Label>
+                                            ) : null}
+                                        </div>
+
+                                        {column.native_type ? (
+                                            <Text variant="caption-2" color="secondary">
+                                                {column.native_type}
+                                            </Text>
+                                        ) : null}
+                                    </div>
+                                </th>
+                            );
+                        })}
                     </tr>
                     </thead>
 
                     <tbody>
-                    {result.rows.map((row, rowIndex) => (
+                    {visibleRows.map((row, rowIndex) => (
                         <tr key={rowIndex}>
                             {row.map((cell, cellIndex) => (
                                 <td
@@ -374,7 +579,7 @@ export function ResultsPanel({
                                         openCellContextMenu(event, {
                                             cell,
                                             row,
-                                            columnName: result.columns[cellIndex]?.name ?? `column_${cellIndex + 1}`,
+                                            columnName: visibleColumns[cellIndex]?.name ?? `column_${cellIndex + 1}`,
                                         })
                                     }
                                     title="Double click to copy cell"
