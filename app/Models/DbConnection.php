@@ -20,6 +20,14 @@ class DbConnection extends Model
         'username',
         'password_encrypted',
         'ssl_mode',
+        'use_ssh_tunnel',
+        'ssh_host',
+        'ssh_port',
+        'ssh_username',
+        'ssh_password_encrypted',
+        'ssh_private_key_encrypted',
+        'ssh_passphrase_encrypted',
+        'ssh_known_host_fingerprint',
         'schema_default',
         'color',
         'is_favorite',
@@ -32,6 +40,7 @@ class DbConnection extends Model
 
     protected $casts = [
         'port' => 'integer',
+        'use_ssh_tunnel' => 'boolean',
         'is_favorite' => 'boolean',
         'is_read_only' => 'boolean',
         'connect_timeout_seconds' => 'integer',
@@ -42,6 +51,9 @@ class DbConnection extends Model
 
     protected $hidden = [
         'password_encrypted',
+        'ssh_password_encrypted',
+        'ssh_private_key_encrypted',
+        'ssh_passphrase_encrypted',
     ];
 
     public function user(): BelongsTo
@@ -67,5 +79,10 @@ class DbConnection extends Model
     public function savedQueries(): HasMany
     {
         return $this->hasMany(SavedQuery::class, 'db_connection_id');
+    }
+
+    public function usesSshTunnel(): bool
+    {
+        return (bool)$this->use_ssh_tunnel;
     }
 }

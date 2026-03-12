@@ -18,4 +18,18 @@ export interface ConnectionDto {
     last_used_at?: string | null;
     created_at?: string;
     updated_at?: string;
+
+    // SSH
+    use_ssh_tunnel?:boolean;
+    ssh_host?:string|null;
+    ssh_port?:string|null;
+    ssh_username?:string|null;
+    ssh_password?:string|null;
+    ssh_private_key?:string|null;
+    ssh_passphrase?:string|null;
+    ssh_known_host_fingerprint?:string|null;
+
+    has_ssh_password?:boolean;
+    has_ssh_private_key?:boolean;
+    has_ssh_passphrase?:boolean;
 }

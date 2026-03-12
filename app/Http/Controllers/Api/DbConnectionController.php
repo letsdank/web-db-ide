@@ -39,6 +39,25 @@ class DbConnectionController extends Controller
             'schema_default' => $request->schema_default,
             'color' => $request->color,
             'is_read_only' => $request->boolean('is_read_only'),
+
+            // SSH
+            'ssh_password_encrypted' => $request->filled('ssh_password')
+                ? encrypt($request->integer('ssh_password'))
+                : null,
+
+            'ssh_private_key_encrypted' => $request->filled('ssh_private_key')
+                ? encrypt($request->integer('ssh_private_key'))
+                : null,
+
+            'ssh_passphrase_encrypted' => $request->filled('ssh_passphrase')
+                ? encrypt($request->integer('ssh_passphrase'))
+                : null,
+
+            'use_ssh_tunnel' => $request->boolean('use_ssh_tunnel'),
+            'ssh_host' => $request->integer('ssh_host'),
+            'ssh_port' => $request->integer('ssh_port') ?: 22,
+            'ssh_username' => $request->input('ssh_username'),
+            'ssh_known_host_fingerprint' => $request->input('ssh_known_host_fingerprint'),
         ]);
 
         return response()->json([
@@ -64,6 +83,21 @@ class DbConnectionController extends Controller
         if (isset($data['password'])) {
             $data['password_encrypted'] = encrypt($data['password']);
             unset($data['password']);
+        }
+
+        if (isset($data['ssh_password'])) {
+            $data['ssh_password_encrypted'] = encrypt($data['ssh_password']);
+            unset($data['ssh_password']);
+        }
+
+        if (isset($data['ssh_private_key'])) {
+            $data['ssh_private_key_encrypted'] = encrypt($data['ssh_private_key']);
+            unset($data['ssh_private_key']);
+        }
+
+        if (isset($data['ssh_passphrase'])) {
+            $data['ssh_passphrase_encrypted'] = encrypt($data['ssh_passphrase']);
+            unset($data['ssh_passphrase']);
         }
 
         $connection->update($data);

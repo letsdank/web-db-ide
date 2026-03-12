@@ -26,6 +26,16 @@ class StoreConnectionRequest extends FormRequest
             'schema_default' => ['nullable', 'string'],
             'color' => ['nullable', 'string'],
             'is_read_only' => ['boolean'],
+
+            // SSH
+            'use_ssh_tunnel' => ['nullable', 'boolean'],
+            'ssh_host' => ['nullable', 'string', 'max:255'],
+            'ssh_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
+            'ssh_username' => ['nullable', 'string', 'max:255'],
+            'ssh_password' => ['nullable', 'string'],
+            'ssh_private_key' => ['nullable', 'string'],
+            'ssh_passphrase' => ['nullable', 'string'],
+            'ssh_known_host_fingerprint' => ['nullable', 'string', 'max:255'],
         ];
     }
 }
