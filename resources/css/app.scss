@@ -1,0 +1,68 @@
+html,
+body,
+#app {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
+body {
+    font-family: Inter, system-ui, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.workspace-page {
+    min-height: 100vh;
+    padding: 16px;
+    background: var(--g-color-base-background);
+
+    &__layout {
+        height: calc(100vh - 32px);
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr) 320px;
+        gap: 16px;
+    }
+
+    &__center {
+        display: grid;
+        grid-template-rows: 48px 72px 72px minmax(0, 1fr) 320px;
+        gap: 16px;
+        min-height: 0;
+    }
+
+    &__palette-trigger {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    &__palette-button {
+        border: 1px solid var(--g-color-line-generic);
+        background: var(--g-color-base-float);
+        color: inherit;
+        border-radius: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+    &__panel {
+        min-height: 0;
+    }
+}
+
+.workspace-card {
+    height: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+
+    &--scroll {
+        overflow: auto;
+    }
+
+    &--hidden {
+        overflow: hidden;
+    }
+}

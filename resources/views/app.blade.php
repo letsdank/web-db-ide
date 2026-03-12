@@ -6,7 +6,7 @@
     <title>Web SQL IDE</title>
 
     @vitereactrefresh
-    @vite(['resources/css/app.css', 'resources/js/app.tsx'])
+    @vite(['resources/css/app.scss', 'resources/js/app.tsx'])
 </head>
 <body>
 <div id="app"></div>

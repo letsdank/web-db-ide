@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import {WorkspacePage} from "./pages/WorkspacePage";
 import '@gravity-ui/uikit/styles/styles.css';
 import {ThemeProvider} from "@gravity-ui/uikit";
+import "../css/app.scss";
 
 
 const el = document.getElementById('app');
