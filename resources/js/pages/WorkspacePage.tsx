@@ -314,6 +314,27 @@ export function WorkspacePage() {
         }
     }
 
+    async function handleDuplicateTab(tab: QueryTabDto) {
+        await handleCreateTab({
+            title: `${tab.title || 'New Query'} copy`,
+            sql_text: tab.sql_text,
+            db_connection_id: tab.db_connection_id,
+        });
+    }
+
+    async function handleCloseOtherTabs(tabId: number) {
+        const tabsToClose = tabs.filter((tab) => tab.id !== tabId && !tab.is_pinned);
+
+        for (const tab of tabsToClose) {
+            try {
+                removeTab(tab.id);
+                await deleteQueryTab(tab.id);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }
+
     async function handleRun(target: 'auto' | 'selection' | 'full' = 'auto') {
         if (!activeTab || !activeConnectionId) {
             return;
@@ -510,7 +531,9 @@ export function WorkspacePage() {
                             onSelect={handleSelectTab}
                             onCreate={() => handleCreateTab()}
                             onClose={handleCloseTab}
+                            onCloseOthers={handleCloseOtherTabs}
                             onTogglePin={handleTogglePin}
+                            onDuplicate={handleDuplicateTab}
                         />
 
                         <EditorToolbar

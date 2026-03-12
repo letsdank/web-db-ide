@@ -1,5 +1,8 @@
 import {QueryTabDto} from "../../types/queryTab";
-import {Button, Card, Label, Text} from "@gravity-ui/uikit";
+import {Button, Card, DropdownMenu, Icon, Label, Text} from "@gravity-ui/uikit";
+import {useContextMenu} from "../../hooks/useContextMenu";
+import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
+import {Ellipsis} from "@gravity-ui/icons";
 
 interface Props {
     tabs: QueryTabDto[];
@@ -8,7 +11,9 @@ interface Props {
     onSelect: (id: number) => void;
     onCreate: () => void;
     onClose: (id: number) => void;
+    onCloseOthers: (id: number) => void;
     onTogglePin: (tab: QueryTabDto) => void;
+    onDuplicate: (tab: QueryTabDto) => void;
 }
 
 export function QueryTabsBar({
@@ -18,10 +23,63 @@ export function QueryTabsBar({
                                  onSelect,
                                  onCreate,
                                  onClose,
+                                 onCloseOthers,
                                  onTogglePin,
+                                 onDuplicate,
                              }: Props) {
+    const {
+        state,
+        anchorRef,
+        anchorStyle,
+        openContextMenu,
+        closeContextMenu,
+    } = useContextMenu<QueryTabDto>();
+
+    const contextTab = state.payload;
+
     return (
         <Card view="filled" style={{padding: 10}}>
+            <div ref={anchorRef} style={anchorStyle}/>
+
+            <WorkspaceContextMenu
+                open={state.open}
+                anchorElement={anchorRef.current}
+                onClose={closeContextMenu}
+                actions={
+                    contextTab
+                        ? [
+                            {
+                                key: 'new',
+                                text: 'Open new tab',
+                                onClick: onCreate,
+                            },
+                            {
+                                key: 'duplicate',
+                                text: 'Duplicate tab',
+                                onClick: () => onDuplicate(contextTab),
+                            },
+                            {
+                                key: 'pin',
+                                text: contextTab.is_pinned ? 'Unpin tab' : 'Pin tab',
+                                onClick: () => onTogglePin(contextTab),
+                            },
+                            {
+                                key: 'close-others',
+                                text: 'Close other tabs',
+                                onClick: () => onCloseOthers(contextTab.id),
+                            },
+                            {
+                                key: 'close',
+                                text: 'Close tab',
+                                danger: true,
+                                disabled: Boolean(contextTab.is_pinned),
+                                onClick: () => onClose(contextTab.id),
+                            },
+                        ]
+                        : []
+                }
+            />
+
             <div
                 style={{
                     display: 'flex',
@@ -47,6 +105,7 @@ export function QueryTabsBar({
                         return (
                             <div
                                 key={tab.id}
+                                onContextMenu={(event) => openContextMenu(event, tab)}
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -94,27 +153,35 @@ export function QueryTabsBar({
                                     ) : null}
                                 </button>
 
-                                {isPinned ? (
-                                    <Label theme="info">Pinned</Label>
-                                ) : null}
+                                {isPinned ? <Label theme="info">Pinned</Label> : null}
 
-                                <Button
-                                    size="s"
-                                    view="flat"
-                                    onClick={() => onTogglePin(tab)}
-                                >
-                                    {isPinned ? 'Unpin' : 'Pin'}
-                                </Button>
-
-                                {!isPinned ? (
-                                    <Button
-                                        size="s"
-                                        view="flat-secondary"
-                                        onClick={() => onClose(tab.id)}
-                                    >
-                                        ×
-                                    </Button>
-                                ) : null}
+                                <DropdownMenu
+                                    items={[
+                                        {
+                                            text: 'Duplicate',
+                                            action:()=>onDuplicate(tab),
+                                        },
+                                        {
+                                            text: isPinned?'Unpin':'Pin',
+                                            action: ()=>onTogglePin(tab),
+                                        },
+                                        {
+                                            text:'Close others',
+                                            action:()=>onCloseOthers(tab.id),
+                                        },
+                                        {
+                                            text:'Close',
+                                            action:()=>onClose(tab.id),
+                                            theme:'danger',
+                                            disabled:isPinned,
+                                        },
+                                    ]}
+                                    renderSwitcher={(props) => (
+                                        <Button {...props} size="s" view="flat-secondary">
+                                            <Icon data={Ellipsis} size={16} />
+                                        </Button>
+                                    )}
+                                />
                             </div>
                         );
                     })}
