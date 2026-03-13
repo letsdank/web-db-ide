@@ -45,6 +45,7 @@ class QueryController extends Controller
                 'duration_ms' => $result['duration_ms'],
                 'result_meta' => [
                     'row_count' => $result['row_count'],
+                    'has_more' => $result['has_more'],
                 ],
             ]);
 
@@ -69,6 +70,7 @@ class QueryController extends Controller
                 'columns' => $result['columns'],
                 'rows' => $result['rows'],
                 'row_count' => $result['row_count'],
+                'has_more' => $result['has_more'],
             ]);
         } catch (Throwable $e) {
             $execution->update([

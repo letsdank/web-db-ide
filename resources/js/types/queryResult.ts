@@ -10,6 +10,7 @@ export interface ExecuteQuerySuccess {
     columns: QueryColumnDto[];
     rows: Array<Array<unknown>>;
     row_count: number;
+    has_more: boolean;
 }
 
 export interface ExecuteQueryError {

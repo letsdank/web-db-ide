@@ -203,6 +203,7 @@ export function ResultsPanel({
 
             <ResultsToolbar
                 rowCount={result.row_count}
+                hasMore={result.has_more}
                 durationMs={result.duration_ms}
                 sortState={sortState}
                 hiddenColumnCount={hiddenColumnNames.length}

@@ -2,6 +2,7 @@ import {Button, Label, Text} from "@gravity-ui/uikit";
 
 interface Props {
     rowCount: number;
+    hasMore: boolean;
     durationMs: number;
     sortState: { columnName: string; direction: 'asc' | 'desc' } | null;
     hiddenColumnCount: number;
@@ -15,6 +16,7 @@ interface Props {
 
 export function ResultsToolbar({
                                    rowCount,
+                                   hasMore,
                                    durationMs,
                                    sortState,
                                    hiddenColumnCount,
@@ -30,7 +32,9 @@ export function ResultsToolbar({
             <div className="results-toolbar__meta">
                 <Text variant="subheader-2">Results</Text>
                 <Label theme="success">Success</Label>
-                <Label theme="info">{rowCount} rows</Label>
+                <Label theme="info">
+                    {hasMore ? `${rowCount}+ rows` : `${rowCount} rows`}
+                </Label>
                 <Label theme="utility">{durationMs} ms</Label>
 
                 {sortState ? (

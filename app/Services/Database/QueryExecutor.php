@@ -20,32 +20,27 @@ class QueryExecutor
         try {
             $pdo = $this->createPdo($connection, $resolved->host, $resolved->port);
 
+            $start = microtime(true);
+
             if ($connection->schema_default) {
-                $schemaStatement = $pdo->prepare(
-                    'SET search_path TO ' . $this->quoteIdentifier($connection->schema_default)
-                );
-                $schemaStatement->execute();
+                $pdo->exec('SET search_path TO ' . $this->quoteIdentifier($connection->schema_default));
             }
 
             if ($connection->query_timeout_seconds) {
-                $timeoutStatement = $pdo->prepare('SET statement_timeout TO :timeout_ms');
-                $timeoutStatement->execute([
-                    'timeout_ms' => max(1000, ((int)$connection->query_timeout_seconds) * 1000),
-                ]);
+                $timeoutMs = max(1000, ((int)$connection->query_timeout_seconds) * 1000);
+                $pdo->exec("SET statement_timeout TO $timeoutMs");
             }
 
             if ($connection->is_read_only) {
-                $readOnlyStatement = $pdo->prepare('SET default_transaction_read_only = on');
-                $readOnlyStatement->execute();
+                $pdo->exec('SET default_transaction_read_only = on');
             }
-
-            $start = microtime(true);
 
             $statement = $pdo->prepare($sql);
             $statement->execute();
 
             $columns = [];
             $rows = [];
+            $hasMore = false;
 
             if ($statement->columnCount() > 0) {
                 for ($i = 0; $i < $statement->columnCount(); $i++) {
@@ -57,10 +52,14 @@ class QueryExecutor
                     ];
                 }
 
-                $rows = $statement->fetchAll(PDO::FETCH_NUM);
+                while (($row = $statement->fetch(PDO::FETCH_NUM)) !== false) {
+                    $rows[] = $row;
 
-                if (count($rows) > $maxRows) {
-                    $rows = array_slice($rows, 0, $maxRows);
+                    if (count($rows) > $maxRows) {
+                        $hasMore = true;
+                        array_pop($rows);
+                        break;
+                    }
                 }
             }
 
@@ -70,6 +69,7 @@ class QueryExecutor
                 'columns' => $columns,
                 'rows' => $rows,
                 'row_count' => count($rows),
+                'has_more' => $hasMore,
                 'duration_ms' => $duration,
             ];
         } finally {
@@ -102,7 +102,7 @@ class QueryExecutor
         $parts = array_filter(array_map('trim', explode('.', $identifier)));
 
         if ($parts === []) {
-            return 'public';
+            return '"public"';
         }
 
         return implode('.', array_map(
