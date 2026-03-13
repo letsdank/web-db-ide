@@ -2,9 +2,11 @@ import {ConnectionDto} from "../../../types/connection";
 import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import {useContextMenu} from "../../../hooks/useContextMenu";
 import {ExplorerTableContextPayload, useExplorerTree} from "../hooks/useExplorerTree";
-import {Button, Card, Text} from "@gravity-ui/uikit";
+import {Button, Card, Icon, Text, TextInput} from "@gravity-ui/uikit";
 import {WorkspaceContextMenu} from "../../../components/workspace/WorkspaceContextMenu";
 import {ExplorerConnectionCard} from "./ExplorerConnectionCard";
+import {useMemo, useState} from "react";
+import {CirclePlus, Magnifier} from "@gravity-ui/icons";
 
 interface Props {
     connections: ConnectionDto[];
@@ -50,6 +52,8 @@ export function ExplorerSidebar({
                                     onCreateClick,
                                     onOpenSql,
                                 }: Props) {
+    const [filter, setFilter] = useState('');
+
     const {
         state: tableMenuState,
         anchorRef: tableMenuAnchorRef,
@@ -78,6 +82,29 @@ export function ExplorerSidebar({
         activeConnectionId,
         onSelectConnection: onSelect,
     });
+
+    const normalizedFilter = filter.trim().toLowerCase();
+
+    const visibleConnections = useMemo(() => {
+        if (!normalizedFilter) {
+            return connections;
+        }
+
+        return connections.filter((connection) => {
+            const haystack = [
+                connection.name,
+                connection.driver,
+                connection.host,
+                connection.database_name,
+                connection.username,
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+
+            return haystack.includes(normalizedFilter);
+        });
+    }, [connections, normalizedFilter]);
 
     async function openMetadata(
         connectionId: number,
@@ -173,15 +200,31 @@ export function ExplorerSidebar({
             />
 
             <div className="explorer-sidebar__header">
-                <Text variant="header-1">Explorer</Text>
+                <div className="explorer-sidebar__header-copy">
+                    <Text variant="header-1">Explorer</Text>
+                    <Text variant="body-2" color="secondary">
+                        Connections, schemas and tables
+                    </Text>
+                </div>
 
                 <Button view="action" size="m" onClick={onCreateClick}>
+                    <Icon data={CirclePlus} size={16}/>
                     New
                 </Button>
             </div>
 
+            <div className="explorer-sidebar__search">
+                <TextInput
+                    size="l"
+                    value={filter}
+                    placeholder="Filter connections"
+                    onUpdate={setFilter}
+                    startContent={<Icon data={Magnifier} size={16}/>}
+                />
+            </div>
+
             <div className="explorer-sidebar__list">
-                {connections.map((connection) => (
+                {visibleConnections.map((connection) => (
                     <ExplorerConnectionCard
                         key={connection.id}
                         connection={connection}
@@ -195,6 +238,7 @@ export function ExplorerSidebar({
                         detailsByTableKey={detailsByTableKey}
                         loadingTablesFor={loadingTablesFor}
                         loadingDetailsFor={loadingDetailsFor}
+                        filter={normalizedFilter}
                         onToggleConnection={() => toggleConnection(connection.id)}
                         onToggleSchema={(schema) => toggleSchema(connection.id, schema)}
                         onToggleTable={(schema, tableName) => toggleTable(connection.id, schema, tableName)}
@@ -222,10 +266,28 @@ export function ExplorerSidebar({
                     />
                 ))}
 
-                {!activeConnection && connections.length === 0 ? (
-                    <Text variant="body-2" color="secondary">
-                        No connections yet. Create one to start browsing the database.
-                    </Text>
+                {connections.length === 0 ? (
+                    <div className="explorer-sidebar__empty">
+                        <Text variant="body-2" color="secondary">
+                            No connections yet. Create one to start browsing the database.
+                        </Text>
+                    </div>
+                ) : null}
+
+                {connections.length > 0 && visibleConnections.length === 0 ? (
+                    <div className="explorer-sidebar__empty">
+                        <Text variant="body-2" color="secondary">
+                            Nothing matches the current filter.
+                        </Text>
+                    </div>
+                ) : null}
+
+                {!activeConnection && connections.length > 0 ? (
+                    <div className="explorer-sidebar__hint">
+                        <Text variant="caption-2" color="secondary">
+                            Select a connection to load schemas.
+                        </Text>
+                    </div>
                 ) : null}
             </div>
         </Card>

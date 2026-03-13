@@ -1,4 +1,3 @@
-
 @use "explorer";
 @use "results";
 @use "command-palette";
@@ -70,5 +69,21 @@ body {
 
     &--hidden {
         overflow: hidden;
+    }
+}
+
+@media (max-width: 1440px) {
+    .workspace-page {
+        &__layout {
+            grid-template-columns: 260px minmax(0, 1fr) 300px;
+        }
+    }
+}
+
+@media(max-width: 1200px) {
+    .workspace-page {
+        &__layout {
+            grid-template-columns: 280px minmax(0, 1fr);
+        }
     }
 }

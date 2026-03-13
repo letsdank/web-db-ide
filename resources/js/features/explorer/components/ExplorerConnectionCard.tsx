@@ -1,8 +1,9 @@
 import {ConnectionDto} from "../../../types/connection";
 import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
-import React from "react";
-import {Label, Text} from "@gravity-ui/uikit";
+import React, {useMemo} from "react";
+import {Button, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerSchemaNode} from "./ExplorerSchemaNode";
+import {ChevronDown, ChevronRight, Database} from "@gravity-ui/icons";
 
 interface Props {
     connection: ConnectionDto;
@@ -16,6 +17,7 @@ interface Props {
     detailsByTableKey: Record<string, ExplorerTableDetailsDto>;
     loadingTablesFor: string | null;
     loadingDetailsFor: string | null;
+    filter: string;
     onToggleConnection: () => void;
     onToggleSchema: (schema: string) => void;
     onToggleTable: (schema: string, tableName: string) => void;
@@ -46,6 +48,7 @@ export function ExplorerConnectionCard({
                                            detailsByTableKey,
                                            loadingTablesFor,
                                            loadingDetailsFor,
+                                           filter,
                                            onToggleConnection,
                                            onToggleSchema,
                                            onToggleTable,
@@ -55,37 +58,75 @@ export function ExplorerConnectionCard({
                                            onOpenMetadata,
                                            onCopyFullName,
                                        }: Props) {
+    const visibleSchemas = useMemo(() => {
+        if (!filter) {
+            return schemas;
+        }
+
+        return schemas.filter((schema) => {
+            const schemaKey = `${connection.id}:${schema}`;
+            const schemaMatches = schema.toLowerCase().includes(filter);
+            const tableMatches = (tablesBySchemaKey[schemaKey] ?? []).some((table) =>
+                table.table_name.toLowerCase().includes(filter)
+            );
+
+            return schemaMatches || tableMatches;
+        });
+    }, [connection.id, filter, schemas, tablesBySchemaKey])
+
+    const connectionClasses = [
+        "explorer-connection-card",
+        isActive ? "explorer-connection-card--active" : "",
+        isExpanded ? "explorer-connection-card--expanded" : "",
+    ].filter(Boolean).join(" ");
+
     return (
-        <div
-            className={[
-                "explorer-connection-card",
-                isActive ? "explorer-connection-card--active" : "",
-            ].filter(Boolean).join(" ")}
-        >
+        <div className={connectionClasses}>
             <button
                 onClick={onToggleConnection}
                 className="explorer-connection-card__header"
+                type="button"
             >
-                <div className="explorer-connection-card__header-row">
-                    <Text variant="subheader-2">{connection.name}</Text>
-                    <Label theme="utility">{connection.driver}</Label>
+                <div className="explorer-connection-card__header-main">
+                    <div className="explorer-connection-card__header-icon">
+                        <Icon data={Database} size={16}/>
+                    </div>
+
+                    <div className="explorer-connection-card__header-copy">
+                        <div className="explorer-connection-card__header-row">
+                            <Text variant="subheader-2">{connection.name}</Text>
+                            <Label theme="utility">{connection.driver}</Label>
+                        </div>
+
+                        <div className="explorer-connection-card__meta">
+                            <Text variant="body-1" color="secondary">
+                                {connection.database_name} · {connection.host}:{connection.port}
+                            </Text>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="explorer-connection-card__meta">
-                    <Text variant="body-1" color="secondary">
-                        {connection.database_name} · {connection.host}:{connection.port}
-                    </Text>
-                </div>
+                <Button
+                    size="s"
+                    view="flat-secondary"
+                    onlyIcon
+                    tabIndex={-1}
+                >
+                    <Icon data={isExpanded ? ChevronDown : ChevronRight} size={16}/>
+                </Button>
             </button>
 
             {isExpanded ? (
                 <div className="explorer-connection-card__body">
                     {loadingSchemas ? (
-                        <Text variant="body-2" color="secondary">
-                            Loading schemas...
-                        </Text>
-                    ) : schemas.length > 0 ? (
-                        schemas.map((schema) => {
+                        <div className="explorer-connection-card__loading">
+                            <Loader size="m"/>
+                            <Text variant="body-2" color="secondary">
+                                Loading schemas...
+                            </Text>
+                        </div>
+                    ) : visibleSchemas.length > 0 ? (
+                        visibleSchemas.map((schema) => {
                             const schemaKey = `${connection.id}:${schema}`;
 
                             return (
@@ -93,6 +134,7 @@ export function ExplorerConnectionCard({
                                     key={schemaKey}
                                     connectionId={connection.id}
                                     schema={schema}
+                                    filter={filter}
                                     isExpanded={expandedSchemaKeys.includes(schemaKey)}
                                     tables={tablesBySchemaKey[schemaKey] ?? []}
                                     loadingTables={loadingTablesFor === schemaKey}
@@ -110,9 +152,11 @@ export function ExplorerConnectionCard({
                             );
                         })
                     ) : (
-                        <Text variant="body-2" color="secondary">
-                            No schemas available.
-                        </Text>
+                        <div className="explorer-connection-card__empty">
+                            <Text variant="body-2" color="secondary">
+                                {filter ? "No schemas or tables matches the filter." : "No schemas available."}
+                            </Text>
+                        </div>
                     )}
                 </div>
             ) : null}
