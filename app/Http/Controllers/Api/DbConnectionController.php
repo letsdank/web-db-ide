@@ -42,19 +42,19 @@ class DbConnectionController extends Controller
 
             // SSH
             'ssh_password_encrypted' => $request->filled('ssh_password')
-                ? encrypt($request->integer('ssh_password'))
+                ? encrypt($request->string('ssh_password'))
                 : null,
 
             'ssh_private_key_encrypted' => $request->filled('ssh_private_key')
-                ? encrypt($request->integer('ssh_private_key'))
+                ? encrypt($request->string('ssh_private_key'))
                 : null,
 
             'ssh_passphrase_encrypted' => $request->filled('ssh_passphrase')
-                ? encrypt($request->integer('ssh_passphrase'))
+                ? encrypt($request->string('ssh_passphrase'))
                 : null,
 
             'use_ssh_tunnel' => $request->boolean('use_ssh_tunnel'),
-            'ssh_host' => $request->integer('ssh_host'),
+            'ssh_host' => $request->input('ssh_host'),
             'ssh_port' => $request->integer('ssh_port') ?: 22,
             'ssh_username' => $request->input('ssh_username'),
             'ssh_known_host_fingerprint' => $request->input('ssh_known_host_fingerprint'),
