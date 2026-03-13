@@ -19,8 +19,8 @@ class PostgresExplorer
 
         $dsn = sprintf(
             "pgsql:host=%s;port=%s;dbname=%s",
-            $connection->host,
-            $connection->port,
+            $resolved->host,
+            $resolved->port,
             $connection->database_name
         );
 
