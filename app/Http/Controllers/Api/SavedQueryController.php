@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SavedQuery\StoreSavedQueryRequest;
 use App\Http\Requests\SavedQuery\UpdateSavedQueryRequest;
 use App\Models\SavedQuery;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -22,29 +23,31 @@ class SavedQueryController extends Controller
         }
 
         if ($request->filled('db_connection_id')) {
-            $query->where('db_connection_id', (int) $request->input('db_connection_id'));
+            $query->where('db_connection_id', (int)$request->input('db_connection_id'));
         }
 
         if ($request->filled('search')) {
-            $search = trim($request->string('search')->toString());
+            $search = mb_strtolower(trim($request->string('search')->toString()));
+            $searchLike = '%' . $search . '%';
 
-            $query->where(function ($subQuery) use ($search) {
+            $query->where(function (Builder $subQuery) use ($searchLike) {
                 $subQuery
-                    ->where('title', 'ilike', '%' . $search . '%')
-                    ->orWhere('description', 'ilike', '%' . $search . '%')
-                    ->orWhere('sql_text', 'ilike', '%' . $search . '%')
-                    ->orWhere('folder', 'ilike', '%' . $search . '%');
+                    ->whereRaw('LOWER(title) LIKE ?', [$searchLike])
+                    ->orWhereRaw('LOWER(COALESCE(description, "")) LIKE ?', [$searchLike])
+                    ->orWhereRaw('LOWER(sql_text) LIKE ?', [$searchLike])
+                    ->orWhereRaw('LOWER(COALESCE(folder, "")) LIKE ?', [$searchLike]);
             });
         }
 
         $savedQueries = $query
-            ->orderByRaw('folder asc nulls first')
+            ->orderByRaw('CASE WHEN folder IS NULL THEN 0 ELSE 1 END')
+            ->orderBy('folder')
             ->orderBy('title')
             ->orderByDesc('id')
             ->get();
 
         return response()->json([
-            'data' => $savedQueries->map(fn (SavedQuery $savedQuery) => $this->mapSavedQuery($savedQuery)),
+            'data' => $savedQueries->map(fn(SavedQuery $savedQuery) => $this->mapSavedQuery($savedQuery)),
         ]);
     }
 
