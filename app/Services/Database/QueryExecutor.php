@@ -20,6 +20,25 @@ class QueryExecutor
         try {
             $pdo = $this->createPdo($connection, $resolved->host, $resolved->port);
 
+            if ($connection->schema_default) {
+                $schemaStatement = $pdo->prepare(
+                    'SET search_path TO ' . $this->quoteIdentifier($connection->schema_default)
+                );
+                $schemaStatement->execute();
+            }
+
+            if ($connection->query_timeout_seconds) {
+                $timeoutStatement = $pdo->prepare('SET statement_timeout TO :timeout_ms');
+                $timeoutStatement->execute([
+                    'timeout_ms' => max(1000, ((int)$connection->query_timeout_seconds) * 1000),
+                ]);
+            }
+
+            if ($connection->is_read_only) {
+                $readOnlyStatement = $pdo->prepare('SET default_transaction_read_only = on');
+                $readOnlyStatement->execute();
+            }
+
             $start = microtime(true);
 
             $statement = $pdo->prepare($sql);
@@ -76,5 +95,19 @@ class QueryExecutor
                 PDO::ATTR_TIMEOUT => $connection->connect_timeout_seconds ?? 10,
             ]
         );
+    }
+
+    protected function quoteIdentifier(string $identifier): string
+    {
+        $parts = array_filter(array_map('trim', explode('.', $identifier)));
+
+        if ($parts === []) {
+            return 'public';
+        }
+
+        return implode('.', array_map(
+            static fn(string $part) => '"' . str_replace('"', '""', $part) . '"',
+            $parts,
+        ));
     }
 }
