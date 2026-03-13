@@ -1,8 +1,8 @@
 import {QueryTabDto} from "../../types/queryTab";
-import {Button, Card, DropdownMenu, Icon, Label, Text} from "@gravity-ui/uikit";
 import {useContextMenu} from "../../hooks/useContextMenu";
 import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
-import {Ellipsis} from "@gravity-ui/icons";
+import {Button, DropdownMenu, Icon, Label, Tab, TabList, TabProvider, Text} from "@gravity-ui/uikit";
+import {CirclePlus, Ellipsis} from "@gravity-ui/icons";
 
 interface Props {
     tabs: QueryTabDto[];
@@ -36,9 +36,18 @@ export function QueryTabsBar({
     } = useContextMenu<QueryTabDto>();
 
     const contextTab = state.payload;
+    const activeValue = activeTabId ? String(activeTabId) : undefined;
 
     return (
-        <Card view="filled" style={{padding: 10}}>
+        <div
+            style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                minWidth: 0,
+                padding: "0 4px",
+            }}
+        >
             <div ref={anchorRef} style={anchorStyle}/>
 
             <WorkspaceContextMenu
@@ -80,117 +89,109 @@ export function QueryTabsBar({
                 }
             />
 
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    minWidth: 0,
-                }}
-            >
-                <div
-                    style={{
-                        display: 'flex',
-                        gap: 8,
-                        overflowX: 'auto',
-                        flex: 1,
-                        minWidth: 0,
+            <div style={{flex: 1, minWidth: 0, overflowX: "auto"}}>
+                <TabProvider
+                    value={activeValue}
+                    onUpdate={(value) => {
+                        const nextId = Number(value);
+                        if (!Number.isNaN(nextId)) {
+                            onSelect(nextId);
+                        }
                     }}
                 >
-                    {tabs.map((tab) => {
-                        const isActive = tab.id === activeTabId;
-                        const isDirty = dirtyTabIds.includes(tab.id);
-                        const isPinned = Boolean(tab.is_pinned);
+                    <TabList size="m">
+                        {tabs.map((tab) => {
+                            const isDirty = dirtyTabIds.includes(tab.id);
+                            const isPinned = Boolean(tab.is_pinned);
 
-                        return (
-                            <div
-                                key={tab.id}
-                                onContextMenu={(event) => openContextMenu(event, tab)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8,
-                                    minWidth: 0,
-                                    padding: '8px 10px',
-                                    borderRadius: 10,
-                                    border: isActive
-                                        ? '1px solid var(--g-color-line-brand)'
-                                        : '1px solid var(--g-color-line-generic)',
-                                    background: isActive
-                                        ? 'var(--g-color-base-selection)'
-                                        : 'var(--g-color-base-float)',
-                                }}
-                            >
-                                <button
-                                    onClick={() => onSelect(tab.id)}
+                            const labelContent = isDirty ? 'Unsaved' : isPinned ? 'Pinned' : null;
+
+                            const label = {
+                                content: labelContent ? <span>{labelContent}</span> : null,
+                                label: isDirty ? 'warning' : isPinned ? 'info' : 'unknown',
+                            };
+
+                            return (
+                                <div
+                                    key={tab.id}
+                                    onContextMenu={(event) => openContextMenu(event, tab)}
                                     style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 8,
-                                        border: 'none',
-                                        background: 'transparent',
-                                        padding: 0,
-                                        cursor: 'pointer',
-                                        minWidth: 0,
-                                        color: 'inherit',
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 4,
+                                        marginRight: 6,
                                     }}
                                 >
-                                    <Text variant="body-2" style={{whiteSpace: 'nowrap'}}>
-                                        {tab.title || 'New Query'}
-                                    </Text>
-
-                                    {isDirty ? (
+                                    <Tab
+                                        value={String(tab.id)}
+                                        title={tab.title || "New Query"}
+                                        label={label}
+                                    >
                                         <span
                                             style={{
-                                                width: 8,
-                                                height: 8,
-                                                borderRadius: 999,
-                                                background: 'var(--g-color-text-brand)',
-                                                display: 'inline-block',
-                                                flexShrink: 0,
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: 8,
+                                                minWidth: 0,
                                             }}
-                                        />
-                                    ) : null}
-                                </button>
+                                        >
+                                            <Text
+                                                variant="body-2"
+                                                style={{
+                                                    whiteSpace: "nowrap",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    maxWidth: 180,
+                                                }}
+                                            >
+                                                {tab.title || "New Query"}
+                                            </Text>
+                                        </span>
+                                    </Tab>
 
-                                {isPinned ? <Label theme="info">Pinned</Label> : null}
-
-                                <DropdownMenu
-                                    items={[
-                                        {
-                                            text: 'Duplicate',
-                                            action:()=>onDuplicate(tab),
-                                        },
-                                        {
-                                            text: isPinned?'Unpin':'Pin',
-                                            action: ()=>onTogglePin(tab),
-                                        },
-                                        {
-                                            text:'Close others',
-                                            action:()=>onCloseOthers(tab.id),
-                                        },
-                                        {
-                                            text:'Close',
-                                            action:()=>onClose(tab.id),
-                                            theme:'danger',
-                                            disabled:isPinned,
-                                        },
-                                    ]}
-                                    renderSwitcher={(props) => (
-                                        <Button {...props} size="s" view="flat-secondary">
-                                            <Icon data={Ellipsis} size={16} />
-                                        </Button>
-                                    )}
-                                />
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <Button view="action" onClick={onCreate}>
-                    New tab
-                </Button>
+                                    <DropdownMenu
+                                        items={[
+                                            {
+                                                text: "Duplicate",
+                                                action: () => onDuplicate(tab),
+                                            },
+                                            {
+                                                text: isPinned ? "Unpin" : "Pin",
+                                                action: () => onTogglePin(tab),
+                                            },
+                                            {
+                                                text: "Close others",
+                                                action: () => onCloseOthers(tab.id),
+                                            },
+                                            {
+                                                text: "Close",
+                                                action: () => onClose(tab.id),
+                                                theme: "danger",
+                                                disabled: isPinned,
+                                            },
+                                        ]}
+                                        renderSwitcher={(props) => (
+                                            <Button
+                                                {...props}
+                                                size="s"
+                                                view="flat-secondary"
+                                                onlyIcon
+                                            >
+                                                <Icon data={Ellipsis} size={16}/>
+                                            </Button>
+                                        )}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </TabList>
+                </TabProvider>
             </div>
-        </Card>
+
+            <Button view="action" size="m" onClick={onCreate}>
+                <Icon data={CirclePlus} size={16}/>
+                New tab
+            </Button>
+        </div>
     );
 }

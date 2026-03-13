@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from "react";
-import {Button, Card, Checkbox, Dialog, Label, RadioGroup, Select, Text, TextArea, TextInput} from "@gravity-ui/uikit";
+import {Button, Checkbox, Dialog, Label, RadioGroup, Select, Text, TextArea, TextInput} from "@gravity-ui/uikit";
 import {ConnectionDto, CreateConnectionPayload} from "../../types/connection";
 
 type SshAuthMode = 'password' | 'private_key';
@@ -44,7 +44,7 @@ function makeInitialForm(connection?: ConnectionDto | null): FormState {
         database_name: connection?.database_name ?? '',
         username: connection?.username ?? '',
         password: '',
-        schema_default: connection?.schema_default ?? '',
+        schema_default: connection?.schema_default ?? 'public',
         ssl_mode: connection?.ssl_mode ?? '',
         color: connection?.color ?? '',
 
@@ -87,6 +87,7 @@ export function ConnectionFormDialog({
     }, [initialConnection, open]);
 
     const isEditMode = Boolean(initialConnection);
+    const dialogTitleId = 'db-connection-dialog-title';
 
     const canSubmit = useMemo(() => {
         if (!form.name.trim()) return false;
@@ -190,227 +191,310 @@ export function ConnectionFormDialog({
     }
 
     return (
-        <div className="connection-form-dialog">
-            <div className="connection-form-dialog__backdrop" onClick={loading ? undefined : onClose}/>
+        <Dialog
+            open={open}
+            onClose={loading ? () => undefined : onClose}
+            aria-labelledby={dialogTitleId}
+            size="l"
+            hasCloseButton={!loading}
+        >
+            <Dialog.Header
+                id={dialogTitleId}
+                caption={isEditMode ? "Edit connection" : "New connection"}
+            />
 
-            <Card view="filled" className="connection-form-dialog__card">
-                <div className="connection-form-dialog__header">
-                    <Text variant="header-1">
-                        {isEditMode ? 'Edit connection' : 'New connection'}
-                    </Text>
+            <Dialog.Body>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 24,
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 24,
+                        }}
+                    >
+                        <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                            <Text variant="subheader-3">Database</Text>
 
-                    <Button view='flat-secondary' onClick={onClose} disabled={loading}>
-                        Close
-                    </Button>
-                </div>
-
-                <div className="connection-form-dialog__body">
-                    <div className="connection-form-dialog__section">
-                        <Text variant="subheader-2">Database</Text>
-
-                        <div className="connection-form-dialog__grid">
-                            <TextInput
-                                value={form.name}
-                                placeholder="Connection name"
-                                onUpdate={(value) => patch('name', value)}
-                            />
-
-                            <Select
-                                width="max"
-                                value={[form.driver]}
-                                onUpdate={(value) => patch('driver', value[0] ?? 'pgsql')}
-                                options={[
-                                    {value: 'pgsql', content: 'PostgreSQL'},
-                                ]}
-                            />
-
-                            <TextInput
-                                value={form.host}
-                                placeholder="Host"
-                                onUpdate={(value) => patch('host', value)}
-                            />
-
-                            <TextInput
-                                value={form.port}
-                                placeholder="Port"
-                                onUpdate={(value) => patch('port', value)}
-                            />
-
-                            <TextInput
-                                value={form.database_name}
-                                placeholder="Database"
-                                onUpdate={(value) => patch('database_name', value)}
-                            />
-
-                            <TextInput
-                                value={form.username}
-                                placeholder="Username"
-                                onUpdate={(value) => patch('username', value)}
-                            />
-
-                            <TextInput
-                                type="password"
-                                value={form.password}
-                                placeholder={isEditMode ? 'Password (leave empty to keep current)' : 'Password'}
-                                onUpdate={(value) => patch('password', value)}
-                            />
-
-                            <TextInput
-                                value={form.schema_default}
-                                placeholder="Default schema (optional)"
-                                onUpdate={(value) => patch('schema_default', value)}
-                            />
-
-                            <TextInput
-                                value={form.ssl_mode}
-                                placeholder="SSL mode (optional)"
-                                onUpdate={(value) => patch('ssl_mode', value)}
-                            />
-
-                            <TextInput
-                                value={form.color}
-                                placeholder="Color (optional)"
-                                onUpdate={(value) => patch('color', value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="connection-form-dialog__section">
-                        <div className="connection-form-dialog__section-title">
-                            <Text variant="subheader-2">SSH tunnel</Text>
-
-                            <Checkbox
-                                checked={form.use_ssh_tunnel}
-                                onUpdate={(checked) => patch('use_ssh_tunnel', checked)}
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                                    gap: 12,
+                                }}
                             >
-                                Use SSH Tunnel
-                            </Checkbox>
+                                <TextInput
+                                    value={form.name}
+                                    placeholder="Connection name"
+                                    onUpdate={(value) => patch('name', value)}
+                                />
+
+                                <Select
+                                    width="max"
+                                    value={[form.driver]}
+                                    onUpdate={(value) => patch('driver', value[0] ?? 'pgsql')}
+                                    options={[
+                                        {value: 'pgsql', content: 'PostgreSQL'},
+                                    ]}
+                                />
+
+                                <TextInput
+                                    value={form.host}
+                                    placeholder="Host"
+                                    onUpdate={(value) => patch('host', value)}
+                                />
+
+                                <TextInput
+                                    value={form.port}
+                                    placeholder="Port"
+                                    onUpdate={(value) => patch('port', value)}
+                                />
+
+                                <TextInput
+                                    value={form.database_name}
+                                    placeholder="Database"
+                                    onUpdate={(value) => patch('database_name', value)}
+                                />
+
+                                <TextInput
+                                    value={form.username}
+                                    placeholder="Username"
+                                    onUpdate={(value) => patch('username', value)}
+                                />
+
+                                <TextInput
+                                    type="password"
+                                    value={form.password}
+                                    placeholder={isEditMode ? 'Password (leave empty to keep current)' : 'Password'}
+                                    onUpdate={(value) => patch('password', value)}
+                                />
+
+                                <TextInput
+                                    value={form.schema_default}
+                                    placeholder="Default schema (optional)"
+                                    onUpdate={(value) => patch('schema_default', value)}
+                                />
+
+                                <Select
+                                    width="max"
+                                    hasClear
+                                    placeholder="SSL mode"
+                                    value={form.ssl_mode ? [form.ssl_mode] : []}
+                                    onUpdate={(value) => patch('ssl_mode', value[0] ?? "")}
+                                    options={[
+                                        {value: "disable", content: "disable"},
+                                        {value: "allow", content: "allow"},
+                                        {value: "prefer", content: "prefer"},
+                                        {value: "require", content: "require"},
+                                        {value: "verify-ca", content: "verify-ca"},
+                                        {value: "verify-full", content: "verify-full"},
+                                    ]}
+                                />
+
+                                <TextInput
+                                    value={form.color}
+                                    placeholder="Color tag (optional)"
+                                    onUpdate={(value) => patch('color', value)}
+                                />
+                            </div>
                         </div>
 
-                        {form.use_ssh_tunnel ? (
-                            <div className="connection-form-dialog__ssh">
-                                <div className="connection-form-dialog__grid">
-                                    <TextInput
-                                        value={form.ssh_host}
-                                        placeholder="SSH host"
-                                        onUpdate={(value) => patch('ssh_host', value)}
-                                    />
+                        <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: 12,
+                                    flexWrap: "wrap",
+                                }}
+                            >
+                                <Text variant="subheader-3">SSH tunnel</Text>
 
-                                    <TextInput
-                                        value={form.ssh_port}
-                                        placeholder="SSH port"
-                                        onUpdate={(value) => patch('ssh_port', value)}
-                                    />
+                                <Checkbox
+                                    checked={form.use_ssh_tunnel}
+                                    onUpdate={(checked) => patch("use_ssh_tunnel", checked)}
+                                >
+                                    Use SSH tunnel
+                                </Checkbox>
+                            </div>
 
-                                    <TextInput
-                                        value={form.ssh_username}
-                                        placeholder="SSH username"
-                                        onUpdate={(value) => patch('ssh_username', value)}
-                                    />
-
-                                    <TextInput
-                                        value={form.ssh_known_host_fingerprint}
-                                        placeholder="Host fingerprint (optional)"
-                                        onUpdate={(value) => patch('ssh_known_host_fingerprint', value)}
-                                    />
-                                </div>
-
-                                <div className="connection-form-dialog__auth-mode">
-                                    <Text variant="body-2">Authentication</Text>
-
-                                    <RadioGroup
-                                        value={sshAuthMode}
-                                        onUpdate={(value) => setSshAuthMode(value as SshAuthMode)}
-                                        options={[
-                                            {value: 'password', content: 'Password'},
-                                            {value: 'private_key', content: 'Private key'},
-                                        ]}
-                                    />
-                                </div>
-
-                                {sshAuthMode === 'password' ? (
-                                    <div className="connection-form-dialog__stack">
-                                        <div className="connection-form-dialog__secret-label">
-                                            <Text variant="body-2">SSH password</Text>
-
-                                            {isEditMode && initialConnection?.has_ssh_password ? (
-                                                <Label theme="success">Stored</Label>
-                                            ) : null}
-                                        </div>
+                            {form.use_ssh_tunnel ? (
+                                <div style={{display: "flex", flexDirection: "column", gap: 16}}>
+                                    <div
+                                        style={{
+                                            display: "grid",
+                                            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                                            gap: 12,
+                                        }}
+                                    >
+                                        <TextInput
+                                            value={form.ssh_host}
+                                            placeholder="SSH host"
+                                            onUpdate={(value) => patch('ssh_host', value)}
+                                        />
 
                                         <TextInput
-                                            type="password"
-                                            value={form.ssh_password}
-                                            placeholder={
-                                                isEditMode
-                                                    ? 'SSH password (leave empty to keep current)'
-                                                    : 'SSH password'
-                                            }
-                                            onUpdate={(value) => patch('ssh_password', value)}
+                                            value={form.ssh_port}
+                                            placeholder="SSH port"
+                                            onUpdate={(value) => patch('ssh_port', value)}
                                         />
-                                    </div>
-                                ) : (
-                                    <div className="connection-form-dialog__stack">
-                                        <div className="connection-form-dialog__secret-label">
-                                            <Text variant="body-2">SSH private key</Text>
-
-                                            {isEditMode && initialConnection?.has_ssh_private_key ? (
-                                                <Label theme="success">Stored</Label>
-                                            ) : null}
-                                        </div>
-
-                                        <TextArea
-                                            value={form.ssh_private_key}
-                                            placeholder={
-                                                isEditMode
-                                                    ? 'Private key (leave empty to keep current)'
-                                                    : 'Paste private key'
-                                            }
-                                            minRows={8}
-                                            onUpdate={(value) => patch('ssh_private_key', value)}
-                                        />
-
-                                        <div className="connection-form-dialog__secret-label">
-                                            <Text variant="body-2">SSH key passphrase</Text>
-
-                                            {isEditMode && initialConnection?.has_ssh_passphrase ? (
-                                                <Label theme="success">Stored</Label>
-                                            ) : null}
-                                        </div>
 
                                         <TextInput
-                                            type="password"
-                                            value={form.ssh_passphrase}
-                                            placeholder={
-                                                isEditMode
-                                                    ? 'Passphrase (leave empty to keep current)'
-                                                    : 'Passphrase (optional)'
-                                            }
-                                            onUpdate={(value) => patch('ssh_passphrase', value)}
+                                            value={form.ssh_username}
+                                            placeholder="SSH username"
+                                            onUpdate={(value) => patch('ssh_username', value)}
+                                        />
+
+                                        <TextInput
+                                            value={form.ssh_known_host_fingerprint}
+                                            placeholder="Host fingerprint (optional)"
+                                            onUpdate={(value) => patch('ssh_known_host_fingerprint', value)}
                                         />
                                     </div>
-                                )}
+
+                                    <div style={{display: "flex", flexDirection: "column", gap: 8}}>
+                                        <Text variant="body-2">Authentication</Text>
+
+                                        <RadioGroup
+                                            value={sshAuthMode}
+                                            onUpdate={(value) => setSshAuthMode(value as SshAuthMode)}
+                                            options={[
+                                                {value: "password", content: "Password"},
+                                                {value: "private_key", content: "Private key"},
+                                            ]}
+                                        />
+                                    </div>
+
+                                    {sshAuthMode === "password" ? (
+                                        <div style={{display: "flex", flexDirection: "column", gap: 8}}>
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 8,
+                                                    flexWrap: "wrap",
+                                                }}
+                                            >
+                                                <Text variant="body-2">SSH password</Text>
+
+                                                {isEditMode && initialConnection?.has_ssh_password ? (
+                                                    <Label theme="success">Stored</Label>
+                                                ) : null}
+                                            </div>
+
+                                            <TextInput
+                                                type="password"
+                                                value={form.ssh_password}
+                                                placeholder={
+                                                    isEditMode
+                                                        ? "SSH password (leave empty to keep current)"
+                                                        : "SSH password"
+                                                }
+                                                onUpdate={(value) => patch("ssh_password", value)}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 8,
+                                                    flexWrap: "wrap",
+                                                }}
+                                            >
+                                                <Text variant="body-2">SSH private key</Text>
+
+                                                {isEditMode && initialConnection?.has_ssh_private_key ? (
+                                                    <Label theme="success">Stored</Label>
+                                                ) : null}
+                                            </div>
+
+                                            <TextArea
+                                                value={form.ssh_private_key}
+                                                placeholder={
+                                                    isEditMode
+                                                        ? "Private key (leave empty to keep current)"
+                                                        : "Paste private key"
+                                                }
+                                                minRows={8}
+                                                onUpdate={(value) => patch("ssh_private_key", value)}
+                                            />
+
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 8,
+                                                    flexWrap: "wrap",
+                                                }}
+                                            >
+                                                <Text variant="body-2">SSH key passphrase</Text>
+
+                                                {isEditMode && initialConnection?.has_ssh_passphrase ? (
+                                                    <Label theme="success">Stored</Label>
+                                                ) : null}
+                                            </div>
+
+                                            <TextInput
+                                                type="password"
+                                                value={form.ssh_passphrase}
+                                                placeholder={
+                                                    isEditMode
+                                                        ? "Passphrase (leave empty to keep current)"
+                                                        : "Passphrase (optional)"
+                                                }
+                                                onUpdate={(value) => patch("ssh_passphrase", value)}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            ) : null}
+                        </div>
+
+                        {error ? (
+                            <div
+                                style={{
+                                    border: "1px solid var(--g-color-line-danger)",
+                                    background: "var(--g-color-base-danger-light)",
+                                    borderRadius: 12,
+                                    padding: 12,
+                                }}
+                            >
+                                <Text variant="body-2">{error}</Text>
                             </div>
                         ) : null}
-                    </div>
 
-                    {error ? (
-                        <div className="connection-form-dialog__error">
-                            <Text variant="body-2">{error}</Text>
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                gap: 10,
+                                paddingTop: 4,
+                            }}
+                        >
+                            <Button view="flat-secondary" onClick={onClose} disabled={loading}>
+                                Cancel
+                            </Button>
+
+                            <Button
+                                view="action"
+                                onClick={handleSubmit}
+                                disabled={!canSubmit || loading}
+                                loading={loading}
+                            >
+                                {isEditMode ? "Save connection" : "Create connection"}
+                            </Button>
                         </div>
-                    ) : null}
+                    </div>
                 </div>
-
-                <div className="connection-form-dialog__footer">
-                    <Button view="flat-secondary" onClick={onClose} disabled={loading}>
-                        Cancel
-                    </Button>
-
-                    <Button view="action" onClick={handleSubmit} disabled={!canSubmit || loading}>
-                        {loading ? 'Saving...' : isEditMode ? 'Save connection' : 'Create connection'}
-                    </Button>
-                </div>
-            </Card>
-        </div>
+            </Dialog.Body>
+        </Dialog>
     );
 }

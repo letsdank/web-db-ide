@@ -1,5 +1,5 @@
 import {ConnectionDto} from "../../types/connection";
-import {Button, Card, Label, Select, Text} from "@gravity-ui/uikit";
+import {Button, Card, Hotkey, Label, Select, Text} from "@gravity-ui/uikit";
 
 interface Props {
     connections: ConnectionDto[];
@@ -26,7 +26,7 @@ export function EditorToolbar({
         <Card
             view="filled"
             style={{
-                padding: 10,
+                padding: 12,
             }}
         >
             <div
@@ -42,8 +42,9 @@ export function EditorToolbar({
                     size="l"
                     onClick={onRun}
                     disabled={!activeConnectionId || isExecuting}
+                    loading={isExecuting}
                 >
-                    {isExecuting ? 'Running...' : 'Run'}
+                    Run query
                 </Button>
 
                 <Button
@@ -55,9 +56,12 @@ export function EditorToolbar({
                     Run selection
                 </Button>
 
-                <div style={{minWidth: 260}}>
+                <div style={{minWidth: 320, flex: "0 1 420px"}}>
                     <Select
                         width="max"
+                        size="l"
+                        filterable
+                        hasClear
                         placeholder="Select connection"
                         value={selectValue}
                         onUpdate={(value) => {
@@ -66,20 +70,31 @@ export function EditorToolbar({
                         }}
                         options={connections.map((connection) => ({
                             value: String(connection.id),
-                            content: `${connection.name} (${connection.driver})`,
+                            content: `${connection.name} · (${connection.driver})`,
                         }))}
                     />
                 </div>
 
                 {hasSelection ? (
-                    <Label theme="info">Selection active</Label>
+                    <Label theme="info">Selection mode</Label>
                 ) : (
                     <Label theme="utility">Full query mode</Label>
                 )}
 
-                <Text variant="body-2" color="secondary">
-                    Ctrl/Cmd + Enter &mdash; execute current selection or full query
-                </Text>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginLeft: "auto",
+                        flexWrap: "wrap",
+                    }}
+                >
+                    <Text variant="body-2" color="secondary">
+                        Execute
+                    </Text>
+                    <Hotkey value="mod+enter" view="dark"/>
+                </div>
             </div>
         </Card>
     );

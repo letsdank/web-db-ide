@@ -1,3 +1,9 @@
+
+@use "explorer";
+@use "results";
+@use "command-palette";
+@use "connections";
+
 html,
 body,
 #app {
@@ -66,8 +72,3 @@ body {
         overflow: hidden;
     }
 }
-
-@import "explorer";
-@import "results";
-@import "command-palette";
-@import "connections";
