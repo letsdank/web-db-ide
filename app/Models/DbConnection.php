@@ -56,6 +56,12 @@ class DbConnection extends Model
         'ssh_passphrase_encrypted',
     ];
 
+    protected $appends = [
+        'has_ssh_password',
+        'has_ssh_private_key',
+        'has_ssh_passphrase',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -84,5 +90,20 @@ class DbConnection extends Model
     public function usesSshTunnel(): bool
     {
         return (bool)$this->use_ssh_tunnel;
+    }
+
+    public function getHasSshPasswordAttribute(): bool
+    {
+        return filled($this->ssh_password_encrypted);
+    }
+
+    public function getHasSshPrivateKeyAttribute(): bool
+    {
+        return filled($this->ssh_private_key_encrypted);
+    }
+
+    public function getHasSshPassphraseAttribute(): bool
+    {
+        return filled($this->ssh_passphrase_encrypted);
     }
 }

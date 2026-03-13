@@ -42,15 +42,15 @@ class DbConnectionController extends Controller
 
             // SSH
             'ssh_password_encrypted' => $request->filled('ssh_password')
-                ? encrypt($request->string('ssh_password'))
+                ? encrypt($request->string('ssh_password')->toString())
                 : null,
 
             'ssh_private_key_encrypted' => $request->filled('ssh_private_key')
-                ? encrypt($request->string('ssh_private_key'))
+                ? encrypt($request->string('ssh_private_key')->toString())
                 : null,
 
             'ssh_passphrase_encrypted' => $request->filled('ssh_passphrase')
-                ? encrypt($request->string('ssh_passphrase'))
+                ? encrypt($request->string('ssh_passphrase')->toString())
                 : null,
 
             'use_ssh_tunnel' => $request->boolean('use_ssh_tunnel'),
@@ -85,18 +85,27 @@ class DbConnectionController extends Controller
             unset($data['password']);
         }
 
-        if (isset($data['ssh_password'])) {
-            $data['ssh_password_encrypted'] = encrypt($data['ssh_password']);
+        if (key_exists('ssh_password', $data)) {
+            $data['ssh_password_encrypted'] = filled($data['ssh_password'])
+                ? encrypt($data['ssh_password'])
+                : null;
+
             unset($data['ssh_password']);
         }
 
-        if (isset($data['ssh_private_key'])) {
-            $data['ssh_private_key_encrypted'] = encrypt($data['ssh_private_key']);
+        if (key_exists('ssh_private_key', $data)) {
+            $data['ssh_private_key_encrypted'] = filled($data['ssh_private_key'])
+                ? encrypt($data['ssh_private_key'])
+                : null;
+
             unset($data['ssh_private_key']);
         }
 
-        if (isset($data['ssh_passphrase'])) {
-            $data['ssh_passphrase_encrypted'] = encrypt($data['ssh_passphrase']);
+        if (key_exists('ssh_passphrase', $data)) {
+            $data['ssh_passphrase_encrypted'] = filled($data['ssh_passphrase'])
+                ? encrypt($data['ssh_passphrase'])
+                : null;
+
             unset($data['ssh_passphrase']);
         }
 
