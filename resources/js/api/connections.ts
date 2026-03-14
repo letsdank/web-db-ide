@@ -18,3 +18,7 @@ export async function updateConnection(id: number, payload: UpdateConnectionPayl
 
     return response.data.data;
 }
+
+export async function deleteConnection(id:number):Promise<void>{
+    await apiClient.delete(`/connections/${id}`);
+}

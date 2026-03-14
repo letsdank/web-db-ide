@@ -1,6 +1,6 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
 import {useCallback, useEffect, useMemo, useState} from "react";
-import {createConnection, fetchConnections} from "../api/connections";
+import {createConnection, deleteConnection, fetchConnections, updateConnection} from "../api/connections";
 import {createQueryTab, deleteQueryTab, fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
 import {fetchQueryHistory} from "../api/queryHistory";
 import {createSavedQuery, fetchSavedQueries} from "../api/savedQueries";
@@ -21,7 +21,7 @@ import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magni
 import {CommandPalette} from "../features/command-palette/components/CommandPalette";
 import {WorkspaceMainLayout} from "../features/workspace/components/WorkspaceMainLayout";
 import {ExplorerSidebar} from "../features/explorer/components/ExplorerSidebar";
-import {CreateConnectionPayload} from "../types/connection";
+import {CreateConnectionPayload, UpdateConnectionPayload} from "../types/connection";
 
 export function WorkspacePage() {
     const {
@@ -31,6 +31,8 @@ export function WorkspacePage() {
         connections,
         setConnections,
         addConnection,
+        updateConnectionInList,
+        removeConnection,
 
         tabs,
         setTabs,
@@ -63,7 +65,9 @@ export function WorkspacePage() {
         clearTabDirty,
 
         isConnectionDialogOpen,
-        openConnectionDialog,
+        editingConnection,
+        openCreateConnectionDialog,
+        openEditConnectionDialog,
         closeConnectionDialog,
         isCreatingConnection,
         setIsCreatingConnection,
@@ -143,7 +147,7 @@ export function WorkspacePage() {
                 kind: 'action',
                 icon: <Icon data={Database} size={18}/>,
                 keywords: ['connection database create add'],
-                onSelect: () => openConnectionDialog(),
+                onSelect: () => openCreateConnectionDialog(),
             },
             {
                 id: 'action:run-query',
@@ -278,7 +282,7 @@ export function WorkspacePage() {
         activeConnectionId,
         activeTab,
         connections,
-        openConnectionDialog,
+        openCreateConnectionDialog,
         savedQueries,
         setRightPanel,
         tabs,
@@ -597,12 +601,43 @@ export function WorkspacePage() {
         await handleRun('selection');
     }
 
-    async function handleCreateConnection(payload: CreateConnectionPayload) {
+    async function detachTabsFromConnection(connectionId: number) {
+        const affectedTabs = tabs.filter((tab) => tab.db_connection_id === connectionId);
+
+        if (affectedTabs.length === 0) {
+            return;
+        }
+
+        const updatedTabs = await Promise.all(
+            affectedTabs.map((tab) =>
+                updateQueryTab(tab.id, {
+                    db_connection_id: null,
+                }),
+            ),
+        );
+
+        updatedTabs.forEach((tab) => upsertTab(tab));
+    }
+
+    async function handleCreateConnection(payload: CreateConnectionPayload | UpdateConnectionPayload) {
         setIsCreatingConnection(true);
         setConnectionDialogError(null);
 
         try {
-            const created = await createConnection(payload);
+            if (editingConnection) {
+                const updated = await updateConnection(editingConnection.id, payload as UpdateConnectionPayload);
+
+                updateConnectionInList(updated);
+
+                if (activeConnectionId === updated.id) {
+                    setActiveConnectionId(updated.id);
+                }
+
+                closeConnectionDialog();
+                return;
+            }
+
+            const created = await createConnection(payload as CreateConnectionPayload);
 
             addConnection(created);
             setActiveConnectionId(created.id);
@@ -621,10 +656,34 @@ export function WorkspacePage() {
             setConnectionDialogError(
                 error?.response?.data?.message ||
                 error?.message ||
-                'Failed to create connection.',
+                (editingConnection
+                    ? 'Failed to update connection.'
+                    : 'Failed to create connection.'),
             );
         } finally {
             setIsCreatingConnection(false);
+        }
+    }
+
+    async function handleDeleteConnection(connection: { id: number; name: string }) {
+        const confirmed = window.confirm(`Delete connection "${connection.name}"?`);
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await deleteConnection(connection.id);
+
+            removeConnection(connection.id);
+            await detachTabsFromConnection(connection.id);
+
+            if (activeConnectionId === connection.id) {
+                const nextConnection = connections.find((item) => item.id !== connection.id) ?? null;
+                setActiveConnectionId(nextConnection?.id ?? null);
+            }
+        } catch (error) {
+            console.error(error);
         }
     }
 
@@ -685,6 +744,7 @@ export function WorkspacePage() {
                 open={isConnectionDialogOpen}
                 loading={isCreatingConnection}
                 error={connectionDialogError}
+                initialConnection={editingConnection}
                 onClose={closeConnectionDialog}
                 onSubmit={handleCreateConnection}
             />
@@ -701,7 +761,9 @@ export function WorkspacePage() {
                         connections={connections}
                         activeConnectionId={activeConnectionId}
                         onSelect={handleSelectConnection}
-                        onCreateClick={openConnectionDialog}
+                        onCreateClick={openCreateConnectionDialog}
+                        onEditClick={openEditConnectionDialog}
+                        onDeleteClick={handleDeleteConnection}
                         onOpenSql={handleCreateTab}
                     />
                 }

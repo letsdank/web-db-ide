@@ -1,9 +1,9 @@
 import {ConnectionDto} from "../../../types/connection";
 import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import React, {useMemo} from "react";
-import {Button, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
+import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerSchemaNode} from "./ExplorerSchemaNode";
-import {ChevronDown, ChevronRight, Database} from "@gravity-ui/icons";
+import {ChevronDown, ChevronRight, Database, Ellipsis} from "@gravity-ui/icons";
 
 interface Props {
     connection: ConnectionDto;
@@ -19,6 +19,8 @@ interface Props {
     loadingDetailsFor: string | null;
     filter: string;
     onToggleConnection: () => void;
+    onEditConnection: () => void;
+    onDeleteConnection: () => void;
     onToggleSchema: (schema: string) => void;
     onToggleTable: (schema: string, tableName: string) => void;
     onOpenTableContextMenu: (
@@ -50,6 +52,8 @@ export function ExplorerConnectionCard({
                                            loadingDetailsFor,
                                            filter,
                                            onToggleConnection,
+                                           onEditConnection,
+                                           onDeleteConnection,
                                            onToggleSchema,
                                            onToggleTable,
                                            onOpenTableContextMenu,
@@ -82,39 +86,80 @@ export function ExplorerConnectionCard({
 
     return (
         <div className={connectionClasses}>
-            <button
-                onClick={onToggleConnection}
-                className="explorer-connection-card__header"
-                type="button"
-            >
-                <div className="explorer-connection-card__header-main">
-                    <div className="explorer-connection-card__header-icon">
-                        <Icon data={Database} size={16}/>
-                    </div>
-
-                    <div className="explorer-connection-card__header-copy">
-                        <div className="explorer-connection-card__header-row">
-                            <Text variant="subheader-2">{connection.name}</Text>
-                            <Label theme="utility">{connection.driver}</Label>
-                        </div>
-
-                        <div className="explorer-connection-card__meta">
-                            <Text variant="body-1" color="secondary">
-                                {connection.database_name} · {connection.host}:{connection.port}
-                            </Text>
-                        </div>
-                    </div>
-                </div>
-
-                <Button
-                    size="s"
-                    view="flat-secondary"
-                    onlyIcon
-                    tabIndex={-1}
+            <div className="explorer-connection-card__header">
+                <button
+                    onClick={onToggleConnection}
+                    className="explorer-connection-card__header-toggle"
+                    type="button"
                 >
-                    <Icon data={isExpanded ? ChevronDown : ChevronRight} size={16}/>
-                </Button>
-            </button>
+                    <div className="explorer-connection-card__header-main">
+                        <div className="explorer-connection-card__header-icon">
+                            <Icon data={Database} size={16}/>
+                        </div>
+
+                        <div className="explorer-connection-card__header-copy">
+                            <div className="explorer-connection-card__header-row">
+                                <Text variant="subheader-2">{connection.name}</Text>
+
+                                <div className="explorer-connection-card__badges">
+                                    <Label theme="utility">{connection.driver}</Label>
+
+                                    {connection.is_read_only ? (
+                                        <Label theme="warning">read only</Label>
+                                    ) : null}
+
+                                    {connection.use_ssh_tunnel ? (
+                                        <Label theme="info">ssh</Label>
+                                    ) : null}
+                                </div>
+                            </div>
+
+                            <div className="explorer-connection-card__meta">
+                                <Text variant="body-1" color="secondary">
+                                    {connection.database_name} · {connection.host}:{connection.port}
+                                </Text>
+                            </div>
+                        </div>
+                    </div>
+
+                    <Button
+                        size="s"
+                        view="flat-secondary"
+                        onlyIcon
+                        tabIndex={-1}
+                    >
+                        <Icon data={isExpanded ? ChevronDown : ChevronRight} size={16}/>
+                    </Button>
+                </button>
+
+                <DropdownMenu
+                    items={[
+                        {
+                            text: 'Edit connection',
+                            action: onEditConnection,
+                        },
+                        {
+                            text: 'Delete connection',
+                            action: onDeleteConnection,
+                            theme: 'danger',
+                        },
+                    ]}
+                    renderSwitcher={(props) => (
+                        <Button
+                            {...props}
+                            size="s"
+                            view="flat-secondary"
+                            onlyIcon
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                props.onClick?.(event);
+                            }}
+                        >
+                            <Icon data={Ellipsis} size={16}/>
+                        </Button>
+                    )}
+                />
+            </div>
 
             {isExpanded ? (
                 <div className="explorer-connection-card__body">

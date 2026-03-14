@@ -13,6 +13,8 @@ interface Props {
     activeConnectionId: number | null;
     onSelect: (id: number | null) => void;
     onCreateClick: () => void;
+    onEditClick: (connection: ConnectionDto) => void;
+    onDeleteClick: (connection: ConnectionDto) => void;
     onOpenSql: (payload: {
         title: string;
         sql_text: string;
@@ -50,6 +52,8 @@ export function ExplorerSidebar({
                                     activeConnectionId,
                                     onSelect,
                                     onCreateClick,
+                                    onEditClick,
+                                    onDeleteClick,
                                     onOpenSql,
                                 }: Props) {
     const [filter, setFilter] = useState('');
@@ -240,6 +244,8 @@ export function ExplorerSidebar({
                         loadingDetailsFor={loadingDetailsFor}
                         filter={normalizedFilter}
                         onToggleConnection={() => toggleConnection(connection.id)}
+                        onEditConnection={() => onEditClick(connection)}
+                        onDeleteConnection={() => onDeleteClick(connection)}
                         onToggleSchema={(schema) => toggleSchema(connection.id, schema)}
                         onToggleTable={(schema, tableName) => toggleTable(connection.id, schema, tableName)}
                         onOpenTableContextMenu={openTableContextMenu}

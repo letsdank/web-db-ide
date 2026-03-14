@@ -29,6 +29,7 @@ interface WorkspaceState {
 
     isConnectionDialogOpen: boolean;
     isCreatingConnection: boolean;
+    editingConnection: ConnectionDto | null;
     connectionDialogError: string | null;
 
     setBooting: (value: boolean) => void;
@@ -58,10 +59,14 @@ interface WorkspaceState {
     markTabDirty: (tabId: number) => void;
     clearTabDirty: (tabId: number) => void;
 
-    openConnectionDialog: () => void;
+    openCreateConnectionDialog: () => void;
+    openEditConnectionDialog: (connection: ConnectionDto) => void;
     closeConnectionDialog: () => void;
     setIsCreatingConnection: (value: boolean) => void;
     setConnectionDialogError: (value: string | null) => void;
+
+    updateConnectionInList: (connection: ConnectionDto) => void;
+    removeConnection: (connectionId: number) => void;
 }
 
 function ensureTabStateRecord(
@@ -117,6 +122,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     isConnectionDialogOpen: false,
     isCreatingConnection: false,
     connectionDialogError: null,
+    editingConnection: null,
 
     setBooting: (value) => set({isBooting: value}),
 
@@ -124,6 +130,24 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     addConnection: (connection) =>
         set((state) => ({
             connections: [...state.connections, connection].sort((a, b) => a.name.localeCompare(b.name)),
+        })),
+
+    updateConnectionInList: (connection) =>
+        set((state) => ({
+            connections: state.connections
+                .map((item) => item.id === connection.id ? connection : item)
+                .sort((a, b) => a.name.localeCompare(b.name)),
+            activeConnectionId: state.activeConnectionId === connection.id
+                ? connection.id
+                : state.activeConnectionId,
+        })),
+
+    removeConnection: (connectionId) =>
+        set((state) => ({
+            connections: state.connections.filter((item) => item.id !== connectionId),
+            activeConnectionId: state.activeConnectionId === connectionId
+                ? null
+                : state.activeConnectionId,
         })),
 
     setTabs: (tabs) =>
@@ -274,9 +298,17 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             dirtyTabIds: state.dirtyTabIds.filter((id) => id !== tabId),
         })),
 
-    openConnectionDialog: () =>
+    openCreateConnectionDialog: () =>
         set({
             isConnectionDialogOpen: true,
+            editingConnection: null,
+            connectionDialogError: null,
+        }),
+
+    openEditConnectionDialog: (connection) =>
+        set({
+            isConnectionDialogOpen: true,
+            editingConnection: connection,
             connectionDialogError: null,
         }),
 
@@ -288,6 +320,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
             return {
                 isConnectionDialogOpen: false,
+                editingConnection: null,
                 connectionDialogError: null,
             };
         }),

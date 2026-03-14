@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 import {Button, Checkbox, Dialog, Label, RadioGroup, Select, Text, TextArea, TextInput} from "@gravity-ui/uikit";
-import {ConnectionDto, CreateConnectionPayload} from "../../types/connection";
+import {ConnectionDto, CreateConnectionPayload, UpdateConnectionPayload} from "../../types/connection";
 
 type SshAuthMode = 'password' | 'private_key';
 
@@ -10,7 +10,7 @@ interface Props {
     error?: string | null;
     initialConnection?: ConnectionDto | null;
     onClose: () => void;
-    onSubmit: (payload: CreateConnectionPayload) => Promise<void> | void;
+    onSubmit: (payload: CreateConnectionPayload | UpdateConnectionPayload) => Promise<void> | void;
 }
 
 interface FormState {
