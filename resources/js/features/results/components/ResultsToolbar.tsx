@@ -1,9 +1,11 @@
-import {Button, Label, Text} from "@gravity-ui/uikit";
+import {Button, DropdownMenu, Label, Text} from "@gravity-ui/uikit";
+import {ChevronDown} from "@gravity-ui/icons";
 
 interface Props {
     rowCount: number;
     hasMore: boolean;
     durationMs: number;
+    resultLimit: 100 | 500 | 1000;
     sortState: { columnName: string; direction: 'asc' | 'desc' } | null;
     hiddenColumnCount: number;
     activeConnectionName?: string | null;
@@ -12,12 +14,14 @@ interface Props {
     onCopyAll: () => void;
     onResetView: () => void;
     onExportCsv: () => void;
+    onChangeResultLimit: (limit: 100 | 500 | 1000) => void;
 }
 
 export function ResultsToolbar({
                                    rowCount,
                                    hasMore,
                                    durationMs,
+                                   resultLimit,
                                    sortState,
                                    hiddenColumnCount,
                                    activeConnectionName,
@@ -26,6 +30,7 @@ export function ResultsToolbar({
                                    onCopyAll,
                                    onResetView,
                                    onExportCsv,
+                                   onChangeResultLimit,
                                }: Props) {
     return (
         <div className="results-toolbar">
@@ -38,37 +43,68 @@ export function ResultsToolbar({
                 <Label theme="utility">{durationMs} ms</Label>
 
                 {sortState ? (
-                    <Label theme="warning">
+                    <Text variant="body-1" color="secondary">
                         sorted: {sortState.columnName} {sortState.direction}
-                    </Label>
+                    </Text>
                 ) : null}
 
                 {hiddenColumnCount > 0 ? (
-                    <Label theme="unknown">
+                    <Text variant="body-1" color="secondary">
                         hidden: {hiddenColumnCount}
-                    </Label>
+                    </Text>
                 ) : null}
 
-                {activeConnectionName ? <Label theme="utility">{activeConnectionName}</Label> : null}
-                {activeDatabaseName ? <Label theme="unknown">{activeDatabaseName}</Label> : null}
-                {activeTabTitle ? <Label theme="info">{activeTabTitle}</Label> : null}
+                {activeConnectionName ? (
+                    <Text variant="body-1" color="secondary">
+                        {activeConnectionName}
+                    </Text>
+                ) : null}
+
+                {activeDatabaseName ? (
+                    <Text variant="body-1" color="secondary">
+                        {activeDatabaseName}
+                    </Text>
+                ) : null}
+
+                {activeTabTitle ? (
+                    <Text variant="body-1" color="secondary">
+                        {activeTabTitle}
+                    </Text>
+                ) : null}
             </div>
 
             <div className="results-toolbar__actions">
-                <Button size="m" view="outlined" onClick={onCopyAll}>
+                <DropdownMenu
+                    items={[
+                        {
+                            text: '100 rows',
+                            action:()=>onChangeResultLimit(100),
+                        },
+                        {
+                            text:'500 rows',
+                            action:()=>onChangeResultLimit(500),
+                        },
+                        {
+                            text: '1000 rows',
+                            action:()=>onChangeResultLimit(1000),
+                        },
+                    ]}
+                    renderSwitcher={(props)=>(
+                        <Button {...props} view="flat-secondary">
+                            Limit: {resultLimit}
+                        </Button>
+                    )}
+                />
+
+                <Button view="flat-secondary" onClick={onCopyAll}>
                     Copy all
                 </Button>
 
-                <Button
-                    size="m"
-                    view="outlined"
-                    disabled={hiddenColumnCount === 0 && !sortState}
-                    onClick={onResetView}
-                >
+                <Button view="flat-secondary" onClick={onResetView}>
                     Reset view
                 </Button>
 
-                <Button size="m" view="action" onClick={onExportCsv}>
+                <Button view="flat-secondary" onClick={onExportCsv}>
                     Export CSV
                 </Button>
             </div>

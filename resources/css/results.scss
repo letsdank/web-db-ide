@@ -50,10 +50,12 @@
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
+        min-width: 0;
     }
 
     &__actions {
         display: flex;
+        align-items: center;
         gap: 8px;
         flex-wrap: wrap;
     }

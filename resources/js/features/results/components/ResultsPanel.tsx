@@ -14,6 +14,8 @@ interface Props {
     activeConnectionName?: string | null;
     activeDatabaseName?: string | null;
     activeTabTitle?: string | null;
+    resultLimit: 100 | 500 | 1000;
+    onChangeResultLimit: (limit: 100 | 500 | 1000) => void;
 }
 
 interface ResultCellPayload {
@@ -32,6 +34,8 @@ export function ResultsPanel({
                                  activeConnectionName,
                                  activeDatabaseName,
                                  activeTabTitle,
+                                 resultLimit,
+                                 onChangeResultLimit,
                              }: Props) {
     const {
         hiddenColumnNames,
@@ -205,6 +209,7 @@ export function ResultsPanel({
                 rowCount={result.row_count}
                 hasMore={result.has_more}
                 durationMs={result.duration_ms}
+                resultLimit={resultLimit}
                 sortState={sortState}
                 hiddenColumnCount={hiddenColumnNames.length}
                 activeConnectionName={activeConnectionName}
@@ -215,6 +220,7 @@ export function ResultsPanel({
                 }}
                 onResetView={resetView}
                 onExportCsv={handleExportCsv}
+                onChangeResultLimit={onChangeResultLimit}
             />
 
             <ResultsGrid

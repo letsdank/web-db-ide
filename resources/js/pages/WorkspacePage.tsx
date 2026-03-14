@@ -358,6 +358,7 @@ export function WorkspacePage() {
                 db_connection_id: initial?.db_connection_id ?? activeConnectionId,
                 title: initial?.title ?? 'New Query',
                 sql_text: initial?.sql_text ?? '',
+                result_limit: 500,
             });
 
             addTab(tab);
@@ -563,7 +564,7 @@ export function WorkspacePage() {
                 query_tab_id: activeTab.id,
                 sql: activeTab.sql_text,
                 selected_sql: sqlToExecute,
-                max_rows: 500,
+                max_rows: activeTab.result_limit ?? 500,
                 save_to_history: true,
             });
 
@@ -576,6 +577,78 @@ export function WorkspacePage() {
                     selected_text: activeTab.selected_text,
                     cursor_position: activeTab.cursor_position,
                     selection_range: activeTab.selection_range,
+                }),
+                fetchQueryHistory(),
+            ]);
+
+            upsertTab(updatedTab);
+            clearTabDirty(activeTab.id);
+            setQueryHistory(historyData);
+            setRightPanel('history');
+        } catch (error: any) {
+            console.error(error);
+
+            const responseData = error?.response?.data;
+
+            if (responseData?.status === 'error') {
+                setTabResult(activeTab.id, responseData);
+            } else {
+                setTabResult(activeTab.id, {
+                    execution_id: crypto.randomUUID(),
+                    status: 'error',
+                    error: responseData?.message || error?.message || 'Failed to execute query.',
+                });
+            }
+        } finally {
+            setTabExecuting(activeTab.id, false);
+        }
+    }
+
+    async function handleChangeResultLimit(limit: 100 | 500 | 1000) {
+        if (!activeTab) {
+            return;
+        }
+
+        const updatedTab = await updateQueryTab(activeTab.id, {
+            result_limit: limit,
+        });
+
+        upsertTab(updatedTab);
+    }
+
+    async function handleChangeResultLimitAndRerun(limit: 100 | 500 | 1000) {
+        if (!activeTab) {
+            return;
+        }
+
+        await handleChangeResultLimit(limit);
+
+        if (!activeConnectionId) {
+            return;
+        }
+
+        setTabExecuting(activeTab.id, true);
+
+        try {
+            const response = await executeQuery({
+                connection_id: activeConnectionId,
+                query_tab_id: activeTab.id,
+                sql: activeTab.sql_text,
+                selected_sql: activeTab.selected_text?.trim() || null,
+                max_rows: limit,
+                save_to_history: true,
+            });
+
+            setTabResult(activeTab.id, response);
+
+            const [updatedTab, historyData] = await Promise.all([
+                updateQueryTab(activeTab.id, {
+                    last_executed_at: new Date().toISOString(),
+                    db_connection_id: activeConnectionId,
+                    selected_text: activeTab.selected_text,
+                    cursor_position: activeTab.cursor_position,
+                    selection_range: activeTab.selection_range,
+                    result_limit: limit,
                 }),
                 fetchQueryHistory(),
             ]);
@@ -828,6 +901,8 @@ export function WorkspacePage() {
                         activeConnectionName={activeConnection?.name ?? null}
                         activeDatabaseName={activeConnection?.database_name ?? null}
                         activeTabTitle={activeTab?.title ?? null}
+                        resultLimit={activeTab?.result_limit ?? 500}
+                        onChangeResultLimit={handleChangeResultLimitAndRerun}
                     />
                 }
                 right={
