@@ -29,6 +29,50 @@ import {WorkspaceMainLayout} from "../features/workspace/components/WorkspaceMai
 import {ExplorerSidebar} from "../features/explorer/components/ExplorerSidebar";
 import {CreateConnectionPayload, UpdateConnectionPayload} from "../types/connection";
 
+const DESTRUCTIVE_SQL_KEYWORDS = [
+    'drop',
+    'truncate',
+    'alter',
+    'delete',
+    'update',
+    'insert',
+    'create',
+    'grant',
+    'revoke',
+] as const;
+
+function stripSqlComments(sql: string): string {
+    return sql
+        // block comments
+        .replace(/\/\*[\s\S]*?\*\//g, ' ')
+        // line comments
+        .replace(/--.*$/gm, ' ')
+        .trim();
+}
+
+function isPotentiallyDestructiveSql(sql: string): boolean {
+    const normalized = stripSqlComments(sql).toLowerCase();
+
+    if (!normalized) {
+        return false;
+    }
+
+    // Не считаем "безопасными" CTE/SELECT, если внутри есть опасные ключевые слова.
+    return DESTRUCTIVE_SQL_KEYWORDS.some((keyword) =>
+        new RegExp(`\\b${keyword}\\b`, 'i').test(normalized),
+    );
+}
+
+function truncateSqlPreview(sql: string, maxLength = 220): string {
+    const compact = sql.replace(/\s+/g, ' ').trim();
+
+    if (compact.length <= maxLength) {
+        return compact;
+    }
+
+    return `${compact.slice(0, maxLength)}...`;
+}
+
 export function WorkspacePage() {
     const {
         isBooting,
@@ -569,6 +613,16 @@ export function WorkspacePage() {
                 ? selectedSql
                 : null;
 
+        const effectiveSql = (sqlToExecute ?? activeTab.sql_text ?? '').trim();
+
+        if (!effectiveSql) {
+            return;
+        }
+
+        if (!confirmDestructiveQuery(effectiveSql)) {
+            return;
+        }
+
         setTabExecuting(activeTab.id, true);
 
         try {
@@ -637,6 +691,16 @@ export function WorkspacePage() {
         await handleChangeResultLimit(limit);
 
         if (!activeConnectionId) {
+            return;
+        }
+
+        const effectiveSql = (activeTab.selected_text?.trim() || activeTab.sql_text || '').trim();
+
+        if (!effectiveSql) {
+            return;
+        }
+
+        if (!confirmDestructiveQuery(effectiveSql)) {
             return;
         }
 
@@ -825,6 +889,23 @@ export function WorkspacePage() {
             sql_text: item.sql_text,
             db_connection_id: item.db_connection_id,
         });
+    }
+
+    function confirmDestructiveQuery(sql: string): boolean {
+        if (!isPotentiallyDestructiveSql(sql)) {
+            return true;
+        }
+
+        const preview = truncateSqlPreview(sql);
+
+        return window.confirm(
+            [
+                'Potentially destructive SQL detected.',
+                'Please confirm execution.',
+                '',
+                preview ? `SQL preview: ${preview}` : '',
+            ].join('\n'),
+        );
     }
 
     if (isBooting) {
