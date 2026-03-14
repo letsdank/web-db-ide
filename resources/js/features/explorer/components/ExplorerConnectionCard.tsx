@@ -122,43 +122,40 @@ export function ExplorerConnectionCard({
                         </div>
                     </div>
 
-                    <Button
-                        size="s"
-                        view="flat-secondary"
-                        onlyIcon
-                        tabIndex={-1}
-                    >
+                    <span className="explorer-connection-card__chevron">
                         <Icon data={isExpanded ? ChevronDown : ChevronRight} size={16}/>
-                    </Button>
+                    </span>
                 </button>
 
-                <DropdownMenu
-                    items={[
-                        {
-                            text: 'Edit connection',
-                            action: onEditConnection,
-                        },
-                        {
-                            text: 'Delete connection',
-                            action: onDeleteConnection,
-                            theme: 'danger',
-                        },
-                    ]}
-                    renderSwitcher={(props) => (
-                        <Button
-                            {...props}
-                            size="s"
-                            view="flat-secondary"
-                            onlyIcon
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                props.onClick?.(event);
-                            }}
-                        >
-                            <Icon data={Ellipsis} size={16}/>
-                        </Button>
-                    )}
-                />
+                <div className="explorer-connection-card__actions">
+                    <DropdownMenu
+                        items={[
+                            {
+                                text: 'Edit connection',
+                                action: onEditConnection,
+                            },
+                            {
+                                text: 'Delete connection',
+                                action: onDeleteConnection,
+                                theme: 'danger',
+                            },
+                        ]}
+                        renderSwitcher={(props) => (
+                            <Button
+                                {...props}
+                                size="s"
+                                view="flat-secondary"
+                                onlyIcon
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    props.onClick?.(event);
+                                }}
+                            >
+                                <Icon data={Ellipsis} size={16}/>
+                            </Button>
+                        )}
+                    />
+                </div>
             </div>
 
             {isExpanded ? (
