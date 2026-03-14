@@ -9,6 +9,7 @@ export interface CreateQueryTabPayload {
     cursor_position?: Record<string, unknown> | null;
     selection_range?: Record<string, unknown> | null;
     is_pinned?: boolean;
+    result_limit?: 100 | 500 | 1000;
 }
 
 export interface UpdateQueryTabPayload {
@@ -20,6 +21,7 @@ export interface UpdateQueryTabPayload {
     selection_range?: Record<string, unknown> | null;
     is_pinned?: boolean;
     last_executed_at?: string | null;
+    result_limit?: 100 | 500 | 1000;
 }
 
 export async function fetchQueryTabs(): Promise<QueryTabDto[]> {

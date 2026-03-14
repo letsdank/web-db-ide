@@ -6,7 +6,7 @@ export interface ExecuteQueryPayload {
     query_tab_id?: number | null;
     sql: string;
     selected_sql?: string | null;
-    max_rows?: number;
+    max_rows?: 100 | 500 | 1000;
     save_to_history?: boolean;
 }
 

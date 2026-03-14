@@ -36,7 +36,7 @@ class QueryController extends Controller
             $result = $executor->execute(
                 $connection,
                 $sql,
-                (int)$request->input('max_rows', 500)
+                $request->integer('max_rows') ?: 500,
             );
 
             $execution->update([

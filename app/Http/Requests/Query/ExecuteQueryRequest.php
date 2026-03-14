@@ -31,7 +31,7 @@ class ExecuteQueryRequest extends FormRequest
             ],
             'sql' => ['required', 'string'],
             'selected_sql' => ['nullable', 'string'],
-            'max_rows' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            'max_rows' => ['nullable', 'integer', 'in:100,500,1000'],
             'save_to_history' => ['boolean'],
         ];
     }

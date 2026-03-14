@@ -13,6 +13,7 @@ class QueryTab extends Model
     protected $fillable = [
         'user_id',
         'db_connection_id',
+        'result_limit',
         'title',
         'sql_text',
         'selected_text',
@@ -24,6 +25,7 @@ class QueryTab extends Model
     ];
 
     protected $casts = [
+        'result_limit' => 'integer',
         'cursor_position' => 'array',
         'selection_range' => 'array',
         'is_pinned' => 'boolean',

@@ -37,6 +37,7 @@ class QueryTabController extends Controller
         $tab = QueryTab::query()->create([
             'user_id' => $request->user()->id,
             'db_connection_id' => $request->validated('db_connection_id'),
+            'result_limit' => $request->integer('result_limit') ?: 500,
             'title' => $request->validated('title') ?? 'New Query',
             'sql_text' => $request->validated('sql_text') ?? '',
             'selected_text' => $request->validated('selected_text'),
@@ -153,8 +154,8 @@ class QueryTabController extends Controller
             'selected_text' => $tab->selected_text,
             'cursor_position' => $tab->cursor_position,
             'selection_range' => $tab->selection_range,
-            'is_pinned' => (bool) $tab->is_pinned,
-            'sort_order' => (int) $tab->sort_order,
+            'is_pinned' => (bool)$tab->is_pinned,
+            'sort_order' => (int)$tab->sort_order,
             'last_executed_at' => optional($tab->last_executed_at)?->toISOString(),
             'created_at' => optional($tab->created_at)?->toISOString(),
             'updated_at' => optional($tab->updated_at)?->toISOString(),

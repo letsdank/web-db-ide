@@ -19,9 +19,10 @@ class UpdateQueryTabRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('db_connections', 'id')->where(
-                    fn ($query) => $query->where('user_id', $this->user()->id)
+                    fn($query) => $query->where('user_id', $this->user()->id)
                 ),
             ],
+            'result_limit' => ['nullable', 'integer', 'in:100,500,1000'],
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'sql_text' => ['sometimes', 'nullable', 'string'],
             'selected_text' => ['sometimes', 'nullable', 'string'],

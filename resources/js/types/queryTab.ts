@@ -4,6 +4,7 @@ export interface QueryTabDto {
     id: number;
     user_id: number;
     db_connection_id: number | null;
+    result_limit: 100 | 500 | 1000;
     title: string;
     sql_text: string;
     selected_text: string | null;
