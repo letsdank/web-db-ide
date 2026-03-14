@@ -39,6 +39,7 @@ interface WorkspaceState {
 
     setTabs: (tabs: QueryTabDto[]) => void;
     replaceTabs: (tabs: QueryTabDto[]) => void;
+    reorderTabs: (tabs: QueryTabDto[]) => void;
     addTab: (tab: QueryTabDto) => void;
     upsertTab: (tab: QueryTabDto) => void;
     removeTab: (tabId: number) => void;
@@ -171,6 +172,27 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         }),
 
     replaceTabs: (tabs) =>
+        set((state) => {
+            const nextTabState: Record<number, TabExecutionState> = {};
+
+            for (const tab of tabs) {
+                nextTabState[tab.id] = state.tabStateById[tab.id] ?? {
+                    isExecuting: false,
+                    result: null,
+                };
+            }
+
+            return {
+                tabs,
+                activeTabId: tabs.some((tab) => tab.id === state.activeTabId)
+                    ? state.activeTabId
+                    : tabs[0]?.id ?? null,
+                tabStateById: nextTabState,
+                dirtyTabIds: state.dirtyTabIds.filter((id) => tabs.some((tab) => tab.id === id)),
+            };
+        }),
+
+    reorderTabs: (tabs) =>
         set((state) => {
             const nextTabState: Record<number, TabExecutionState> = {};
 

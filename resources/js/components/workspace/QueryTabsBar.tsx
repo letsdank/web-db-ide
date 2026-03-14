@@ -14,6 +14,8 @@ interface Props {
     onCloseOthers: (id: number) => void;
     onTogglePin: (tab: QueryTabDto) => void;
     onDuplicate: (tab: QueryTabDto) => void;
+    onMoveLeft: (tab: QueryTabDto) => void;
+    onMoveRight: (tab: QueryTabDto) => void;
 }
 
 export function QueryTabsBar({
@@ -26,6 +28,8 @@ export function QueryTabsBar({
                                  onCloseOthers,
                                  onTogglePin,
                                  onDuplicate,
+                                 onMoveLeft,
+                                 onMoveRight,
                              }: Props) {
     const {
         state,
@@ -37,6 +41,20 @@ export function QueryTabsBar({
 
     const contextTab = state.payload;
     const activeValue = activeTabId ? String(activeTabId) : undefined;
+
+    function canMoveLeft(tab: QueryTabDto): boolean {
+        const groupTabs = tabs.filter((item) => item.is_pinned === tab.is_pinned);
+        const index = groupTabs.findIndex((item) => item.id === tab.id);
+
+        return index > 0;
+    }
+
+    function canMoveRight(tab: QueryTabDto): boolean {
+        const groupTabs = tabs.filter((item) => item.is_pinned === tab.is_pinned);
+        const index = groupTabs.findIndex((item) => item.id === tab.id);
+
+        return index !== -1 && index < groupTabs.length - 1;
+    }
 
     return (
         <div
@@ -66,6 +84,18 @@ export function QueryTabsBar({
                                 key: 'duplicate',
                                 text: 'Duplicate tab',
                                 onClick: () => onDuplicate(contextTab),
+                            },
+                            {
+                                key: 'move-left',
+                                text: 'Move left',
+                                disabled: !canMoveLeft(contextTab),
+                                onClick: () => onMoveLeft(contextTab),
+                            },
+                            {
+                                key: 'move-right',
+                                text: 'Move right',
+                                disabled: !canMoveRight(contextTab),
+                                onClick: () => onMoveRight(contextTab),
                             },
                             {
                                 key: 'pin',
@@ -103,6 +133,8 @@ export function QueryTabsBar({
                         {tabs.map((tab) => {
                             const isDirty = dirtyTabIds.includes(tab.id);
                             const isPinned = Boolean(tab.is_pinned);
+                            const canTabMoveLeft = canMoveLeft(tab);
+                            const canTabMoveRight = canMoveRight(tab);
 
                             const labelContent = isDirty ? 'Unsaved' : isPinned ? 'Pinned' : null;
 
@@ -154,6 +186,16 @@ export function QueryTabsBar({
                                             {
                                                 text: "Duplicate",
                                                 action: () => onDuplicate(tab),
+                                            },
+                                            {
+                                                text: "Move left",
+                                                action: () => onMoveLeft(tab),
+                                                disabled: !canTabMoveLeft,
+                                            },
+                                            {
+                                                text: "Move right",
+                                                action: () => onMoveRight(tab),
+                                                disabled: !canTabMoveRight,
                                             },
                                             {
                                                 text: isPinned ? "Unpin" : "Pin",

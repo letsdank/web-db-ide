@@ -7,7 +7,7 @@ import {
     testConnection, testExistingConnection,
     updateConnection
 } from "../api/connections";
-import {createQueryTab, deleteQueryTab, fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
+import {createQueryTab, deleteQueryTab, fetchQueryTabs, reorderQueryTabs, updateQueryTab} from "../api/queryTabs";
 import {fetchQueryHistory} from "../api/queryHistory";
 import {createSavedQuery, fetchSavedQueries} from "../api/savedQueries";
 import {executeQuery} from "../api/queries";
@@ -87,6 +87,7 @@ export function WorkspacePage() {
         tabs,
         setTabs,
         replaceTabs,
+        reorderTabs,
         addTab,
         upsertTab,
         removeTab,
@@ -524,6 +525,57 @@ export function WorkspacePage() {
         }
     }
 
+    function withSequentialSortOrder(nextTabs: QueryTabDto[]): QueryTabDto[] {
+        return nextTabs.map((tab, index) => ({
+            ...tab,
+            sort_order: index,
+        }));
+    }
+
+    function moveTabInsideGroup(
+        sourceTabs: QueryTabDto[],
+        tabId: number,
+        direction: 'left' | 'right',
+    ): QueryTabDto[] {
+        const targetTab = sourceTabs.find((tab) => tab.id === tabId);
+
+        if (!targetTab) {
+            return sourceTabs;
+        }
+
+        const sameGroupTabs = sourceTabs.filter((tab) => tab.is_pinned === targetTab.is_pinned);
+        const groupIndex = sameGroupTabs.findIndex((tab) => tab.id === tabId);
+
+        if (groupIndex === -1) {
+            return sourceTabs;
+        }
+
+        const swapIndex = direction === 'left' ? groupIndex - 1 : groupIndex + 1;
+
+        if (swapIndex < 0 || swapIndex >= sameGroupTabs.length) {
+            return sourceTabs;
+        }
+
+        const reorderedGroup = [...sameGroupTabs];
+        const [movedTab] = reorderedGroup.splice(groupIndex, 1);
+        reorderedGroup.splice(swapIndex, 0, movedTab);
+
+        const groupIds = new Set(reorderedGroup.map((tab) => tab.id));
+        const nextTabs: QueryTabDto[] = [];
+        let groupCursor = 0;
+
+        for (const tab of sourceTabs) {
+            if (groupIds.has(tab.id)) {
+                nextTabs.push(reorderedGroup[groupCursor]);
+                groupCursor += 1;
+            } else {
+                nextTabs.push(tab);
+            }
+        }
+
+        return withSequentialSortOrder(nextTabs);
+    }
+
     async function handleTogglePin(tab: QueryTabDto) {
         const nextTab: QueryTabDto = {
             ...tab,
@@ -537,10 +589,61 @@ export function WorkspacePage() {
                 is_pinned: nextTab.is_pinned,
             });
 
-            upsertTab(updatedTab);
+            const refreshedTabs = tabs.map((item) =>
+                item.id === updatedTab.id ? updatedTab : item,
+            );
+
+            const normalizedTabs = withSequentialSortOrder(
+                [...refreshedTabs].sort((a, b) => {
+                    if (a.is_pinned !== b.is_pinned) {
+                        return Number(b.is_pinned) - Number(a.is_pinned);
+                    }
+
+                    if (a.sort_order !== b.sort_order) {
+                        return a.sort_order - b.sort_order;
+                    }
+
+                    return a.id - b.id;
+                }),
+            );
+
+            reorderTabs(normalizedTabs);
+
+            const persistedTabs = await reorderQueryTabs(
+                normalizedTabs.map((item) => ({
+                    id: item.id,
+                    sort_order: item.sort_order,
+                })),
+            );
+
+            reorderTabs(persistedTabs);
         } catch (error) {
             console.error(error);
             upsertTab(tab);
+        }
+    }
+
+    async function handleMoveTab(tab: QueryTabDto, direction: 'left' | 'right') {
+        const nextTabs = moveTabInsideGroup(tabs, tab.id, direction);
+
+        if (nextTabs === tabs) {
+            return;
+        }
+
+        reorderTabs(nextTabs);
+
+        try {
+            const updatedTabs = await reorderQueryTabs(
+                nextTabs.map((item) => ({
+                    id: item.id,
+                    sort_order: item.sort_order,
+                })),
+            );
+
+            reorderTabs(updatedTabs);
+        } catch (error) {
+            console.error(error);
+            replaceTabs(tabs);
         }
     }
 
@@ -972,6 +1075,8 @@ export function WorkspacePage() {
                         onCloseOthers={handleCloseOtherTabs}
                         onTogglePin={handleTogglePin}
                         onDuplicate={handleDuplicateTab}
+                        onMoveLeft={(tab) => handleMoveTab(tab, 'left')}
+                        onMoveRight={(tab) => handleMoveTab(tab, 'right')}
                     />
                 }
                 toolbar={

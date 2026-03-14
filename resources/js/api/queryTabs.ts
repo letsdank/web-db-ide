@@ -45,3 +45,13 @@ export async function updateQueryTab(id: number, payload: UpdateQueryTabPayload)
 export async function deleteQueryTab(id: number): Promise<void> {
     await apiClient.delete(`/query-tabs/${id}`);
 }
+
+export async function reorderQueryTabs(
+    tabs: Array<{ id: number; sort_order: number }>
+): Promise<QueryTabDto[]> {
+    const response = await apiClient.patch<{ data: QueryTabDto[] }>('/query-tabs/reorder', {
+        tabs,
+    });
+
+    return response.data.data;
+}
