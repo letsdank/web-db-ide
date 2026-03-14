@@ -1,6 +1,12 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
 import {useCallback, useEffect, useMemo, useState} from "react";
-import {createConnection, deleteConnection, fetchConnections, updateConnection} from "../api/connections";
+import {
+    createConnection,
+    deleteConnection,
+    fetchConnections,
+    testConnection, testExistingConnection,
+    updateConnection
+} from "../api/connections";
 import {createQueryTab, deleteQueryTab, fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
 import {fetchQueryHistory} from "../api/queryHistory";
 import {createSavedQuery, fetchSavedQueries} from "../api/savedQueries";
