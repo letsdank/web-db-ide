@@ -1,6 +1,6 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
 import {useCallback, useEffect, useMemo, useState} from "react";
-import {createConnection, CreateConnectionPayload, fetchConnections} from "../api/connections";
+import {createConnection, fetchConnections} from "../api/connections";
 import {createQueryTab, deleteQueryTab, fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
 import {fetchQueryHistory} from "../api/queryHistory";
 import {createSavedQuery, fetchSavedQueries} from "../api/savedQueries";
@@ -21,6 +21,7 @@ import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magni
 import {CommandPalette} from "../features/command-palette/components/CommandPalette";
 import {WorkspaceMainLayout} from "../features/workspace/components/WorkspaceMainLayout";
 import {ExplorerSidebar} from "../features/explorer/components/ExplorerSidebar";
+import {CreateConnectionPayload} from "../types/connection";
 
 export function WorkspacePage() {
     const {
