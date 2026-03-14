@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DbConnectionController;
 use App\Http\Controllers\Api\ExplorerController;
 use App\Http\Controllers\Api\QueryController;
@@ -9,7 +10,12 @@ use App\Http\Controllers\Api\QueryTabController;
 use App\Http\Controllers\Api\SavedQueryController;
 use Illuminate\Support\Facades\Route;
 
+Route::post('/auth/login', [AuthController::class, 'login']);
+
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
     // saved queries
     Route::get('/saved-queries', [SavedQueryController::class, 'index']);
     Route::post('/saved-queries', [SavedQueryController::class, 'store']);
@@ -34,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('connections', DbConnectionController::class);
 
     // query history
-    Route::get('/query-history', [QueryHistoryController::class,'index']);
+    Route::get('/query-history', [QueryHistoryController::class, 'index']);
     Route::get('/query-history/{history}', [QueryHistoryController::class, 'show']);
     Route::delete('/query-history/{history}', [QueryHistoryController::class, 'destroy']);
 

@@ -46,8 +46,22 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         const status = error?.response?.status;
+        const requestUrl = error?.config?.url ?? "";
 
-        if (status >= 400 || !status) {
+        if (status === 401) {
+            localStorage.removeItem('api_token');
+            delete apiClient.defaults.headers.Authorization;
+        }
+
+        if (
+            status >= 400 &&
+            requestUrl !== '/auth/me' &&
+            requestUrl !== '/auth/login'
+        ) {
+            showErrorToast(extractErrorMessage(error), "Request failed");
+        }
+
+        if (!status) {
             showErrorToast(extractErrorMessage(error), "Request failed");
         }
 
