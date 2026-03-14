@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Connection\StoreConnectionRequest;
+use App\Http\Requests\Connection\TestConnectionRequest;
 use App\Http\Requests\Connection\UpdateConnectionRequest;
 use App\Models\DbConnection;
+use App\Services\Database\ConnectionProbe;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class DbConnectionController extends Controller
 {
@@ -85,7 +88,7 @@ class DbConnectionController extends Controller
             unset($data['password']);
         }
 
-        if (key_exists('ssh_password', $data)) {
+        if (array_key_exists('ssh_password', $data)) {
             $data['ssh_password_encrypted'] = filled($data['ssh_password'])
                 ? encrypt($data['ssh_password'])
                 : null;
@@ -93,7 +96,7 @@ class DbConnectionController extends Controller
             unset($data['ssh_password']);
         }
 
-        if (key_exists('ssh_private_key', $data)) {
+        if (array_key_exists('ssh_private_key', $data)) {
             $data['ssh_private_key_encrypted'] = filled($data['ssh_private_key'])
                 ? encrypt($data['ssh_private_key'])
                 : null;
@@ -101,7 +104,7 @@ class DbConnectionController extends Controller
             unset($data['ssh_private_key']);
         }
 
-        if (key_exists('ssh_passphrase', $data)) {
+        if (array_key_exists('ssh_passphrase', $data)) {
             $data['ssh_passphrase_encrypted'] = filled($data['ssh_passphrase'])
                 ? encrypt($data['ssh_passphrase'])
                 : null;
@@ -125,5 +128,99 @@ class DbConnectionController extends Controller
         return response()->json([
             'message' => 'Connection deleted',
         ]);
+    }
+
+    public function test(TestConnectionRequest $request, ConnectionProbe $probe): JsonResponse
+    {
+        $connection = $this->makeProbeConnection(
+            $request->validated(),
+            $request->user()->id,
+        );
+
+        $result = $probe->probe($connection);
+
+        return response()->json([
+            'data' => $result,
+        ]);
+    }
+
+    public function testExisting(
+        TestConnectionRequest $request,
+        DbConnection          $connection,
+        ConnectionProbe       $probe,
+    ): JsonResponse
+    {
+        abort_unless($connection->user_id === $request->user()->id, 404);
+
+        $probeConnection = $this->makeProbeConnection(
+            $request->validated(),
+            $request->user()->id,
+            $connection,
+        );
+
+        $result = $probe->probe($probeConnection);
+
+        return response()->json([
+            'data' => $result,
+        ]);
+    }
+
+    // helpers
+    protected function makeProbeConnection(array $data, int $userId, ?DbConnection $base = null): DbConnection
+    {
+        $connection = $base ? $base->replicate() : new DbConnection();
+
+        $connection->forceFill([
+            'user_id' => $userId,
+            'name' => $data['name'] ?? $base?->name ?? 'Test connection',
+            'driver' => $data['driver'] ?? $base?->driver ?? 'pgsql',
+            'host' => $data['host'] ?? $base?->host,
+            'port' => $data['port'] ?? $base?->port ?? 5432,
+            'database_name' => $data['database_name'] ?? $base?->database_name,
+            'username' => $data['username'] ?? $base?->username,
+            'ssl_mode' => $data['ssl_mode'] ?? $base?->ssl_mode,
+            'schema_default' => $data['schema_default'] ?? $base?->schema_default,
+            'color' => $data['color'] ?? $base?->color,
+            'is_read_only' => Arr::get($data, 'is_read_only', $base?->is_read_only ?? false),
+            'connect_timeout_seconds' => Arr::get($data, 'connect_timeout_seconds', $base?->connect_timeout_seconds ?? 10),
+            'query_timeout_seconds' => Arr::get($data, 'query_timeout_seconds', $base?->query_timeout_seconds),
+            'use_ssh_tunnel' => Arr::get($data, 'use_ssh_tunnel', $base?->use_ssh_tunnel ?? false),
+            'ssh_host' => Arr::get($data, 'ssh_host', $base?->ssh_host),
+            'ssh_port' => Arr::get($data, 'ssh_port', $base?->ssh_port ?? 22),
+            'ssh_username' => Arr::get($data, 'ssh_username', $base?->ssh_username),
+            'ssh_known_host_fingerprint' => Arr::get($data, 'ssh_known_host_fingerprint', $base?->ssh_known_host_fingerprint),
+        ]);
+
+        if (array_key_exists('password', $data)) {
+            $connection->password_encrypted = filled($data['password'])
+                ? encrypt($data['password'])
+                : $base?->password_encrypted;
+        }
+
+        if (array_key_exists('ssh_password', $data)) {
+            $connection->ssh_password_encrypted = filled($data['ssh_password'])
+                ? encrypt($data['ssh_password'])
+                : null;
+        } else if ($base) {
+            $connection->ssh_password_encrypted = $base->ssh_password_encrypted;
+        }
+
+        if (array_key_exists('ssh_private_key', $data)) {
+            $connection->ssh_private_key_encrypted = filled($data['ssh_private_key'])
+                ? encrypt($data['ssh_private_key'])
+                : null;
+        } else if ($base) {
+            $connection->ssh_private_key_encrypted = $base->ssh_private_key_encrypted;
+        }
+
+        if (array_key_exists('ssh_passphrase', $data)) {
+            $connection->ssh_passphrase_encrypted = filled($data['ssh_passphrase'])
+                ? encrypt($data['ssh_passphrase'])
+                : null;
+        } else if ($base) {
+            $connection->ssh_passphrase_encrypted = $base->ssh_passphrase_encrypted;
+        }
+
+        return $connection;
     }
 }

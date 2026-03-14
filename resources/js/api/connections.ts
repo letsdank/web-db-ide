@@ -1,4 +1,9 @@
-import {ConnectionDto, CreateConnectionPayload, UpdateConnectionPayload} from "../types/connection";
+import {
+    ConnectionDto,
+    CreateConnectionPayload,
+    TestConnectionResultDto,
+    UpdateConnectionPayload
+} from "../types/connection";
 import {apiClient} from "./client";
 
 export async function fetchConnections(): Promise<ConnectionDto[]> {
@@ -19,6 +24,23 @@ export async function updateConnection(id: number, payload: UpdateConnectionPayl
     return response.data.data;
 }
 
-export async function deleteConnection(id:number):Promise<void>{
+export async function deleteConnection(id: number): Promise<void> {
     await apiClient.delete(`/connections/${id}`);
+}
+
+export async function testConnection(
+    payload: CreateConnectionPayload | UpdateConnectionPayload,
+): Promise<TestConnectionResultDto> {
+    const response = await apiClient.post<{ data: TestConnectionResultDto }>('/connections/test', payload);
+
+    return response.data.data;
+}
+
+export async function testExistingConnection(
+    id: number,
+    payload: CreateConnectionPayload | UpdateConnectionPayload,
+): Promise<TestConnectionResultDto> {
+    const response = await apiClient.post<{ data: TestConnectionResultDto }>(`/connections/${id}/test`, payload);
+
+    return response.data.data;
 }

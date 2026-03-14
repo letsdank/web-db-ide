@@ -1,6 +1,11 @@
 import {useEffect, useMemo, useState} from "react";
 import {Button, Checkbox, Dialog, Label, RadioGroup, Select, Text, TextArea, TextInput} from "@gravity-ui/uikit";
-import {ConnectionDto, CreateConnectionPayload, UpdateConnectionPayload} from "../../types/connection";
+import {
+    ConnectionDto,
+    CreateConnectionPayload,
+    TestConnectionResultDto,
+    UpdateConnectionPayload
+} from "../../types/connection";
 
 type SshAuthMode = 'password' | 'private_key';
 
@@ -11,6 +16,7 @@ interface Props {
     initialConnection?: ConnectionDto | null;
     onClose: () => void;
     onSubmit: (payload: CreateConnectionPayload | UpdateConnectionPayload) => Promise<void> | void;
+    onTest: (payload: CreateConnectionPayload | UpdateConnectionPayload) => Promise<TestConnectionResultDto>;
 }
 
 interface FormState {
@@ -66,8 +72,12 @@ export function ConnectionFormDialog({
                                          initialConnection = null,
                                          onClose,
                                          onSubmit,
+                                         onTest,
                                      }: Props) {
     const [form, setForm] = useState<FormState>(() => makeInitialForm(initialConnection));
+    const [isTestingConnection, setIsTestingConnection] = useState(false);
+    const [testResult, setTestResult] = useState<TestConnectionResultDto | null>(null);
+    const [testError, setTestError] = useState<string | null>(null);
 
     const [sshAuthMode, setSshAuthMode] = useState<SshAuthMode>(() => {
         if (initialConnection?.has_ssh_private_key) {
@@ -84,6 +94,9 @@ export function ConnectionFormDialog({
 
         setForm(makeInitialForm(initialConnection));
         setSshAuthMode(initialConnection?.has_ssh_private_key ? 'private_key' : 'password');
+        setTestResult(null);
+        setTestError(null);
+        setIsTestingConnection(false);
     }, [initialConnection, open]);
 
     const isEditMode = Boolean(initialConnection);
@@ -126,12 +139,8 @@ export function ConnectionFormDialog({
         }));
     }
 
-    async function handleSubmit() {
-        if (!canSubmit || loading) {
-            return;
-        }
-
-        const payload: CreateConnectionPayload = {
+    function buildPayload(): CreateConnectionPayload | UpdateConnectionPayload {
+        const payload: CreateConnectionPayload | UpdateConnectionPayload = {
             name: form.name.trim(),
             driver: form.driver.trim(),
             host: form.host.trim(),
@@ -142,7 +151,6 @@ export function ConnectionFormDialog({
             schema_default: form.schema_default?.trim() || null,
             ssl_mode: form.ssl_mode?.trim() || null,
             color: form.color?.trim() || null,
-
             use_ssh_tunnel: form.use_ssh_tunnel,
             ssh_host: form.use_ssh_tunnel ? form.ssh_host.trim() || null : null,
             ssh_port: form.use_ssh_tunnel ? Number(form.ssh_port || 22) : null,
@@ -183,7 +191,38 @@ export function ConnectionFormDialog({
             payload.ssh_passphrase = null;
         }
 
-        await onSubmit(payload);
+        return payload;
+    }
+
+    async function handleSubmit() {
+        if (!canSubmit || loading) {
+            return;
+        }
+
+        await onSubmit(buildPayload());
+    }
+
+    async function handleTestConnection() {
+        if (!canSubmit || loading || isTestingConnection) {
+            return;
+        }
+
+        setIsTestingConnection(true);
+        setTestError(null);
+        setTestResult(null);
+
+        try {
+            const result = await onTest(buildPayload());
+            setTestResult(result);
+        } catch (error: any) {
+            setTestError(
+                error?.response?.data?.message ||
+                error?.message ||
+                'Failed to test connection.',
+            );
+        } finally {
+            setIsTestingConnection(false);
+        }
     }
 
     if (!open) {
@@ -459,39 +498,56 @@ export function ConnectionFormDialog({
                         </div>
 
                         {error ? (
-                            <div
-                                style={{
-                                    border: "1px solid var(--g-color-line-danger)",
-                                    background: "var(--g-color-base-danger-light)",
-                                    borderRadius: 12,
-                                    padding: 12,
-                                }}
-                            >
-                                <Text variant="body-2">{error}</Text>
+                            <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+                                <Label theme="danger">Connection failed</Label>
+                                <Text variant="body-2" color="danger">
+                                    {error}
+                                </Text>
                             </div>
                         ) : null}
 
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                gap: 10,
-                                paddingTop: 4,
-                            }}
-                        >
-                            <Button view="flat-secondary" onClick={onClose} disabled={loading}>
-                                Cancel
-                            </Button>
+                        {testError ? (
+                            <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+                                <Label theme="danger">Connection test failed</Label>
+                                <Text variant="body-2" color="danger">
+                                    {testError}
+                                </Text>
+                            </div>
+                        ) : null}
 
+                        {testResult ? (
+                            <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+                                <Label theme="danger">Connection successful</Label>
+                                <Text variant="body-2" color="secondary">
+                                    Connected
+                                    to {testResult.database_name} as {testResult.user_name} in {testResult.duration_ms} ms
+                                </Text>
+                            </div>
+                        ) : null}
+
+                        <Dialog.Footer
+                            textButtonApply={isEditMode ? "Save changes" : "Create connection"}
+                            textButtonCancel="Cancel"
+                            propsButtonApply={{
+                                view: "action",
+                                loading,
+                                disabled: !canSubmit || isTestingConnection,
+                            }}
+                            propsButtonCancel={{
+                                disabled: loading || isTestingConnection,
+                            }}
+                            onClickButtonApply={handleSubmit}
+                            onClickButtonCancel={onClose}
+                        >
                             <Button
-                                view="action"
-                                onClick={handleSubmit}
+                                view="outlined"
+                                loading={isTestingConnection}
                                 disabled={!canSubmit || loading}
-                                loading={loading}
+                                onClick={handleTestConnection}
                             >
-                                {isEditMode ? "Save connection" : "Create connection"}
+                                Test connection
                             </Button>
-                        </div>
+                        </Dialog.Footer>
                     </div>
                 </div>
             </Dialog.Body>

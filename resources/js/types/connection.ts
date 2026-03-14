@@ -34,6 +34,13 @@ export interface ConnectionDto {
     updated_at?: string;
 }
 
+export interface TestConnectionResultDto {
+    ok: boolean;
+    duration_ms: number;
+    database_name: string;
+    user_name: string;
+}
+
 export interface CreateConnectionPayload {
     name: string;
     driver: string;

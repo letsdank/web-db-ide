@@ -687,6 +687,14 @@ export function WorkspacePage() {
         }
     }
 
+    async function handleTestConnection(payload: CreateConnectionPayload | UpdateConnectionPayload) {
+        if (editingConnection) {
+            return await testExistingConnection(editingConnection.id, payload);
+        }
+
+        return await testConnection(payload);
+    }
+
     async function handleSaveCurrentQuery() {
         if (!activeTab) {
             return;
@@ -747,6 +755,7 @@ export function WorkspacePage() {
                 initialConnection={editingConnection}
                 onClose={closeConnectionDialog}
                 onSubmit={handleCreateConnection}
+                onTest={handleTestConnection}
             />
 
             <CommandPalette

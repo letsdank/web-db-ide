@@ -37,6 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/queries/execute', [QueryController::class, 'execute']);
 
     // connections
+    Route::post('/connections/test', [DbConnectionController::class, 'test']);
+    Route::post('/connections/{connection}/test', [DbConnectionController::class, 'testExisting']);
+
     Route::apiResource('connections', DbConnectionController::class);
 
     // query history
