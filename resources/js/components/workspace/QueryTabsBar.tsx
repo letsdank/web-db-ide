@@ -1,8 +1,9 @@
 import {QueryTabDto} from "../../types/queryTab";
 import {useContextMenu} from "../../hooks/useContextMenu";
 import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
-import {Button, DropdownMenu, Icon, Label, Tab, TabList, TabProvider, Text} from "@gravity-ui/uikit";
+import {Button, DropdownMenu, Icon, Tab, TabList, TabProvider, Text, TextInput} from "@gravity-ui/uikit";
 import {CirclePlus, Ellipsis} from "@gravity-ui/icons";
+import {useEffect, useMemo, useRef, useState} from "react";
 
 interface Props {
     tabs: QueryTabDto[];
@@ -16,6 +17,7 @@ interface Props {
     onDuplicate: (tab: QueryTabDto) => void;
     onMoveLeft: (tab: QueryTabDto) => void;
     onMoveRight: (tab: QueryTabDto) => void;
+    onRename: (tab: QueryTabDto, title: string) => void;
 }
 
 export function QueryTabsBar({
@@ -30,6 +32,7 @@ export function QueryTabsBar({
                                  onDuplicate,
                                  onMoveLeft,
                                  onMoveRight,
+                                 onRename,
                              }: Props) {
     const {
         state,
@@ -39,8 +42,46 @@ export function QueryTabsBar({
         closeContextMenu,
     } = useContextMenu<QueryTabDto>();
 
+    const [editingTabId, setEditingTabId] = useState<number | null>(null);
+    const [editingTitle, setEditingTitle] = useState('');
+    const inputRef = useRef<HTMLInputElement | null>(null);
+
     const contextTab = state.payload;
     const activeValue = activeTabId ? String(activeTabId) : undefined;
+
+    useEffect(() => {
+        if (editingTabId && inputRef.current) {
+            inputRef.current.focus();
+            inputRef.current.select();
+        }
+    }, [editingTabId]);
+
+    const editingTab = useMemo(
+        () => tabs.find((tab) => tab.id === editingTabId) ?? null,
+        [tabs, editingTabId],
+    );
+
+    function startRename(tab: QueryTabDto) {
+        setEditingTabId(tab.id);
+        setEditingTitle(tab.title || 'New Query');
+    }
+
+    function cancelRename() {
+        setEditingTabId(null);
+        setEditingTitle('');
+    }
+
+    function submitRename(tab: QueryTabDto) {
+        const normalizedTitle = editingTitle.trim() || 'New Query';
+
+        cancelRename();
+
+        if (normalizedTitle === (tab.title || 'New Query')) {
+            return;
+        }
+
+        onRename(tab, normalizedTitle);
+    }
 
     function canMoveLeft(tab: QueryTabDto): boolean {
         const groupTabs = tabs.filter((item) => item.is_pinned === tab.is_pinned);
@@ -79,6 +120,11 @@ export function QueryTabsBar({
                                 key: 'new',
                                 text: 'Open new tab',
                                 onClick: onCreate,
+                            },
+                            {
+                                key: 'rename',
+                                text: 'Rename tab',
+                                onClick: () => startRename(contextTab),
                             },
                             {
                                 key: 'duplicate',
@@ -135,6 +181,7 @@ export function QueryTabsBar({
                             const isPinned = Boolean(tab.is_pinned);
                             const canTabMoveLeft = canMoveLeft(tab);
                             const canTabMoveRight = canMoveRight(tab);
+                            const isEditing = editingTabId === tab.id;
 
                             const labelContent = isDirty ? 'Unsaved' : isPinned ? 'Pinned' : null;
 
@@ -166,23 +213,62 @@ export function QueryTabsBar({
                                                 gap: 8,
                                                 minWidth: 0,
                                             }}
+                                            onDoubleClick={(event) => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                startRename(tab);
+                                            }}
                                         >
-                                            <Text
-                                                variant="body-2"
-                                                style={{
-                                                    whiteSpace: "nowrap",
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    maxWidth: 180,
-                                                }}
-                                            >
-                                                {tab.title || "New Query"}
-                                            </Text>
+                                            {isEditing ? (
+                                                <div
+                                                    onClick={(event) => {
+                                                        event.preventDefault();
+                                                        event.stopPropagation();
+                                                    }}
+                                                    style={{width: 180}}
+                                                >
+                                                    <TextInput
+                                                        controlRef={inputRef}
+                                                        value={editingTitle}
+                                                        size="s"
+                                                        onUpdate={setEditingTitle}
+                                                        onBlur={() => submitRename(tab)}
+                                                        onKeyDown={(event) => {
+                                                            if (event.key === 'Enter') {
+                                                                event.preventDefault();
+                                                                submitRename(tab);
+                                                            }
+                                                            if (event.key === 'Escape') {
+                                                                event.preventDefault();
+                                                                cancelRename();
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <Text
+                                                    variant="body-2"
+                                                    style={{
+                                                        whiteSpace: "nowrap",
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        maxWidth: 180,
+                                                        userSelect: "none",
+                                                    }}
+                                                >
+                                                    {tab.title || "New Query"}
+                                                </Text>
+                                            )}
                                         </span>
                                     </Tab>
 
                                     <DropdownMenu
                                         items={[
+                                            {
+                                                text: "Rename",
+                                                action: () => startRename(tab),
+                                            },
+
                                             {
                                                 text: "Duplicate",
                                                 action: () => onDuplicate(tab),

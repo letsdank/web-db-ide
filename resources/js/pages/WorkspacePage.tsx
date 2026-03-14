@@ -4,7 +4,8 @@ import {
     createConnection,
     deleteConnection,
     fetchConnections,
-    testConnection, testExistingConnection,
+    testConnection,
+    testExistingConnection,
     updateConnection
 } from "../api/connections";
 import {createQueryTab, deleteQueryTab, fetchQueryTabs, reorderQueryTabs, updateQueryTab} from "../api/queryTabs";
@@ -576,6 +577,30 @@ export function WorkspacePage() {
         return withSequentialSortOrder(nextTabs);
     }
 
+    async function handleMoveTab(tab: QueryTabDto, direction: 'left' | 'right') {
+        const nextTabs = moveTabInsideGroup(tabs, tab.id, direction);
+
+        if (nextTabs === tabs) {
+            return;
+        }
+
+        reorderTabs(nextTabs);
+
+        try {
+            const updatedTabs = await reorderQueryTabs(
+                nextTabs.map((item) => ({
+                    id: item.id,
+                    sort_order: item.sort_order,
+                })),
+            );
+
+            reorderTabs(updatedTabs);
+        } catch (error) {
+            console.error(error);
+            replaceTabs(tabs);
+        }
+    }
+
     async function handleTogglePin(tab: QueryTabDto) {
         const nextTab: QueryTabDto = {
             ...tab,
@@ -623,30 +648,6 @@ export function WorkspacePage() {
         }
     }
 
-    async function handleMoveTab(tab: QueryTabDto, direction: 'left' | 'right') {
-        const nextTabs = moveTabInsideGroup(tabs, tab.id, direction);
-
-        if (nextTabs === tabs) {
-            return;
-        }
-
-        reorderTabs(nextTabs);
-
-        try {
-            const updatedTabs = await reorderQueryTabs(
-                nextTabs.map((item) => ({
-                    id: item.id,
-                    sort_order: item.sort_order,
-                })),
-            );
-
-            reorderTabs(updatedTabs);
-        } catch (error) {
-            console.error(error);
-            replaceTabs(tabs);
-        }
-    }
-
     async function handleCloseTab(tabId: number) {
         const tab = tabs.find((item) => item.id === tabId);
 
@@ -682,6 +683,29 @@ export function WorkspacePage() {
             sql_text: tab.sql_text,
             db_connection_id: tab.db_connection_id,
         });
+    }
+
+    async function handleRenameTab(tab: QueryTabDto, title: string) {
+        const normalizedTitle = title.trim() || 'New Query';
+        const previousTab = tab;
+
+        const nextTab: QueryTabDto = {
+            ...tab,
+            title: normalizedTitle,
+        };
+
+        upsertTab(nextTab);
+
+        try {
+            const updatedTab = await updateQueryTab(tab.id, {
+                title: normalizedTitle,
+            });
+
+            upsertTab(updatedTab);
+        } catch (error) {
+            console.error(error);
+            upsertTab(previousTab);
+        }
     }
 
     async function handleCloseOtherTabs(tabId: number) {
@@ -1077,6 +1101,7 @@ export function WorkspacePage() {
                         onDuplicate={handleDuplicateTab}
                         onMoveLeft={(tab) => handleMoveTab(tab, 'left')}
                         onMoveRight={(tab) => handleMoveTab(tab, 'right')}
+                        onRename={handleRenameTab}
                     />
                 }
                 toolbar={
