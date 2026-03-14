@@ -44,7 +44,7 @@ export function EditorToolbar({
                     disabled={!activeConnectionId || isExecuting}
                     loading={isExecuting}
                 >
-                    Run query
+                    Run all
                 </Button>
 
                 <Button
@@ -76,9 +76,9 @@ export function EditorToolbar({
                 </div>
 
                 {hasSelection ? (
-                    <Label theme="info">Selection mode</Label>
+                    <Label theme="info">Selection available</Label>
                 ) : (
-                    <Label theme="utility">Full query mode</Label>
+                    <Label theme="utility">No selection</Label>
                 )}
 
                 <div
@@ -91,9 +91,18 @@ export function EditorToolbar({
                     }}
                 >
                     <Text variant="body-2" color="secondary">
-                        Execute
+                        Run all
                     </Text>
                     <Hotkey value="mod+enter" view="dark"/>
+
+                    {hasSelection ? (
+                        <>
+                            <Text variant="body-2" color="secondary">
+                                Run selection
+                            </Text>
+                            <Hotkey value="shift+mod+enter" view="dark"/>
+                        </>
+                    ) : null}
                 </div>
             </div>
         </Card>

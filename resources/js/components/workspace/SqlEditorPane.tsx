@@ -22,13 +22,15 @@ interface Props {
     onChange: (value: string) => void;
     onSelectionChange: (payload: EditorSelectionPayload) => void;
     onRun: () => void;
+    onRunSelection: () => void;
 }
 
 export function SqlEditorPane({
                                   value,
                                   onChange,
                                   onSelectionChange,
-                                  onRun
+                                  onRun,
+                                  onRunSelection,
                               }: Props) {
     const options = useMemo<MonacoNamespace.editor.IStandaloneEditorConstructionOptions>(() => ({
         minimap: {enabled: false},
@@ -80,6 +82,10 @@ export function SqlEditorPane({
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
             onRun();
         });
+
+        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+            onRunSelection();
+        })
 
         const pushSelectionState = () => {
             const selection = editor.getSelection();

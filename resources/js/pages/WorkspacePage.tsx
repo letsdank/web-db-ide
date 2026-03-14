@@ -157,12 +157,21 @@ export function WorkspacePage() {
             },
             {
                 id: 'action:run-query',
-                title: 'Run current query',
+                title: 'Run full query',
                 subtitle: activeTab?.title ?? 'Active tab',
                 kind: 'action',
                 icon: <Icon data={Magnifier} size={18}/>,
-                keywords: ['run execute query sql current active'],
-                onSelect: () => handleRun('auto'),
+                keywords: ['run execute query sql current active full all'],
+                onSelect: () => handleRun('full'),
+            },
+            {
+                id: 'action:run-selection',
+                title: 'Run selection',
+                subtitle: hasSelection ? 'Selected SQL fragment' : 'No SQL selected',
+                kind: 'action',
+                icon: <Icon data={Magnifier} size={18}/>,
+                keywords: ['run execute selection highlighted sql fragment'],
+                onSelect: () => handleRun('selection'),
             },
             {
                 id: 'action:show-history',
@@ -288,10 +297,11 @@ export function WorkspacePage() {
         activeConnectionId,
         activeTab,
         connections,
-        openCreateConnectionDialog,
+        hasSelection,
         savedQueries,
-        setRightPanel,
         tabs,
+        openCreateConnectionDialog,
+        setRightPanel,
         handleCreateTab,
         handleRun,
         handleSelectTab,
@@ -549,12 +559,15 @@ export function WorkspacePage() {
         }
 
         const selectedSql = activeTab.selected_text?.trim() || null;
+
+        if (target === 'selection' && !selectedSql) {
+            return;
+        }
+
         const sqlToExecute =
             target === 'selection'
                 ? selectedSql
-                : target === 'full'
-                    ? null
-                    : selectedSql;
+                : null;
 
         setTabExecuting(activeTab.id, true);
 
@@ -677,6 +690,10 @@ export function WorkspacePage() {
     }
 
     async function handleRunSelection() {
+        if (!activeTab?.selected_text?.trim()) {
+            return;
+        }
+
         await handleRun('selection');
     }
 
@@ -883,7 +900,7 @@ export function WorkspacePage() {
                         isExecuting={isExecuting}
                         hasSelection={hasSelection}
                         onSelectConnection={handleSelectConnection}
-                        onRun={() => handleRun('auto')}
+                        onRun={() => handleRun('full')}
                         onRunSelection={handleRunSelection}
                     />
                 }
@@ -893,6 +910,7 @@ export function WorkspacePage() {
                         onChange={handleChangeSql}
                         onSelectionChange={handleEditorSelectionChange}
                         onRun={() => handleRun('auto')}
+                        onRunSelection={handleRunSelection}
                     />
                 }
                 results={
