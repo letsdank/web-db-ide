@@ -1,9 +1,7 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {fetchConnections} from "../api/connections";
-import {fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
-import {fetchQueryHistory} from "../api/queryHistory";
-import {createSavedQuery, fetchSavedQueries} from "../api/savedQueries";
+import {useCallback, useMemo, useRef, useState} from "react";
+import {updateQueryTab} from "../api/queryTabs";
+import {createSavedQuery} from "../api/savedQueries";
 import {QueryHistoryDto} from "../types/queryHistory";
 import {SavedQueryDto} from "../types/savedQuery";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
@@ -23,6 +21,7 @@ import {useWorkspaceExecution} from "../features/workspace/hooks/useWorkspaceExe
 import {useWorkspaceConnections} from "../features/workspace/hooks/useWorkspaceConnections";
 import {useWorkspaceCommandPalette} from "../features/workspace/hooks/useWorkspaceCommandPalette";
 import {useWorkspaceHotkeys} from "../features/workspace/hooks/useWorkspaceHotkeys";
+import {useWorkspaceBoot} from "../features/workspace/hooks/useWorkspaceBoot";
 
 export function WorkspacePage() {
     const {
@@ -246,51 +245,16 @@ export function WorkspacePage() {
         closeConnectionDialog,
     });
 
-    useEffect(() => {
-        async function boot() {
-            try {
-                const [connectionsData, tabsData, historyData, savedQueriesData] = await Promise.all([
-                    fetchConnections(),
-                    fetchQueryTabs(),
-                    fetchQueryHistory(),
-                    fetchSavedQueries(),
-                ]);
-
-                setConnections(connectionsData);
-                setTabs(tabsData);
-                setQueryHistory(historyData);
-                setSavedQueries(savedQueriesData);
-
-                const initialTab = tabsData[0] ?? null;
-                const initialConnectionId =
-                    initialTab?.db_connection_id ??
-                    connectionsData[0]?.id ??
-                    null;
-
-                setActiveTabId(initialTab?.id ?? null);
-                setActiveConnectionId(initialConnectionId);
-
-                if (initialTab?.id) {
-                    ensureTabState(initialTab.id);
-                }
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setBooting(false);
-            }
-        }
-
-        void boot();
-    }, [
-        ensureTabState,
-        setActiveConnectionId,
-        setActiveTabId,
+    useWorkspaceBoot({
         setBooting,
         setConnections,
+        setTabs,
         setQueryHistory,
         setSavedQueries,
-        setTabs,
-    ]);
+        setActiveTabId,
+        setActiveConnectionId,
+        ensureTabState,
+    });
 
     async function handleChangeSql(value: string) {
         if (!activeTab) {
@@ -434,8 +398,6 @@ export function WorkspacePage() {
 
     useWorkspaceHotkeys({
         activeTabId,
-        tabsCount: tabs.length,
-        activeTabIndex,
         isCommandPaletteOpen,
         onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
         onCreateTab: handleCreateTab,
