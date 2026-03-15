@@ -71,6 +71,11 @@ export function EditorToolbar({
 
                 <div className="editor-toolbar__hotkeys">
                     <Text variant="body-2" color="secondary">
+                        New tab
+                    </Text>
+                    <Hotkey value="shift+mod+t" view="dark"/>
+
+                    <Text variant="body-2" color="secondary">
                         Run all
                     </Text>
                     <Hotkey value="mod+enter" view="dark"/>

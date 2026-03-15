@@ -1,10 +1,8 @@
-import {useCallback, useEffect} from "react";
+import {useEffect} from "react";
 import {isEditableElement, isModKey} from "../../../lib/hotkeys";
 
 interface Params {
     activeTabId: number | null;
-    tabsCount: number;
-    activeTabIndex: number;
     isCommandPaletteOpen: boolean;
 
     onOpenCommandPalette: () => void;
@@ -16,8 +14,6 @@ interface Params {
 
 export function useWorkspaceHotkeys({
                                         activeTabId,
-                                        tabsCount,
-                                        activeTabIndex,
                                         isCommandPaletteOpen,
                                         onOpenCommandPalette,
                                         onCreateTab,
@@ -25,22 +21,6 @@ export function useWorkspaceHotkeys({
                                         onFocusEditor,
                                         onSelectAdjacentTab,
                                     }: Params) {
-    const handleSelectAdjacentTabSafe = useCallback((direction: 'next' | 'prev') => {
-        if (tabsCount === 0) {
-            return;
-        }
-
-        const currentIndex = activeTabIndex >= 0 ? activeTabIndex : 0;
-        const delta = direction === 'next' ? 1 : -1;
-        const nextIndex = (currentIndex + delta + tabsCount) % tabsCount;
-
-        if (nextIndex === currentIndex && tabsCount <= 1) {
-            return;
-        }
-
-        onSelectAdjacentTab(direction);
-    }, [activeTabIndex, onSelectAdjacentTab, tabsCount]);
-
     useEffect(() => {
         function handleGlobalKeyDown(event: KeyboardEvent) {
             const key = event.key.toLowerCase();
@@ -48,6 +28,7 @@ export function useWorkspaceHotkeys({
 
             if (isModKey(event) && key === 'k') {
                 event.preventDefault();
+                event.stopPropagation();
                 onOpenCommandPalette();
                 return;
             }
@@ -56,38 +37,50 @@ export function useWorkspaceHotkeys({
                 return;
             }
 
-            if (isModKey(event) && key === 't' && !event.shiftKey) {
+            if (isModKey(event) && event.shiftKey && key === 't') {
                 event.preventDefault();
+                event.stopPropagation();
                 void onCreateTab();
                 return;
             }
 
-            if (isModKey(event) && key === 'w' && !event.shiftKey) {
+            if (isModKey(event) && event.shiftKey && key === 'w') {
                 if (!activeTabId || editable) {
                     return;
                 }
 
                 event.preventDefault();
+                event.stopPropagation();
                 void onCloseActiveTab(activeTabId);
                 return;
             }
 
             if (isModKey(event) && key === '1' && !event.shiftKey) {
                 event.preventDefault();
+                event.stopPropagation();
                 onFocusEditor();
                 return;
             }
 
-            if (isModKey(event) && event.shiftKey && event.key === '[') {
+            const isPrevTabHotkey =
+                (event.altKey && event.shiftKey && event.code === 'ArrowLeft') ||
+                (isModKey(event) && event.shiftKey && event.code === 'BracketLeft');
+
+            if (isPrevTabHotkey) {
                 event.preventDefault();
-                handleSelectAdjacentTabSafe('prev');
+                event.stopPropagation();
+                onSelectAdjacentTab('prev');
                 return;
             }
 
-            if (isModKey(event) && event.shiftKey && event.key === ']') {
+            const isNextTabHotkey =
+                (event.altKey && event.shiftKey && event.code === 'ArrowRight') ||
+                (isModKey(event) && event.shiftKey && event.code === 'BracketRight');
+
+            if (isNextTabHotkey) {
                 event.preventDefault();
-                handleSelectAdjacentTabSafe('next');
-                return;
+                event.stopPropagation();
+                onSelectAdjacentTab('next');
             }
         }
 
@@ -98,11 +91,11 @@ export function useWorkspaceHotkeys({
         };
     }, [
         activeTabId,
-        handleSelectAdjacentTabSafe,
         isCommandPaletteOpen,
         onCloseActiveTab,
         onCreateTab,
         onFocusEditor,
         onOpenCommandPalette,
+        onSelectAdjacentTab,
     ]);
 }
