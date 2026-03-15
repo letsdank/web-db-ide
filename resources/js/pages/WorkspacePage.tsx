@@ -1,17 +1,9 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {
-    createConnection,
-    deleteConnection,
-    fetchConnections,
-    testConnection,
-    testExistingConnection,
-    updateConnection
-} from "../api/connections";
+import {fetchConnections} from "../api/connections";
 import {fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
 import {fetchQueryHistory} from "../api/queryHistory";
 import {createSavedQuery, fetchSavedQueries} from "../api/savedQueries";
-import {executeQuery} from "../api/queries";
 import {QueryHistoryDto} from "../types/queryHistory";
 import {SavedQueryDto} from "../types/savedQuery";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
@@ -22,19 +14,15 @@ import {ResultsPanel} from "../features/results/components/ResultsPanel";
 import {RightSidebarPanels} from "../components/workspace/RightSidebarPanels";
 import {useDebouncedCallback} from "../hooks/useDebouncedCallback";
 import {QueryTabDto} from "../types/queryTab";
-import {CommandPaletteItem} from "../types/commandPalette";
-import {Icon} from "@gravity-ui/uikit";
-import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magnifier} from "@gravity-ui/icons";
 import {CommandPalette} from "../features/command-palette/components/CommandPalette";
 import {WorkspaceMainLayout} from "../features/workspace/components/WorkspaceMainLayout";
 import {ExplorerSidebar} from "../features/explorer/components/ExplorerSidebar";
-import {CreateConnectionPayload, UpdateConnectionPayload} from "../types/connection";
-import {isEditableElement, isModKey} from "../lib/hotkeys";
 import {EditorStatusBar} from "../components/workspace/EditorStatusBar";
 import {useWorkspaceTabActions} from "../features/workspace/hooks/useWorkspaceTabActions";
 import {useWorkspaceExecution} from "../features/workspace/hooks/useWorkspaceExecution";
 import {useWorkspaceConnections} from "../features/workspace/hooks/useWorkspaceConnections";
 import {useWorkspaceCommandPalette} from "../features/workspace/hooks/useWorkspaceCommandPalette";
+import {useWorkspaceHotkeys} from "../features/workspace/hooks/useWorkspaceHotkeys";
 
 export function WorkspacePage() {
     const {
@@ -444,64 +432,17 @@ export function WorkspacePage() {
         void handleSelectTab(nextTab.id);
     }, [activeTabIndex, tabs, handleSelectTab]);
 
-    useEffect(() => {
-        function handleGlobalKeyDown(event: KeyboardEvent) {
-            const key = event.key.toLowerCase();
-            const editable = isEditableElement(event.target);
-
-            if (isModKey(event) && key === 'k') {
-                event.preventDefault();
-                setIsCommandPaletteOpen(true);
-                return;
-            }
-
-            if (isModKey(event) && key === 't' && !event.shiftKey) {
-                event.preventDefault();
-                void handleCreateTab();
-                return;
-            }
-
-            if (isModKey(event) && key === 'w' && !event.shiftKey) {
-                if (!activeTab || editable) {
-                    return;
-                }
-
-                event.preventDefault();
-                void handleCloseTab(activeTab.id);
-                return;
-            }
-
-            if (isModKey(event) && key === '1' && !event.shiftKey) {
-                event.preventDefault();
-                focusEditor();
-                return;
-            }
-
-            if (isModKey(event) && event.shiftKey && event.key === '[') {
-                event.preventDefault();
-                handleSelectAdjacentTab('prev');
-                return;
-            }
-
-            if (isModKey(event) && event.shiftKey && event.key === ']') {
-                event.preventDefault();
-                handleSelectAdjacentTab('next');
-                return;
-            }
-        }
-
-        window.addEventListener('keydown', handleGlobalKeyDown);
-
-        return () => {
-            window.removeEventListener('keydown', handleGlobalKeyDown);
-        };
-    }, [
-        activeTab,
-        focusEditor,
-        handleCloseTab,
-        handleCreateTab,
-        handleSelectAdjacentTab,
-    ]);
+    useWorkspaceHotkeys({
+        activeTabId,
+        tabsCount: tabs.length,
+        activeTabIndex,
+        isCommandPaletteOpen,
+        onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
+        onCreateTab: handleCreateTab,
+        onCloseActiveTab: handleCloseTab,
+        onFocusEditor: focusEditor,
+        onSelectAdjacentTab: handleSelectAdjacentTab,
+    });
 
     const commandPaletteItems = useWorkspaceCommandPalette({
         activeConnectionId,
