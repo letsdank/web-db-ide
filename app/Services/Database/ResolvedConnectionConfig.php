@@ -7,7 +7,7 @@ final class ResolvedConnectionConfig
     public function __construct(
         public readonly string           $host,
         public readonly int              $port,
-        public readonly ?SshTunnelHandle $tunnelHandle = null,
+        public readonly ?SshTunnelSession $tunnelHandle = null,
     )
     {
     }

@@ -8,6 +8,7 @@ final class SshTunnelSession
         public readonly int $localPort,
         private             $process,
         private array       $pipes = [],
+        private array       $tempFiles = [],
     )
     {
     }
@@ -21,8 +22,14 @@ final class SshTunnelSession
         }
 
         if (is_resource($this->process)) {
-            proc_terminate($this->process);
-            proc_close($this->process);
+            @proc_terminate($this->process);
+            @proc_close($this->process);
+        }
+
+        foreach ($this->tempFiles as $path) {
+            if (is_string($path) && is_file($path)) {
+                @unlink($path);
+            }
         }
     }
 }

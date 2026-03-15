@@ -25,7 +25,7 @@ class ConnectionEndpointResolver
         $tunnelHandle = $this->sshTunnelManager->open($connection);
 
         return new ResolvedConnectionConfig(
-            host: $tunnelHandle->localHost,
+            host: '127.0.0.1',
             port: $tunnelHandle->localPort,
             tunnelHandle: $tunnelHandle,
         );
@@ -33,8 +33,6 @@ class ConnectionEndpointResolver
 
     public function cleanup(ResolvedConnectionConfig $resolved): void
     {
-        if ($resolved->tunnelHandle) {
-            $this->sshTunnelManager->close($resolved->tunnelHandle);
-        }
+        $resolved->tunnelHandle?->close();
     }
 }

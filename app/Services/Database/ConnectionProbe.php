@@ -47,7 +47,7 @@ class ConnectionProbe
 
             $statement = $pdo->query('select current_database() as database_name, current_user as user_name');
 
-            return(array)$statement->fetch(PDO::FETCH_ASSOC);
+            return (array)$statement->fetch(PDO::FETCH_ASSOC);
         } finally {
             $tunnelSession?->close();
         }
