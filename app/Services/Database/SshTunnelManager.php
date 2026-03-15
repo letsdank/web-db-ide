@@ -21,13 +21,17 @@ class SshTunnelManager
 
         $command = [
             'ssh',
+            '-v',
             '-p', (string)$sshPort,
             '-N',
             '-L', sprintf('127.0.0.1:%d:%s:%d', $localPort, $targetHost, $targetPort),
             '-o', 'ExitOnForwardFailure=yes',
+            '-o', 'BatchMode=yes',
+            '-o', 'ConnectTimeout=5',
             '-o', 'ServerAliveInterval=30',
             '-o', 'ServerAliveCountMax=3',
             '-o', 'StrictHostKeyChecking=no',
+            '-o', 'UserKnownHostsFile=/dev/null',
             sprintf('%s@%s', $sshUser, $sshHost),
         ];
 
@@ -53,16 +57,32 @@ class SshTunnelManager
 
     private function waitUntilTunnelIsReady($process, array $pipes, int $localPort): void
     {
-        $deadline = microtime(true) + 5.0;
+        $deadline = microtime(true) + 8.0;
+        $stderrBuffer = '';
+        $stdoutBuffer = '';
 
         do {
             $status = proc_get_status($process);
 
+            if (is_resource($pipes[1])) {
+                $stdoutChunk = stream_get_contents($pipes[1]);
+                if ($stdoutChunk !== false && $stdoutChunk !== '') {
+                    $stdoutBuffer .= $stdoutChunk;
+                }
+            }
+
+            if (is_resource($pipes[2])) {
+                $stderrChunk = stream_get_contents($pipes[2]);
+                if ($stderrChunk !== false && $stderrChunk !== '') {
+                    $stderrBuffer .= $stderrChunk;
+                }
+            }
+
             if (!$status['running']) {
-                $stderr = is_resource($pipes[2]) ? stream_get_contents($pipes[2]) : '';
                 throw new RuntimeException(
                     'SSH tunnel exited before becoming ready.'
-                    . ($stderr ? ' STDERR: ' . trim($stderr) : '')
+                    . ($stderrBuffer !== '' ? ' STDERR: ' . trim($stderrBuffer) : '')
+                    . ($stdoutBuffer !== '' ? ' STDOUT: ' . trim($stdoutBuffer) : '')
                 );
             }
 
@@ -76,14 +96,24 @@ class SshTunnelManager
             usleep(100_000);
         } while (microtime(true) < $deadline);
 
-        $stderr = is_resource($pipes[2]) ? stream_get_contents($pipes[2]) : '';
+        if (is_resource($pipes[1])) {
+            $stdoutChunk = stream_get_contents($pipes[1]);
+            if ($stdoutChunk !== false && $stdoutChunk !== '') {
+                $stdoutBuffer .= $stdoutChunk;
+            }
+        }
+
+        if (is_resource($pipes[2])) {
+            $stderrChunk = stream_get_contents($pipes[2]);
+            if ($stderrChunk !== false && $stderrChunk !== '') {
+                $stderrBuffer .= $stderrChunk;
+            }
+        }
 
         throw new RuntimeException(
-            sprintf(
-                'SSH tunnel did not become ready on 127.0.0.1:%d.%s',
-                $localPort,
-                $stderr ? ' STDERR: ' . trim($stderr) : '',
-            )
+            'SSH tunnel did not become ready on 127.0.0.1:' . $localPort
+            . ($stderrBuffer !== '' ? '. STDERR: ' . trim($stderrBuffer) : '')
+            . ($stdoutBuffer !== '' ? '. STDOUT: ' . trim($stdoutBuffer) : '')
         );
     }
 
