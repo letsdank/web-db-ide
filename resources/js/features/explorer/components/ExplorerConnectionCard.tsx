@@ -36,6 +36,7 @@ interface Props {
     onOpenCount: (schema: string, table: ExplorerTableDto) => void;
     onOpenMetadata: (schema: string, table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
     onCopyFullName: (schema: string, table: ExplorerTableDto) => void;
+    onCopySelect: (schema: string, table: ExplorerTableDto) => void;
 }
 
 export function ExplorerConnectionCard({
@@ -61,6 +62,7 @@ export function ExplorerConnectionCard({
                                            onOpenCount,
                                            onOpenMetadata,
                                            onCopyFullName,
+                                           onCopySelect,
                                        }: Props) {
     const visibleSchemas = useMemo(() => {
         if (!filter) {
@@ -190,6 +192,7 @@ export function ExplorerConnectionCard({
                                     onOpenCount={(table) => onOpenCount(schema, table)}
                                     onOpenMetadata={(table, details) => onOpenMetadata(schema, table, details)}
                                     onCopyFullName={(table) => onCopyFullName(schema, table)}
+                                    onCopySelect={(table) => onCopySelect(schema, table)}
                                 />
                             );
                         })

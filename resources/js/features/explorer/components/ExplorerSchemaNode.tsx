@@ -29,6 +29,7 @@ interface Props {
     onOpenCount: (table: ExplorerTableDto) => void;
     onOpenMetadata: (table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
     onCopyFullName: (table: ExplorerTableDto) => void;
+    onCopySelect: (table: ExplorerTableDto) => void;
 }
 
 export function ExplorerSchemaNode({
@@ -48,6 +49,7 @@ export function ExplorerSchemaNode({
                                        onOpenCount,
                                        onOpenMetadata,
                                        onCopyFullName,
+                                       onCopySelect,
                                    }: Props) {
     const visibleTables = useMemo(() => {
         if (!filter) {
@@ -126,6 +128,7 @@ export function ExplorerSchemaNode({
                                     onOpenCount={() => onOpenCount(table)}
                                     onOpenMetadata={() => onOpenMetadata(table, details)}
                                     onCopyFullName={() => onCopyFullName(table)}
+                                    onCopySelect={() => onCopySelect(table)}
                                 />
                             );
                         })

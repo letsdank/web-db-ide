@@ -20,14 +20,22 @@ interface Props {
         sql_text: string;
         db_connection_id: number | null;
     }) => void;
-}
 
-function buildSelectSql(schema: string, table: string) {
-    return `SELECT *\nFROM "${schema}"."${table}" LIMIT 100;`;
-}
-
-function buildCountSql(schema: string, table: string) {
-    return `SELECT COUNT(*) AS total_rows\nFROM "${schema}"."${table}";`;
+    onOpenTablePreview: (payload: {
+        connectionId: number;
+        schema: string | null;
+        table: string;
+    }) => void;
+    onOpenTableCount: (payload: {
+        connectionId: number;
+        schema: string | null;
+        table: string;
+    }) => void;
+    onCopyTableSelect: (payload: {
+        connectionId: number;
+        schema: string | null;
+        table: string;
+    }) => void;
 }
 
 function buildDescribeSql(details: ExplorerTableDetailsDto) {
@@ -55,6 +63,9 @@ export function ExplorerSidebar({
                                     onEditClick,
                                     onDeleteClick,
                                     onOpenSql,
+                                    onOpenTablePreview,
+                                    onOpenTableCount,
+                                    onCopyTableSelect,
                                 }: Props) {
     const [filter, setFilter] = useState('');
 
@@ -157,23 +168,23 @@ export function ExplorerSidebar({
                         ? [
                             {
                                 key: 'select-top',
-                                text: 'Select top 100',
+                                text: 'Open preview',
                                 onClick: () =>
-                                    onOpenSql({
-                                        title: `${contextTable.schema}.${contextTable.table.table_name}`,
-                                        sql_text: buildSelectSql(contextTable.schema, contextTable.table.table_name),
-                                        db_connection_id: contextTable.connectionId,
+                                    onOpenTablePreview({
+                                        connectionId: contextTable.connectionId,
+                                        schema: contextTable.schema,
+                                        table: contextTable.table.table_name,
                                     }),
                             },
                             {
                                 key: 'count',
                                 text: 'Count rows',
                                 onClick: () =>
-                                    onOpenSql({
-                                        title: `${contextTable.schema}.${contextTable.table.table_name} count`,
-                                        sql_text: buildCountSql(contextTable?.schema, contextTable.table.table_name),
-                                        db_connection_id: contextTable.connectionId,
-                                    }),
+                                    onOpenTableCount({
+                                        connectionId: contextTable.connectionId,
+                                        schema: contextTable.schema,
+                                        table: contextTable.table.table_name,
+                                    })
                             },
                             {
                                 key: 'metadata',
@@ -185,6 +196,16 @@ export function ExplorerSidebar({
                                         contextTable.table,
                                         contextTable.details,
                                     ),
+                            },
+                            {
+                                key: 'copy-select',
+                                text: 'Copy SELECT to editor',
+                                onClick: () =>
+                                    onCopyTableSelect({
+                                        connectionId: contextTable.connectionId,
+                                        schema: contextTable.schema,
+                                        table: contextTable.table.table_name,
+                                    }),
                             },
                             {
                                 key: 'separator-1',
@@ -250,17 +271,24 @@ export function ExplorerSidebar({
                         onToggleTable={(schema, tableName) => toggleTable(connection.id, schema, tableName)}
                         onOpenTableContextMenu={openTableContextMenu}
                         onOpenSelect={(schema, table) =>
-                            onOpenSql({
-                                title: `${schema}.${table.table_name}`,
-                                sql_text: buildSelectSql(schema, table.table_name),
-                                db_connection_id: connection.id,
+                            onOpenTablePreview({
+                                connectionId: connection.id,
+                                schema,
+                                table: table.table_name,
                             })
                         }
                         onOpenCount={(schema, table) =>
-                            onOpenSql({
-                                title: `${schema}.${table.table_name} count`,
-                                sql_text: buildCountSql(schema, table.table_name),
-                                db_connection_id: connection.id,
+                            onOpenTableCount({
+                                connectionId: connection.id,
+                                schema,
+                                table: table.table_name,
+                            })
+                        }
+                        onCopySelect={(schema, table) =>
+                            onCopyTableSelect({
+                                connectionId: connection.id,
+                                schema,
+                                table: table.table_name,
                             })
                         }
                         onOpenMetadata={(schema, table, details) =>

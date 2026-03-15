@@ -16,6 +16,7 @@ interface Props {
     onOpenCount: () => void;
     onOpenMetadata: () => void;
     onCopyFullName: () => void;
+    onCopySelect: () => void;
 }
 
 export function ExplorerTableNode({
@@ -29,6 +30,7 @@ export function ExplorerTableNode({
                                       onOpenCount,
                                       onOpenMetadata,
                                       onCopyFullName,
+                                      onCopySelect,
                                   }: Props) {
     return (
         <div className="explorer-table-node">
@@ -73,12 +75,16 @@ export function ExplorerTableNode({
                     <DropdownMenu
                         items={[
                             {
-                                text: 'Select top 100',
+                                text: 'Open preview',
                                 action: onOpenSelect,
                             },
                             {
                                 text: 'Count rows',
                                 action: onOpenCount,
+                            },
+                            {
+                                text: 'Copy SELECT to editor',
+                                action: onCopySelect,
                             },
                             {
                                 text: 'Open metadata',

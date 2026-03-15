@@ -19,6 +19,7 @@ import {useWorkspaceBoot} from "../features/workspace/hooks/useWorkspaceBoot";
 import {useWorkspaceLibrary} from "../features/workspace/hooks/useWorkspaceLibrary";
 import {useActiveWorkspace} from "../features/workspace/hooks/useActiveWorkspace";
 import {useWorkspaceDraft} from "../features/workspace/hooks/useWorkspaceDraft";
+import {buildCountSql, buildPreviewSql, buildSelectSql} from "../features/explorer/lib/sql";
 
 export function WorkspacePage() {
     const {
@@ -194,6 +195,59 @@ export function WorkspacePage() {
         handleCreateTab,
     });
 
+    const handleOpenTablePreview = useCallback(async (payload: {
+        connectionId: number;
+        schema: string | null;
+        table: string;
+    }) => {
+        await handleCreateTab({
+            title: `${payload.table} Preview`,
+            sql_text: buildPreviewSql(payload.schema, payload.table, 100),
+            db_connection_id: payload.connectionId,
+        });
+    }, [handleCreateTab]);
+
+    const handleOpenTableCount = useCallback(async (payload: {
+        connectionId: number;
+        schema: string | null;
+        table: string;
+    }) => {
+        await handleCreateTab({
+            title: `${payload.table} Count`,
+            sql_text: buildCountSql(payload.schema, payload.table),
+            db_connection_id: payload.connectionId,
+        });
+    }, [handleCreateTab]);
+
+    const handleCopyTableSelect = useCallback(async (payload: {
+        connectionId: number;
+        schema: string | null;
+        table: string;
+    }) => {
+        const sql = buildSelectSql(payload.schema, payload.table);
+
+        if (activeTab) {
+            if (activeConnectionId !== payload.connectionId) {
+                await handleSelectConnection(payload.connectionId);
+            }
+
+            await handleChangeSql(sql);
+            return;
+        }
+
+        await handleCreateTab({
+            title: `${payload.table} Query`,
+            sql_text: sql,
+            db_connection_id: payload.connectionId,
+        });
+    }, [
+        activeConnectionId,
+        activeTab,
+        handleChangeSql,
+        handleCreateTab,
+        handleSelectConnection,
+    ]);
+
     const commandPaletteItems = useWorkspaceCommandPalette({
         activeConnectionId,
         activeTab,
@@ -272,6 +326,9 @@ export function WorkspacePage() {
                         onEditClick={openEditConnectionDialog}
                         onDeleteClick={handleDeleteConnection}
                         onOpenSql={handleCreateTab}
+                        onOpenTablePreview={handleOpenTablePreview}
+                        onOpenTableCount={handleOpenTableCount}
+                        onCopyTableSelect={handleCopyTableSelect}
                     />
                 }
                 centerTop={
