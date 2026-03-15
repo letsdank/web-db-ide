@@ -30,7 +30,9 @@ class ConnectionProbe
             $pdo = new PDO(
                 $dsn,
                 $connection->username,
-                decrypt($connection->password_decrypted),
+                filled($connection->password_encrypted)
+                    ? decrypt($connection->password_encrypted)
+                    : null,
                 [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_TIMEOUT => $connection->connect_timeout_seconds ?? 10,
