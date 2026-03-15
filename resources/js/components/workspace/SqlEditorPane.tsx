@@ -1,4 +1,4 @@
-import {useMemo} from "react";
+import {forwardRef, useImperativeHandle, useMemo, useRef} from "react";
 import type * as MonacoNamespace from "monaco-editor"
 import {Editor, OnMount} from "@monaco-editor/react";
 import {Card} from "@gravity-ui/uikit";
@@ -17,6 +17,10 @@ interface EditorSelectionPayload {
     } | null;
 }
 
+export interface SqlEditorPaneHandle {
+    focus: () => void;
+}
+
 interface Props {
     value: string;
     onChange: (value: string) => void;
@@ -25,13 +29,13 @@ interface Props {
     onRunSelection: () => void;
 }
 
-export function SqlEditorPane({
-                                  value,
-                                  onChange,
-                                  onSelectionChange,
-                                  onRun,
-                                  onRunSelection,
-                              }: Props) {
+export const SqlEditorPane = forwardRef<SqlEditorPaneHandle, Props>(function SqlEditorPane({
+                                                                                               value,
+                                                                                               onChange,
+                                                                                               onSelectionChange,
+                                                                                               onRun,
+                                                                                               onRunSelection,
+                                                                                           }, ref) {
     const options = useMemo<MonacoNamespace.editor.IStandaloneEditorConstructionOptions>(() => ({
         minimap: {enabled: false},
         fontSize: 14,
@@ -57,7 +61,17 @@ export function SqlEditorPane({
         },
     }), []);
 
+    const editorRef = useRef<MonacoNamespace.editor.IStandaloneCodeEditor | null>(null);
+
+    useImperativeHandle(ref, () => ({
+        focus: () => {
+            editorRef.current?.focus();
+        },
+    }), []);
+
     const handleMount: OnMount = (editor, monaco) => {
+        editorRef.current = editor;
+
         monaco.editor.defineTheme('web-db-ide-sql', {
             base: 'vs-dark',
             inherit: true,
@@ -145,5 +159,5 @@ export function SqlEditorPane({
                 />
             </div>
         </Card>
-    )
-}
+    );
+});

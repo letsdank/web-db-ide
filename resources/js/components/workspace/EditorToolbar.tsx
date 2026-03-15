@@ -91,6 +91,11 @@ export function EditorToolbar({
                     }}
                 >
                     <Text variant="body-2" color="secondary">
+                        New tab
+                    </Text>
+                    <Hotkey value="mod+t" view="dark"/>
+
+                    <Text variant="body-2" color="secondary">
                         Run all
                     </Text>
                     <Hotkey value="mod+enter" view="dark"/>
@@ -103,6 +108,11 @@ export function EditorToolbar({
                             <Hotkey value="shift+mod+enter" view="dark"/>
                         </>
                     ) : null}
+
+                    <Text variant="body-2" color="secondary">
+                        Palette
+                    </Text>
+                    <Hotkey value="mod+k" view="dark"/>
                 </div>
             </div>
         </Card>
