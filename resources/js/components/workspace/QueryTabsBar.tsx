@@ -207,7 +207,7 @@ export function QueryTabsBar({
                                                         event.preventDefault();
                                                         event.stopPropagation();
                                                     }}
-                                                    style={{width: 180}}
+                                                    className="query-tabs-bar__rename-input"
                                                 >
                                                     <TextInput
                                                         controlRef={inputRef}

@@ -20,23 +20,12 @@ function StatusMeta({
     value: string;
 }) {
     return (
-        <div
-            style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-            }}
-        >
+        <div className="editor-status-bar__meta">
             <Text variant="body-2" color="secondary">
                 {label}
             </Text>
 
-            <Text
-                variant="body-2"
-                style={{
-                    fontFamily: "var(--g-font-family-monospace, monospace)",
-                }}
-            >
+            <Text variant="body-2" className="editor-status-bar__meta-value">
                 {value}
             </Text>
         </div>
@@ -57,29 +46,9 @@ export function EditorStatusBar({
     const hasSelection = Boolean(selectedText?.trim().length);
 
     return (
-        <Card
-            view="filled"
-            style={{
-                padding: "8px 12px",
-            }}
-        >
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    flexWrap: "wrap",
-                }}
-            >
-                <div
-                    style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 12,
-                        flexWrap: "wrap",
-                    }}
-                >
+        <Card view="filled" className="editor-status-bar__card">
+            <div className="editor-status-bar__content">
+                <div className="editor-status-bar__group">
                     <Label theme={connectionName ? "info" : "utility"}>
                         {connectionName || "No connection"}
                     </Label>
@@ -110,14 +79,7 @@ export function EditorStatusBar({
                     />
                 </div>
 
-                <div
-                    style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 12,
-                        flexWrap: "wrap",
-                    }}
-                >
+                <div className="editor-status-bar__group">
                     <StatusMeta
                         label="Rows"
                         value={

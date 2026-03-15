@@ -243,30 +243,12 @@ export function ConnectionFormDialog({
             />
 
             <Dialog.Body>
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 24,
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 24,
-                        }}
-                    >
-                        <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                <div className="connection-dialog__body">
+                    <div className="connection-dialog__section-stack">
+                        <div className="connection-dialog__section">
                             <Text variant="subheader-3">Database</Text>
 
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                                    gap: 12,
-                                }}
-                            >
+                            <div className="connection-dialog__grid">
                                 <TextInput
                                     value={form.name}
                                     placeholder="Connection name"
@@ -343,7 +325,7 @@ export function ConnectionFormDialog({
                             </div>
                         </div>
 
-                        <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                        <div className="connection-dialog__section">
                             <div
                                 style={{
                                     display: "flex",
@@ -364,14 +346,8 @@ export function ConnectionFormDialog({
                             </div>
 
                             {form.use_ssh_tunnel ? (
-                                <div style={{display: "flex", flexDirection: "column", gap: 16}}>
-                                    <div
-                                        style={{
-                                            display: "grid",
-                                            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                                            gap: 12,
-                                        }}
-                                    >
+                                <div className="connection-dialog__section">
+                                    <div className="connection-dialog__grid">
                                         <TextInput
                                             value={form.ssh_host}
                                             placeholder="SSH host"
@@ -397,7 +373,7 @@ export function ConnectionFormDialog({
                                         />
                                     </div>
 
-                                    <div style={{display: "flex", flexDirection: "column", gap: 8}}>
+                                    <div className="connection-dialog__auth-mode">
                                         <Text variant="body-2">Authentication</Text>
 
                                         <RadioGroup
@@ -411,7 +387,7 @@ export function ConnectionFormDialog({
                                     </div>
 
                                     {sshAuthMode === "password" ? (
-                                        <div style={{display: "flex", flexDirection: "column", gap: 8}}>
+                                        <div className="connection-dialog__auth-mode">
                                             <div
                                                 style={{
                                                     display: "flex",
@@ -439,7 +415,7 @@ export function ConnectionFormDialog({
                                             />
                                         </div>
                                     ) : (
-                                        <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                                        <div className="connection-dialog__section">
                                             <div
                                                 style={{
                                                     display: "flex",
@@ -498,7 +474,7 @@ export function ConnectionFormDialog({
                         </div>
 
                         {error ? (
-                            <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+                            <div className="connection-dialog__field">
                                 <Label theme="danger">Connection failed</Label>
                                 <Text variant="body-2" color="danger">
                                     {error}
@@ -507,7 +483,7 @@ export function ConnectionFormDialog({
                         ) : null}
 
                         {testError ? (
-                            <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+                            <div className="connection-dialog__field">
                                 <Label theme="danger">Connection test failed</Label>
                                 <Text variant="body-2" color="danger">
                                     {testError}
@@ -516,7 +492,7 @@ export function ConnectionFormDialog({
                         ) : null}
 
                         {testResult ? (
-                            <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+                            <div className="connection-dialog__field">
                                 <Label theme="danger">Connection successful</Label>
                                 <Text variant="body-2" color="secondary">
                                     Connected
@@ -538,6 +514,7 @@ export function ConnectionFormDialog({
                             }}
                             onClickButtonApply={handleSubmit}
                             onClickButtonCancel={onClose}
+                            className="connection-dialog__footer"
                         >
                             <Button
                                 view="outlined"

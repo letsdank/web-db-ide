@@ -36,7 +36,7 @@ export function WorkspaceMainLayout({
 
                     <div className="workspace-page__panel">
                         <div className="workspace-page__panel-main">
-                            <div style={{minHeight: 0, flex: 1}}>
+                            <div className="workspace-page__panel-content">
                                 {editor}
                             </div>
 
