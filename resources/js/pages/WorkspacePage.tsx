@@ -32,50 +32,7 @@ import {CreateConnectionPayload, UpdateConnectionPayload} from "../types/connect
 import {isEditableElement, isModKey} from "../lib/hotkeys";
 import {EditorStatusBar} from "../components/workspace/EditorStatusBar";
 import {useWorkspaceTabActions} from "../features/workspace/hooks/useWorkspaceTabActions";
-
-const DESTRUCTIVE_SQL_KEYWORDS = [
-    'drop',
-    'truncate',
-    'alter',
-    'delete',
-    'update',
-    'insert',
-    'create',
-    'grant',
-    'revoke',
-] as const;
-
-function stripSqlComments(sql: string): string {
-    return sql
-        // block comments
-        .replace(/\/\*[\s\S]*?\*\//g, ' ')
-        // line comments
-        .replace(/--.*$/gm, ' ')
-        .trim();
-}
-
-function isPotentiallyDestructiveSql(sql: string): boolean {
-    const normalized = stripSqlComments(sql).toLowerCase();
-
-    if (!normalized) {
-        return false;
-    }
-
-    // Не считаем "безопасными" CTE/SELECT, если внутри есть опасные ключевые слова.
-    return DESTRUCTIVE_SQL_KEYWORDS.some((keyword) =>
-        new RegExp(`\\b${keyword}\\b`, 'i').test(normalized),
-    );
-}
-
-function truncateSqlPreview(sql: string, maxLength = 220): string {
-    const compact = sql.replace(/\s+/g, ' ').trim();
-
-    if (compact.length <= maxLength) {
-        return compact;
-    }
-
-    return `${compact.slice(0, maxLength)}...`;
-}
+import {useWorkspaceExecution} from "../features/workspace/hooks/useWorkspaceExecution";
 
 export function WorkspacePage() {
     const {
@@ -264,6 +221,21 @@ export function WorkspacePage() {
         scheduleTabDraftPersist,
     });
 
+    const {
+        handleRun,
+        handleRunSelection,
+        handleChangeResultLimitAndRerun,
+    } = useWorkspaceExecution({
+        activeTab,
+        activeConnectionId,
+        setTabExecuting,
+        setTabResult,
+        upsertTab,
+        clearTabDirty,
+        setQueryHistory,
+        setRightPanel,
+    });
+
     useEffect(() => {
         async function boot() {
             try {
@@ -397,170 +369,6 @@ export function WorkspacePage() {
         }
     }
 
-    async function handleRun(target: 'auto' | 'selection' | 'full' = 'auto') {
-        if (!activeTab || !activeConnectionId) {
-            return;
-        }
-
-        const selectedSql = activeTab.selected_text?.trim() || null;
-
-        if (target === 'selection' && !selectedSql) {
-            return;
-        }
-
-        const sqlToExecute =
-            target === 'selection'
-                ? selectedSql
-                : null;
-
-        const effectiveSql = (sqlToExecute ?? activeTab.sql_text ?? '').trim();
-
-        if (!effectiveSql) {
-            return;
-        }
-
-        if (!confirmDestructiveQuery(effectiveSql)) {
-            return;
-        }
-
-        setTabExecuting(activeTab.id, true);
-
-        try {
-            const response = await executeQuery({
-                connection_id: activeConnectionId,
-                query_tab_id: activeTab.id,
-                sql: activeTab.sql_text,
-                selected_sql: sqlToExecute,
-                max_rows: activeTab.result_limit ?? 500,
-                save_to_history: true,
-            });
-
-            setTabResult(activeTab.id, response);
-
-            const [updatedTab, historyData] = await Promise.all([
-                updateQueryTab(activeTab.id, {
-                    last_executed_at: new Date().toISOString(),
-                    db_connection_id: activeConnectionId,
-                    selected_text: activeTab.selected_text,
-                    cursor_position: activeTab.cursor_position,
-                    selection_range: activeTab.selection_range,
-                }),
-                fetchQueryHistory(),
-            ]);
-
-            upsertTab(updatedTab);
-            clearTabDirty(activeTab.id);
-            setQueryHistory(historyData);
-            setRightPanel('history');
-        } catch (error: any) {
-            console.error(error);
-
-            const responseData = error?.response?.data;
-
-            if (responseData?.status === 'error') {
-                setTabResult(activeTab.id, responseData);
-            } else {
-                setTabResult(activeTab.id, {
-                    execution_id: crypto.randomUUID(),
-                    status: 'error',
-                    error: responseData?.message || error?.message || 'Failed to execute query.',
-                });
-            }
-        } finally {
-            setTabExecuting(activeTab.id, false);
-        }
-    }
-
-    async function handleChangeResultLimit(limit: 100 | 500 | 1000) {
-        if (!activeTab) {
-            return;
-        }
-
-        const updatedTab = await updateQueryTab(activeTab.id, {
-            result_limit: limit,
-        });
-
-        upsertTab(updatedTab);
-    }
-
-    async function handleChangeResultLimitAndRerun(limit: 100 | 500 | 1000) {
-        if (!activeTab) {
-            return;
-        }
-
-        await handleChangeResultLimit(limit);
-
-        if (!activeConnectionId) {
-            return;
-        }
-
-        const effectiveSql = (activeTab.selected_text?.trim() || activeTab.sql_text || '').trim();
-
-        if (!effectiveSql) {
-            return;
-        }
-
-        if (!confirmDestructiveQuery(effectiveSql)) {
-            return;
-        }
-
-        setTabExecuting(activeTab.id, true);
-
-        try {
-            const response = await executeQuery({
-                connection_id: activeConnectionId,
-                query_tab_id: activeTab.id,
-                sql: activeTab.sql_text,
-                selected_sql: activeTab.selected_text?.trim() || null,
-                max_rows: limit,
-                save_to_history: true,
-            });
-
-            setTabResult(activeTab.id, response);
-
-            const [updatedTab, historyData] = await Promise.all([
-                updateQueryTab(activeTab.id, {
-                    last_executed_at: new Date().toISOString(),
-                    db_connection_id: activeConnectionId,
-                    selected_text: activeTab.selected_text,
-                    cursor_position: activeTab.cursor_position,
-                    selection_range: activeTab.selection_range,
-                    result_limit: limit,
-                }),
-                fetchQueryHistory(),
-            ]);
-
-            upsertTab(updatedTab);
-            clearTabDirty(activeTab.id);
-            setQueryHistory(historyData);
-            setRightPanel('history');
-        } catch (error: any) {
-            console.error(error);
-
-            const responseData = error?.response?.data;
-
-            if (responseData?.status === 'error') {
-                setTabResult(activeTab.id, responseData);
-            } else {
-                setTabResult(activeTab.id, {
-                    execution_id: crypto.randomUUID(),
-                    status: 'error',
-                    error: responseData?.message || error?.message || 'Failed to execute query.',
-                });
-            }
-        } finally {
-            setTabExecuting(activeTab.id, false);
-        }
-    }
-
-    async function handleRunSelection() {
-        if (!activeTab?.selected_text?.trim()) {
-            return;
-        }
-
-        await handleRun('selection');
-    }
-
     async function detachTabsFromConnection(connectionId: number) {
         const affectedTabs = tabs.filter((tab) => tab.db_connection_id === connectionId);
 
@@ -689,23 +497,6 @@ export function WorkspacePage() {
             sql_text: item.sql_text,
             db_connection_id: item.db_connection_id,
         });
-    }
-
-    function confirmDestructiveQuery(sql: string): boolean {
-        if (!isPotentiallyDestructiveSql(sql)) {
-            return true;
-        }
-
-        const preview = truncateSqlPreview(sql);
-
-        return window.confirm(
-            [
-                'Potentially destructive SQL detected.',
-                'Please confirm execution.',
-                '',
-                preview ? `SQL preview: ${preview}` : '',
-            ].join('\n'),
-        );
     }
 
     const handleSelectAdjacentTab = useCallback((direction: 'next' | 'prev') => {
