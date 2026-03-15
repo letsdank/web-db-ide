@@ -9,36 +9,49 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
+        min-width: 0;
     }
 
     &__section-stack {
         display: flex;
         flex-direction: column;
         gap: 24px;
+        min-width: 0;
+    }
+
+    &__section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
     }
 
     &__grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
+        min-width: 0;
     }
 
     &__field {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        min-width: 0;
+    }
+
+    &__field-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 
     &__auth-mode {
         display: flex;
         flex-direction: column;
         gap: 16px;
-    }
-
-    &__radio-group {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
     }
 
     &__test-result {
@@ -48,17 +61,14 @@
     }
 
     &__footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
+        width: 100%;
     }
 
-    &__footer-actions {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+    &__footer :global(.g-dialog-footer__children) {
+        margin-right: auto;
+    }
+
+    &__footer :global(.g-dialog-footer__buttons) {
         flex-wrap: wrap;
     }
 }
@@ -109,9 +119,12 @@
 
 @media(max-width: 900px) {
     .connection-dialog {
-        &__grid,
-        &__radio-group {
+        &__grid {
             grid-template-columns: minmax(0, 1fr);
+        }
+
+        &__section-header {
+            align-items: flex-start;
         }
     }
 }

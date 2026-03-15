@@ -326,15 +326,7 @@ export function ConnectionFormDialog({
                         </div>
 
                         <div className="connection-dialog__section">
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 12,
-                                    flexWrap: "wrap",
-                                }}
-                            >
+                            <div className="connection-dialog__section-header">
                                 <Text variant="subheader-3">SSH tunnel</Text>
 
                                 <Checkbox
@@ -388,14 +380,7 @@ export function ConnectionFormDialog({
 
                                     {sshAuthMode === "password" ? (
                                         <div className="connection-dialog__auth-mode">
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 8,
-                                                    flexWrap: "wrap",
-                                                }}
-                                            >
+                                            <div className="connection-dialog__field-header">
                                                 <Text variant="body-2">SSH password</Text>
 
                                                 {isEditMode && initialConnection?.has_ssh_password ? (
@@ -415,15 +400,8 @@ export function ConnectionFormDialog({
                                             />
                                         </div>
                                     ) : (
-                                        <div className="connection-dialog__section">
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 8,
-                                                    flexWrap: "wrap",
-                                                }}
-                                            >
+                                        <div className="connection-dialog__field">
+                                            <div className="connection-dialog__field-header">
                                                 <Text variant="body-2">SSH private key</Text>
 
                                                 {isEditMode && initialConnection?.has_ssh_private_key ? (
@@ -442,14 +420,7 @@ export function ConnectionFormDialog({
                                                 onUpdate={(value) => patch("ssh_private_key", value)}
                                             />
 
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 8,
-                                                    flexWrap: "wrap",
-                                                }}
-                                            >
+                                            <div className="connection-dialog__field-header">
                                                 <Text variant="body-2">SSH key passphrase</Text>
 
                                                 {isEditMode && initialConnection?.has_ssh_passphrase ? (
@@ -493,10 +464,9 @@ export function ConnectionFormDialog({
 
                         {testResult ? (
                             <div className="connection-dialog__field">
-                                <Label theme="danger">Connection successful</Label>
+                                <Label theme="success">Connection successful</Label>
                                 <Text variant="body-2" color="secondary">
-                                    Connected
-                                    to {testResult.database_name} as {testResult.user_name} in {testResult.duration_ms} ms
+                                    Connected to {testResult.database_name} as {testResult.user_name} in {testResult.duration_ms} ms
                                 </Text>
                             </div>
                         ) : null}
