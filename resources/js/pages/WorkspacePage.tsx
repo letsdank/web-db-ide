@@ -1,14 +1,11 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
 import {useCallback, useRef, useState} from "react";
-import {updateQueryTab} from "../api/queryTabs";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
 import {SqlEditorPane, SqlEditorPaneHandle} from "../components/workspace/SqlEditorPane";
 import {ResultsPanel} from "../features/results/components/ResultsPanel";
 import {RightSidebarPanels} from "../components/workspace/RightSidebarPanels";
-import {useDebouncedCallback} from "../hooks/useDebouncedCallback";
-import {QueryTabDto} from "../types/queryTab";
 import {CommandPalette} from "../features/command-palette/components/CommandPalette";
 import {WorkspaceMainLayout} from "../features/workspace/components/WorkspaceMainLayout";
 import {ExplorerSidebar} from "../features/explorer/components/ExplorerSidebar";
@@ -21,6 +18,7 @@ import {useWorkspaceHotkeys} from "../features/workspace/hooks/useWorkspaceHotke
 import {useWorkspaceBoot} from "../features/workspace/hooks/useWorkspaceBoot";
 import {useWorkspaceLibrary} from "../features/workspace/hooks/useWorkspaceLibrary";
 import {useActiveWorkspace} from "../features/workspace/hooks/useActiveWorkspace";
+import {useWorkspaceDraft} from "../features/workspace/hooks/useWorkspaceDraft";
 
 export function WorkspacePage() {
     const {
@@ -78,6 +76,10 @@ export function WorkspacePage() {
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
     const editorRef = useRef<SqlEditorPaneHandle | null>(null);
 
+    const focusEditor = useCallback(() => {
+        editorRef.current?.focus();
+    }, []);
+
     const {
         activeTab,
         activeConnection,
@@ -96,113 +98,19 @@ export function WorkspacePage() {
         tabStateById,
     });
 
-    const focusEditor = useCallback(() => {
-        editorRef.current?.focus();
-    }, []);
-
-    const persistTabDraft = useDebouncedCallback(
-        async (tabId: number, payload: Partial<QueryTabDto>) => {
-            try {
-                const updatedTab = await updateQueryTab(tabId, payload);
-                upsertTab(updatedTab);
-                clearTabDirty(tabId);
-            } catch (error) {
-                console.error(error);
-            }
-        },
-        750,
-    );
-
-    const scheduleTabDraftPersist = useCallback((tab: QueryTabDto, payload: Partial<QueryTabDto>) => {
-        persistTabDraft(tab.id, payload);
-    }, [persistTabDraft]);
-
-    async function handleChangeSql(value: string) {
-        if (!activeTab) {
-            return;
-        }
-
-        const nextTab: QueryTabDto = {
-            ...activeTab,
-            sql_text: value,
-        };
-
-        upsertTab(nextTab);
-        markTabDirty(nextTab.id);
-
-        scheduleTabDraftPersist(nextTab, {
-            sql_text: value,
-            db_connection_id: activeConnectionId,
-            selected_text: nextTab.selected_text,
-            cursor_position: nextTab.cursor_position,
-            selection_range: nextTab.selection_range,
-        });
-    }
-
-    function handleEditorSelectionChange(payload: {
-        selectedText: string | null,
-        cursorPosition: {
-            lineNumber: number;
-            column: number;
-        } | null;
-        selectionRange: {
-            startLineNumber: number;
-            startColumn: number;
-            endLineNumber: number;
-            endColumn: number;
-        } | null;
-    }) {
-        if (!activeTab) {
-            return;
-        }
-
-        const nextTab: QueryTabDto = {
-            ...activeTab,
-            selected_text: payload.selectedText,
-            cursor_position: payload.cursorPosition,
-            selection_range: payload.selectionRange,
-        };
-
-        upsertTab(nextTab);
-        markTabDirty(nextTab.id);
-
-        scheduleTabDraftPersist(nextTab, {
-            sql_text: nextTab.sql_text,
-            db_connection_id: activeConnectionId,
-            selected_text: payload.selectedText,
-            cursor_position: payload.cursorPosition,
-            selection_range: payload.selectionRange,
-        });
-    }
-
-    async function handleSelectConnection(id: number | null) {
-        setActiveConnectionId(id);
-
-        if (!activeTab) {
-            return;
-        }
-
-        const nextTab: QueryTabDto = {
-            ...activeTab,
-            db_connection_id: id,
-        };
-
-        upsertTab(nextTab);
-
-        try {
-            const updatedTab = await updateQueryTab(activeTab.id, {
-                db_connection_id: id,
-                sql_text: nextTab.sql_text,
-                selected_text: nextTab.selected_text,
-                cursor_position: nextTab.cursor_position,
-                selection_range: nextTab.selection_range,
-            });
-
-            upsertTab(updatedTab);
-        } catch (error) {
-            console.error(error);
-        }
-    }
+    const {
+        scheduleTabDraftPersist,
+        handleChangeSql,
+        handleEditorSelectionChange,
+        handleSelectConnection,
+    } = useWorkspaceDraft({
+        activeTab,
+        activeConnectionId,
+        upsertTab,
+        markTabDirty,
+        clearTabDirty,
+        setActiveConnectionId,
+    });
 
     const {
         handleCreateTab,
@@ -286,6 +194,25 @@ export function WorkspacePage() {
         handleCreateTab,
     });
 
+    const commandPaletteItems = useWorkspaceCommandPalette({
+        activeConnectionId,
+        activeTab,
+        connections,
+        tabs,
+        savedQueries,
+        hasSelection,
+        openCreateConnectionDialog,
+        setRightPanel,
+        handleCreateTab: () => handleCreateTab(),
+        handleRun,
+        handleSelectTab,
+        handleSelectConnection,
+        handleOpenSavedQuery,
+        handleDuplicateTab,
+        handleCloseTab,
+        handleTogglePin,
+    });
+
     const handleSelectAdjacentTab = useCallback((direction: 'next' | 'prev') => {
         if (tabs.length === 0) {
             return;
@@ -311,25 +238,6 @@ export function WorkspacePage() {
         onCloseActiveTab: handleCloseTab,
         onFocusEditor: focusEditor,
         onSelectAdjacentTab: handleSelectAdjacentTab,
-    });
-
-    const commandPaletteItems = useWorkspaceCommandPalette({
-        activeConnectionId,
-        activeTab,
-        connections,
-        tabs,
-        savedQueries,
-        hasSelection,
-        openCreateConnectionDialog,
-        setRightPanel,
-        handleCreateTab: () => handleCreateTab(),
-        handleRun,
-        handleSelectTab,
-        handleSelectConnection,
-        handleOpenSavedQuery,
-        handleDuplicateTab,
-        handleCloseTab,
-        handleTogglePin,
     });
 
     if (isBooting) {
