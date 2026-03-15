@@ -33,6 +33,7 @@ import {isEditableElement, isModKey} from "../lib/hotkeys";
 import {EditorStatusBar} from "../components/workspace/EditorStatusBar";
 import {useWorkspaceTabActions} from "../features/workspace/hooks/useWorkspaceTabActions";
 import {useWorkspaceExecution} from "../features/workspace/hooks/useWorkspaceExecution";
+import {useWorkspaceConnections} from "../features/workspace/hooks/useWorkspaceConnections";
 
 export function WorkspacePage() {
     const {
@@ -236,6 +237,26 @@ export function WorkspacePage() {
         setRightPanel,
     });
 
+    const {
+        handleCreateConnection,
+        handleDeleteConnection,
+        handleTestConnection,
+    } = useWorkspaceConnections({
+        editingConnection,
+        activeConnectionId,
+        activeTab,
+        connections,
+        tabs,
+        addConnection,
+        updateConnectionInList,
+        removeConnection,
+        upsertTab,
+        setActiveConnectionId,
+        setIsCreatingConnection,
+        setConnectionDialogError,
+        closeConnectionDialog,
+    });
+
     useEffect(() => {
         async function boot() {
             try {
@@ -367,100 +388,6 @@ export function WorkspacePage() {
         } catch (error) {
             console.error(error);
         }
-    }
-
-    async function detachTabsFromConnection(connectionId: number) {
-        const affectedTabs = tabs.filter((tab) => tab.db_connection_id === connectionId);
-
-        if (affectedTabs.length === 0) {
-            return;
-        }
-
-        const updatedTabs = await Promise.all(
-            affectedTabs.map((tab) =>
-                updateQueryTab(tab.id, {
-                    db_connection_id: null,
-                }),
-            ),
-        );
-
-        updatedTabs.forEach((tab) => upsertTab(tab));
-    }
-
-    async function handleCreateConnection(payload: CreateConnectionPayload | UpdateConnectionPayload) {
-        setIsCreatingConnection(true);
-        setConnectionDialogError(null);
-
-        try {
-            if (editingConnection) {
-                const updated = await updateConnection(editingConnection.id, payload as UpdateConnectionPayload);
-
-                updateConnectionInList(updated);
-
-                if (activeConnectionId === updated.id) {
-                    setActiveConnectionId(updated.id);
-                }
-
-                closeConnectionDialog();
-                return;
-            }
-
-            const created = await createConnection(payload as CreateConnectionPayload);
-
-            addConnection(created);
-            setActiveConnectionId(created.id);
-            closeConnectionDialog();
-
-            if (activeTab) {
-                const updatedTab = await updateQueryTab(activeTab.id, {
-                    db_connection_id: created.id,
-                });
-
-                upsertTab(updatedTab);
-            }
-        } catch (error: any) {
-            console.error(error);
-
-            setConnectionDialogError(
-                error?.response?.data?.message ||
-                error?.message ||
-                (editingConnection
-                    ? 'Failed to update connection.'
-                    : 'Failed to create connection.'),
-            );
-        } finally {
-            setIsCreatingConnection(false);
-        }
-    }
-
-    async function handleDeleteConnection(connection: { id: number; name: string }) {
-        const confirmed = window.confirm(`Delete connection "${connection.name}"?`);
-
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            await deleteConnection(connection.id);
-
-            removeConnection(connection.id);
-            await detachTabsFromConnection(connection.id);
-
-            if (activeConnectionId === connection.id) {
-                const nextConnection = connections.find((item) => item.id !== connection.id) ?? null;
-                setActiveConnectionId(nextConnection?.id ?? null);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    async function handleTestConnection(payload: CreateConnectionPayload | UpdateConnectionPayload) {
-        if (editingConnection) {
-            return await testExistingConnection(editingConnection.id, payload);
-        }
-
-        return await testConnection(payload);
     }
 
     async function handleSaveCurrentQuery() {
