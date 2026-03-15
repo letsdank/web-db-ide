@@ -8,7 +8,7 @@ import {
     testExistingConnection,
     updateConnection
 } from "../api/connections";
-import {createQueryTab, deleteQueryTab, fetchQueryTabs, reorderQueryTabs, updateQueryTab} from "../api/queryTabs";
+import {fetchQueryTabs, updateQueryTab} from "../api/queryTabs";
 import {fetchQueryHistory} from "../api/queryHistory";
 import {createSavedQuery, fetchSavedQueries} from "../api/savedQueries";
 import {executeQuery} from "../api/queries";
@@ -31,6 +31,7 @@ import {ExplorerSidebar} from "../features/explorer/components/ExplorerSidebar";
 import {CreateConnectionPayload, UpdateConnectionPayload} from "../types/connection";
 import {isEditableElement, isModKey} from "../lib/hotkeys";
 import {EditorStatusBar} from "../components/workspace/EditorStatusBar";
+import {useWorkspaceTabActions} from "../features/workspace/hooks/useWorkspaceTabActions";
 
 const DESTRUCTIVE_SQL_KEYWORDS = [
     'drop',
@@ -232,12 +233,36 @@ export function WorkspacePage() {
                 console.error(error);
             }
         },
-        500,
+        750,
     );
 
     const scheduleTabDraftPersist = useCallback((tab: QueryTabDto, payload: Partial<QueryTabDto>) => {
         persistTabDraft(tab.id, payload);
     }, [persistTabDraft]);
+
+    const {
+        handleCreateTab,
+        handleSelectTab,
+        handleCloseTab,
+        handleCloseOtherTabs,
+        handleDuplicateTab,
+        handleRenameTab,
+        handleMoveTab,
+        handleTogglePin,
+    } = useWorkspaceTabActions({
+        tabs,
+        activeTabId,
+        activeConnectionId,
+        setActiveConnectionId,
+        addTab,
+        upsertTab,
+        removeTab,
+        replaceTabs,
+        reorderTabs,
+        setActiveTabId,
+        ensureTabState,
+        scheduleTabDraftPersist,
+    });
 
     useEffect(() => {
         async function boot() {
@@ -284,41 +309,6 @@ export function WorkspacePage() {
         setSavedQueries,
         setTabs,
     ]);
-
-    const handleCreateTab = useCallback(async (initial?: Partial<{
-        title: string;
-        sql_text: string;
-        db_connection_id: number | null;
-    }>) => {
-        try {
-            const tab = await createQueryTab({
-                db_connection_id: initial?.db_connection_id ?? activeConnectionId,
-                title: initial?.title ?? 'New Query',
-                sql_text: initial?.sql_text ?? '',
-                result_limit: 500,
-            });
-
-            addTab(tab);
-
-            if (tab.db_connection_id) {
-                setActiveConnectionId(tab.db_connection_id);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }, [activeConnectionId, addTab, setActiveConnectionId]);
-
-    const handleSelectTab = useCallback(async (id: number) => {
-        setActiveTabId(id);
-
-        const tab = tabs.find((item) => item.id === id);
-
-        if (tab?.db_connection_id !== undefined) {
-            setActiveConnectionId(tab.db_connection_id);
-        }
-
-        ensureTabState(id);
-    }, [ensureTabState, setActiveConnectionId, setActiveTabId, tabs]);
 
     async function handleChangeSql(value: string) {
         if (!activeTab) {
@@ -404,204 +394,6 @@ export function WorkspacePage() {
             upsertTab(updatedTab);
         } catch (error) {
             console.error(error);
-        }
-    }
-
-    function withSequentialSortOrder(nextTabs: QueryTabDto[]): QueryTabDto[] {
-        return nextTabs.map((tab, index) => ({
-            ...tab,
-            sort_order: index,
-        }));
-    }
-
-    function moveTabInsideGroup(
-        sourceTabs: QueryTabDto[],
-        tabId: number,
-        direction: 'left' | 'right',
-    ): QueryTabDto[] {
-        const targetTab = sourceTabs.find((tab) => tab.id === tabId);
-
-        if (!targetTab) {
-            return sourceTabs;
-        }
-
-        const sameGroupTabs = sourceTabs.filter((tab) => tab.is_pinned === targetTab.is_pinned);
-        const groupIndex = sameGroupTabs.findIndex((tab) => tab.id === tabId);
-
-        if (groupIndex === -1) {
-            return sourceTabs;
-        }
-
-        const swapIndex = direction === 'left' ? groupIndex - 1 : groupIndex + 1;
-
-        if (swapIndex < 0 || swapIndex >= sameGroupTabs.length) {
-            return sourceTabs;
-        }
-
-        const reorderedGroup = [...sameGroupTabs];
-        const [movedTab] = reorderedGroup.splice(groupIndex, 1);
-        reorderedGroup.splice(swapIndex, 0, movedTab);
-
-        const groupIds = new Set(reorderedGroup.map((tab) => tab.id));
-        const nextTabs: QueryTabDto[] = [];
-        let groupCursor = 0;
-
-        for (const tab of sourceTabs) {
-            if (groupIds.has(tab.id)) {
-                nextTabs.push(reorderedGroup[groupCursor]);
-                groupCursor += 1;
-            } else {
-                nextTabs.push(tab);
-            }
-        }
-
-        return withSequentialSortOrder(nextTabs);
-    }
-
-    async function handleMoveTab(tab: QueryTabDto, direction: 'left' | 'right') {
-        const nextTabs = moveTabInsideGroup(tabs, tab.id, direction);
-
-        if (nextTabs === tabs) {
-            return;
-        }
-
-        reorderTabs(nextTabs);
-
-        try {
-            const updatedTabs = await reorderQueryTabs(
-                nextTabs.map((item) => ({
-                    id: item.id,
-                    sort_order: item.sort_order,
-                })),
-            );
-
-            reorderTabs(updatedTabs);
-        } catch (error) {
-            console.error(error);
-            replaceTabs(tabs);
-        }
-    }
-
-    async function handleTogglePin(tab: QueryTabDto) {
-        const nextTab: QueryTabDto = {
-            ...tab,
-            is_pinned: !tab.is_pinned,
-        };
-
-        upsertTab(nextTab);
-
-        try {
-            const updatedTab = await updateQueryTab(tab.id, {
-                is_pinned: nextTab.is_pinned,
-            });
-
-            const refreshedTabs = tabs.map((item) =>
-                item.id === updatedTab.id ? updatedTab : item,
-            );
-
-            const normalizedTabs = withSequentialSortOrder(
-                [...refreshedTabs].sort((a, b) => {
-                    if (a.is_pinned !== b.is_pinned) {
-                        return Number(b.is_pinned) - Number(a.is_pinned);
-                    }
-
-                    if (a.sort_order !== b.sort_order) {
-                        return a.sort_order - b.sort_order;
-                    }
-
-                    return a.id - b.id;
-                }),
-            );
-
-            reorderTabs(normalizedTabs);
-
-            const persistedTabs = await reorderQueryTabs(
-                normalizedTabs.map((item) => ({
-                    id: item.id,
-                    sort_order: item.sort_order,
-                })),
-            );
-
-            reorderTabs(persistedTabs);
-        } catch (error) {
-            console.error(error);
-            upsertTab(tab);
-        }
-    }
-
-    const handleCloseTab = useCallback(async (tabId: number) => {
-        const tab = tabs.find((item) => item.id === tabId);
-
-        if (!tab || tab.is_pinned) {
-            return;
-        }
-
-        const previousTabs = tabs;
-
-        removeTab(tabId);
-
-        try {
-            await deleteQueryTab(tabId);
-
-            const remainingTabs = previousTabs.filter((item) => item.id !== tabId);
-
-            if (remainingTabs.length === 0) {
-                await handleCreateTab({
-                    title: 'New Query',
-                    sql_text: '',
-                    db_connection_id: activeConnectionId,
-                });
-            }
-        } catch (error) {
-            console.error(error);
-            replaceTabs(previousTabs);
-        }
-    }, [tabs, removeTab, replaceTabs, activeConnectionId, handleCreateTab]);
-
-    async function handleDuplicateTab(tab: QueryTabDto) {
-        await handleCreateTab({
-            title: `${tab.title || 'New Query'} copy`,
-            sql_text: tab.sql_text,
-            db_connection_id: tab.db_connection_id,
-        });
-    }
-
-    async function handleRenameTab(tab: QueryTabDto, title: string) {
-        const normalizedTitle = title.trim() || 'New Query';
-        const previousTab = tab;
-
-        const nextTab: QueryTabDto = {
-            ...tab,
-            title: normalizedTitle,
-        };
-
-        upsertTab(nextTab);
-
-        try {
-            const updatedTab = await updateQueryTab(tab.id, {
-                title: normalizedTitle,
-            });
-
-            upsertTab(updatedTab);
-        } catch (error) {
-            console.error(error);
-            upsertTab(previousTab);
-        }
-    }
-
-    async function handleCloseOtherTabs(tabId: number) {
-        const tabsToClose = tabs.filter((tab) => tab.id !== tabId && !tab.is_pinned);
-
-        for (const tab of tabsToClose) {
-            removeTab(tab.id);
-        }
-
-        for (const tab of tabsToClose) {
-            try {
-                await deleteQueryTab(tab.id);
-            } catch (error) {
-                console.error(error);
-            }
         }
     }
 
