@@ -8,24 +8,30 @@ use PDO;
 class ConnectionProbe
 {
     public function __construct(
-        protected ConnectionEndpointResolver $endpointResolver,
+        protected SshTunnelManager $sshTunnelManager,
     )
     {
     }
 
     public function probe(DbConnection $connection): array
     {
-        $resolved = $this->endpointResolver->resolve($connection);
+        $host = $connection->host;
+        $port = (int)$connection->port;
+        $tunnelSession = null;
 
         try {
+            if ($connection->use_ssh_tunnel) {
+                $tunnelSession = $this->sshTunnelManager->open($connection);
+                $host = '127.0.0.1';
+                $port = $tunnelSession->localPort;
+            }
             $dsn = sprintf(
-                'pgsql:host=%s;port=%s;dbname=%s',
-                $resolved->host,
-                $resolved->port,
+                'pgsql:host=%s;port=%s;dbname=%s;sslmode=%s',
+                $host,
+                $port,
                 $connection->database_name,
+                $connection->ssl_mode ?: 'prefer',
             );
-
-            $start = microtime(true);
 
             $pdo = new PDO(
                 $dsn,
@@ -40,16 +46,10 @@ class ConnectionProbe
             );
 
             $statement = $pdo->query('select current_database() as database_name, current_user as user_name');
-            $meta = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
 
-            return [
-                'ok' => true,
-                'duration_ms' => (int)((microtime(true) - $start) * 1000),
-                'database_name' => $meta['database_name'] ?? $connection->database_name,
-                'user_name' => $meta['user_name'] ?? $connection->username,
-            ];
+            return(array)$statement->fetch(PDO::FETCH_ASSOC);
         } finally {
-            $this->endpointResolver->cleanup($resolved);
+            $tunnelSession?->close();
         }
     }
 }
