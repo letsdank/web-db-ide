@@ -30,6 +30,7 @@ import {WorkspaceMainLayout} from "../features/workspace/components/WorkspaceMai
 import {ExplorerSidebar} from "../features/explorer/components/ExplorerSidebar";
 import {CreateConnectionPayload, UpdateConnectionPayload} from "../types/connection";
 import {isEditableElement, isModKey} from "../lib/hotkeys";
+import {EditorStatusBar} from "../components/workspace/EditorStatusBar";
 
 const DESTRUCTIVE_SQL_KEYWORDS = [
     'drop',
@@ -144,6 +145,71 @@ export function WorkspacePage() {
     const activeTabState = activeTabId ? tabStateById[activeTabId] ?? null : null;
     const activeResult = activeTabState?.result ?? null;
     const isExecuting = activeTabState?.isExecuting ?? false;
+
+    const activeCursorPosition = useMemo(() => {
+        const raw = activeTab?.cursor_position;
+
+        if (!raw || typeof raw !== 'object') {
+            return null;
+        }
+
+        const lineNumber = raw['lineNumber'];
+        const column = raw['column'];
+
+        if (typeof lineNumber !== 'number' || typeof column !== 'number') {
+            return null;
+        }
+
+        return {
+            lineNumber,
+            column,
+        };
+    }, [activeTab?.cursor_position]);
+
+    const activeSelectionRange = useMemo(() => {
+        const raw = activeTab?.selection_range;
+
+        if (!raw || typeof raw !== 'object') {
+            return null;
+        }
+
+        const startLineNumber = raw['startLineNumber'];
+        const endLineNumber = raw['endLineNumber'];
+
+        if (typeof startLineNumber !== 'number' || typeof endLineNumber !== 'number') {
+            return null;
+        }
+
+        return {
+            startLineNumber,
+            endLineNumber,
+        };
+    }, [activeTab?.selection_range]);
+
+    const activeSelectedLineCount = useMemo(() => {
+        if (!activeTab?.selected_text?.trim() || !activeSelectionRange) {
+            return null;
+        }
+
+        return Math.max(
+            1,
+            activeSelectionRange.endLineNumber - activeSelectionRange.startLineNumber + 1,
+        );
+    }, [activeTab?.selected_text, activeSelectionRange]);
+
+    const activeRowsMeta = useMemo(() => {
+        if (!activeResult || activeResult.status !== 'success') {
+            return {
+                rowsCount: null,
+                hasMoreRows: false,
+            };
+        }
+
+        return {
+            rowsCount: activeResult.row_count ?? activeResult.rows.length,
+            hasMoreRows: Boolean(activeResult.has_more),
+        };
+    }, [activeResult]);
 
     const hasSelection = Boolean(activeTab?.selected_text?.trim());
 
@@ -1195,6 +1261,19 @@ export function WorkspacePage() {
                         onSelectionChange={handleEditorSelectionChange}
                         onRun={() => handleRun('auto')}
                         onRunSelection={handleRunSelection}
+                    />
+                }
+                editorFooter={
+                    <EditorStatusBar
+                        connectionName={activeConnection?.name ?? null}
+                        resultLimit={activeTab?.result_limit ?? null}
+                        cursorLine={activeCursorPosition?.lineNumber ?? null}
+                        cursorColumn={activeCursorPosition?.column ?? null}
+                        selectedText={activeTab?.selected_text ?? null}
+                        selectedLineCount={activeSelectedLineCount}
+                        isExecuting={isExecuting}
+                        rowsCount={activeRowsMeta.rowsCount}
+                        hasMoreRows={activeRowsMeta.hasMoreRows}
                     />
                 }
                 results={

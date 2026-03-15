@@ -6,6 +6,7 @@ interface Props {
     tabs: React.ReactNode;
     toolbar: React.ReactNode;
     editor: React.ReactNode;
+    editorFooter?: React.ReactNode;
     results: React.ReactNode;
     right: React.ReactNode;
 }
@@ -16,6 +17,7 @@ export function WorkspaceMainLayout({
                                         tabs,
                                         toolbar,
                                         editor,
+                                        editorFooter,
                                         results,
                                         right,
                                     }: Props) {
@@ -33,7 +35,25 @@ export function WorkspaceMainLayout({
                     {toolbar}
 
                     <div className="workspace-page__panel">
-                        {editor}
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 8,
+                                minHeight: 0,
+                                height: "100%",
+                            }}
+                        >
+                            <div style={{minHeight: 0, flex: 1}}>
+                                {editor}
+                            </div>
+
+                            {editorFooter ? (
+                                <div>
+                                    {editorFooter}
+                                </div>
+                            ) : null}
+                        </div>
                     </div>
 
                     <div className="workspace-page__panel">
