@@ -1,9 +1,6 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
 import {useCallback, useMemo, useRef, useState} from "react";
 import {updateQueryTab} from "../api/queryTabs";
-import {createSavedQuery} from "../api/savedQueries";
-import {QueryHistoryDto} from "../types/queryHistory";
-import {SavedQueryDto} from "../types/savedQuery";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
@@ -22,6 +19,7 @@ import {useWorkspaceConnections} from "../features/workspace/hooks/useWorkspaceC
 import {useWorkspaceCommandPalette} from "../features/workspace/hooks/useWorkspaceCommandPalette";
 import {useWorkspaceHotkeys} from "../features/workspace/hooks/useWorkspaceHotkeys";
 import {useWorkspaceBoot} from "../features/workspace/hooks/useWorkspaceBoot";
+import {useWorkspaceLibrary} from "../features/workspace/hooks/useWorkspaceLibrary";
 
 export function WorkspacePage() {
     const {
@@ -186,76 +184,6 @@ export function WorkspacePage() {
         persistTabDraft(tab.id, payload);
     }, [persistTabDraft]);
 
-    const {
-        handleCreateTab,
-        handleSelectTab,
-        handleCloseTab,
-        handleCloseOtherTabs,
-        handleDuplicateTab,
-        handleRenameTab,
-        handleMoveTab,
-        handleTogglePin,
-    } = useWorkspaceTabActions({
-        tabs,
-        activeTabId,
-        activeConnectionId,
-        setActiveConnectionId,
-        addTab,
-        upsertTab,
-        removeTab,
-        replaceTabs,
-        reorderTabs,
-        setActiveTabId,
-        ensureTabState,
-        scheduleTabDraftPersist,
-    });
-
-    const {
-        handleRun,
-        handleRunSelection,
-        handleChangeResultLimitAndRerun,
-    } = useWorkspaceExecution({
-        activeTab,
-        activeConnectionId,
-        setTabExecuting,
-        setTabResult,
-        upsertTab,
-        clearTabDirty,
-        setQueryHistory,
-        setRightPanel,
-    });
-
-    const {
-        handleCreateConnection,
-        handleDeleteConnection,
-        handleTestConnection,
-    } = useWorkspaceConnections({
-        editingConnection,
-        activeConnectionId,
-        activeTab,
-        connections,
-        tabs,
-        addConnection,
-        updateConnectionInList,
-        removeConnection,
-        upsertTab,
-        setActiveConnectionId,
-        setIsCreatingConnection,
-        setConnectionDialogError,
-        closeConnectionDialog,
-    });
-
-    useWorkspaceBoot({
-        setBooting,
-        setConnections,
-        setTabs,
-        setQueryHistory,
-        setSavedQueries,
-        setActiveTabId,
-        setActiveConnectionId,
-        ensureTabState,
-    });
-
     async function handleChangeSql(value: string) {
         if (!activeTab) {
             return;
@@ -343,41 +271,87 @@ export function WorkspacePage() {
         }
     }
 
-    async function handleSaveCurrentQuery() {
-        if (!activeTab) {
-            return;
-        }
+    const {
+        handleCreateTab,
+        handleSelectTab,
+        handleCloseTab,
+        handleCloseOtherTabs,
+        handleDuplicateTab,
+        handleRenameTab,
+        handleMoveTab,
+        handleTogglePin,
+    } = useWorkspaceTabActions({
+        tabs,
+        activeTabId,
+        activeConnectionId,
+        setActiveConnectionId,
+        addTab,
+        upsertTab,
+        removeTab,
+        replaceTabs,
+        reorderTabs,
+        setActiveTabId,
+        ensureTabState,
+        scheduleTabDraftPersist,
+    });
 
-        try {
-            const saved = await createSavedQuery({
-                db_connection_id: activeConnectionId,
-                title: activeTab.title || 'New Query',
-                sql_text: activeTab.sql_text,
-                folder: 'General',
-            });
+    const {
+        handleRun,
+        handleRunSelection,
+        handleChangeResultLimitAndRerun,
+    } = useWorkspaceExecution({
+        activeTab,
+        activeConnectionId,
+        setTabExecuting,
+        setTabResult,
+        upsertTab,
+        clearTabDirty,
+        setQueryHistory,
+        setRightPanel,
+    });
 
-            addSavedQuery(saved);
-            setRightPanel('saved');
-        } catch (error) {
-            console.error(error);
-        }
-    }
+    const {
+        handleCreateConnection,
+        handleDeleteConnection,
+        handleTestConnection,
+    } = useWorkspaceConnections({
+        editingConnection,
+        activeConnectionId,
+        activeTab,
+        connections,
+        tabs,
+        addConnection,
+        updateConnectionInList,
+        removeConnection,
+        upsertTab,
+        setActiveConnectionId,
+        setIsCreatingConnection,
+        setConnectionDialogError,
+        closeConnectionDialog,
+    });
 
-    async function handleOpenHistoryItem(item: QueryHistoryDto) {
-        await handleCreateTab({
-            title: 'History Query',
-            sql_text: item.sql_text,
-            db_connection_id: item.db_connection_id,
-        });
-    }
+    useWorkspaceBoot({
+        setBooting,
+        setConnections,
+        setTabs,
+        setQueryHistory,
+        setSavedQueries,
+        setActiveTabId,
+        setActiveConnectionId,
+        ensureTabState,
+    });
 
-    async function handleOpenSavedQuery(item: SavedQueryDto) {
-        await handleCreateTab({
-            title: item.title,
-            sql_text: item.sql_text,
-            db_connection_id: item.db_connection_id,
-        });
-    }
+    const {
+        handleSaveCurrentQuery,
+        handleOpenHistoryItem,
+        handleOpenSavedQuery,
+    } = useWorkspaceLibrary({
+        activeTab,
+        activeConnectionId,
+        addSavedQuery,
+        setRightPanel,
+        handleCreateTab,
+    });
 
     const handleSelectAdjacentTab = useCallback((direction: 'next' | 'prev') => {
         if (tabs.length === 0) {
