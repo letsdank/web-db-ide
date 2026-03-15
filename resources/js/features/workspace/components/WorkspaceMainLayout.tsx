@@ -35,15 +35,7 @@ export function WorkspaceMainLayout({
                     {toolbar}
 
                     <div className="workspace-page__panel">
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 8,
-                                minHeight: 0,
-                                height: "100%",
-                            }}
-                        >
+                        <div className="workspace-page__panel-main">
                             <div style={{minHeight: 0, flex: 1}}>
                                 {editor}
                             </div>

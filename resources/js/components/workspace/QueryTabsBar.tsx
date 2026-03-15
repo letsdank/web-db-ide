@@ -98,15 +98,7 @@ export function QueryTabsBar({
     }
 
     return (
-        <div
-            style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                minWidth: 0,
-                padding: "0 4px",
-            }}
-        >
+        <div className="query-tabs-bar">
             <div ref={anchorRef} style={anchorStyle}/>
 
             <WorkspaceContextMenu
@@ -165,7 +157,7 @@ export function QueryTabsBar({
                 }
             />
 
-            <div style={{flex: 1, minWidth: 0, overflowX: "auto"}}>
+            <div className="query-tabs-bar__scroller">
                 <TabProvider
                     value={activeValue}
                     onUpdate={(value) => {
@@ -194,12 +186,7 @@ export function QueryTabsBar({
                                 <div
                                     key={tab.id}
                                     onContextMenu={(event) => openContextMenu(event, tab)}
-                                    style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: 4,
-                                        marginRight: 6,
-                                    }}
+                                    className="query-tabs-bar__item"
                                 >
                                     <Tab
                                         value={String(tab.id)}
@@ -207,12 +194,7 @@ export function QueryTabsBar({
                                         label={label}
                                     >
                                         <span
-                                            style={{
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                gap: 8,
-                                                minWidth: 0,
-                                            }}
+                                            className="query-tabs-bar__label"
                                             onDoubleClick={(event) => {
                                                 event.preventDefault();
                                                 event.stopPropagation();
@@ -248,13 +230,7 @@ export function QueryTabsBar({
                                             ) : (
                                                 <Text
                                                     variant="body-2"
-                                                    style={{
-                                                        whiteSpace: "nowrap",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        maxWidth: 180,
-                                                        userSelect: "none",
-                                                    }}
+                                                    className="query-tabs-bar__title"
                                                 >
                                                     {tab.title || "New Query"}
                                                 </Text>

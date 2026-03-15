@@ -1174,18 +1174,7 @@ export function WorkspacePage() {
     ]);
 
     if (isBooting) {
-        return (
-            <div
-                style={{
-                    minHeight: '100vh',
-                    display: 'grid',
-                    placeItems: 'center',
-                    background: 'var(--g-color-base-background)',
-                }}
-            >
-                Loading...
-            </div>
-        );
+        return <div className="workspace-page__boot">Loading...</div>;
     }
 
     return (

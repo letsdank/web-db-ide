@@ -60,26 +60,14 @@ export function WorkspaceContextMenu({
             hasArrow={false}
             onClose={onClose}
         >
-            <div
-                style={{
-                    minWidth: 220,
-                    padding: 4,
-                    borderRadius: 8,
-                    background: "var(--g-color-base-float)",
-                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.24)",
-                }}
-            >
+            <div className="workspace-context-menu">
                 <Menu size="m">
                     {actions.map((action) => {
                         if (!action.text) {
                             return (
                                 <div
                                     key={action.key}
-                                    style={{
-                                        height: 1,
-                                        margin: "4px 8px",
-                                        background: "var(--g-color-line-generic)",
-                                    }}
+                                    className="workspace-context-menu__separator"
                                 />
                             );
                         }

@@ -23,39 +23,10 @@ export function RightSidebarPanels({
                                        onSaveCurrentQuery,
                                    }: Props) {
     return (
-        <Card
-            view="filled"
-            style={{
-                height: '100%',
-                padding: 12,
-                overflow: 'hidden',
-                boxSizing: 'border-box',
-            }}
-        >
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
-                    height: '100%',
-                    minHeight: 0,
-                }}
-            >
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 10,
-                    }}
-                >
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 8,
-                        }}
-                    >
+        <Card view="filled" className="right-sidebar-panels__card">
+            <div className="right-sidebar-panels__layout">
+                <div className="right-sidebar-panels__header">
+                    <div className="right-sidebar-panels__title-row">
                         <Text variant="header-1">Workspace</Text>
 
                         <Button view="outlined" size="m" onClick={onSaveCurrentQuery}>
@@ -74,39 +45,16 @@ export function RightSidebarPanels({
                     />
                 </div>
 
-                <div
-                    style={{
-                        minHeight: 0,
-                        overflow: 'auto',
-                        display: 'grid',
-                        gap: 8,
-                    }}
-                >
+                <div className="right-sidebar-panels__content">
                     {panel === 'history' ? (
                         history.length > 0 ? (
                             history.map((item) => (
                                 <button
                                     key={item.id}
                                     onClick={() => onOpenHistoryItem(item)}
-                                    style={{
-                                        textAlign: 'left',
-                                        border: '1px solid var(--g-color-line-generic)',
-                                        background: 'var(--g-color-base-float)',
-                                        borderRadius: 10,
-                                        padding: 12,
-                                        cursor: 'pointer',
-                                        color: 'inherit',
-                                    }}
+                                    className="right-sidebar-panels__item"
                                 >
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 8,
-                                            marginBottom: 8,
-                                            flexWrap: 'wrap',
-                                        }}
-                                    >
+                                    <div className="right-sidebar-panels__item-meta">
                                         <Label theme={item.status === 'success' ? 'success' : 'danger'}>
                                             {item.status}
                                         </Label>
@@ -120,11 +68,11 @@ export function RightSidebarPanels({
                                         ) : null}
                                     </div>
 
-                                    <Text variant="body-2" style={{display: 'block'}}>
+                                    <Text variant="body-2" className="right-sidebar-panels__item-text">
                                         {item.sql_text.slice(0, 140) || 'Empty query'}
                                     </Text>
 
-                                    <div style={{marginTop: 6}}>
+                                    <div className="right-sidebar-panels__item-footer">
                                         <Text variant="caption-2" color="secondary">
                                             {new Date(item.executed_at).toLocaleString()}
                                         </Text>
@@ -141,25 +89,9 @@ export function RightSidebarPanels({
                             <button
                                 key={item.id}
                                 onClick={() => onOpenSavedQuery(item)}
-                                style={{
-                                    textAlign: 'left',
-                                    border: '1px solid var(--g-color-line-generic)',
-                                    background: 'var(--g-color-base-float)',
-                                    borderRadius: 10,
-                                    padding: 12,
-                                    cursor: 'pointer',
-                                    color: 'inherit',
-                                }}
+                                className="right-sidebar-panels__item"
                             >
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 8,
-                                        marginBottom: 8,
-                                        flexWrap: 'wrap',
-                                    }}
-                                >
+                                <div className="right-sidebar-panels__item-meta">
                                     <Text variant="subheader-2">{item.title}</Text>
 
                                     {item.folder ? (
@@ -168,7 +100,7 @@ export function RightSidebarPanels({
                                 </div>
 
                                 {item.connection ? (
-                                    <div style={{marginBottom: 6}}>
+                                    <div className="right-sidebar-panels__item-subtitle">
                                         <Text variant="caption-2" color="secondary">
                                             {item.connection.name} · {item.connection.database_name}
                                         </Text>

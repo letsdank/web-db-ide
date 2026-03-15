@@ -139,16 +139,8 @@ export const SqlEditorPane = forwardRef<SqlEditorPaneHandle, Props>(function Sql
     }
 
     return (
-        <Card
-            view="filled"
-            style={{
-                height: '100%',
-                padding: 12,
-                overflow: 'hidden',
-                boxSizing: 'border-box',
-            }}
-        >
-            <div style={{height: '100%', borderRadius: 10, overflow: 'hidden'}}>
+        <Card view="filled" className="sql-editor-pane__card">
+            <div className="sql-editor-pane__editor">
                 <Editor
                     height="100%"
                     defaultLanguage="sql"

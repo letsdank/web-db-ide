@@ -23,20 +23,8 @@ export function EditorToolbar({
     const selectValue = activeConnectionId ? [String(activeConnectionId)] : [];
 
     return (
-        <Card
-            view="filled"
-            style={{
-                padding: 12,
-            }}
-        >
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    flexWrap: 'wrap',
-                }}
-            >
+        <Card view="filled" className="editor-toolbar__card">
+            <div className="editor-toolbar__content">
                 <Button
                     view="action"
                     size="l"
@@ -56,7 +44,7 @@ export function EditorToolbar({
                     Run selection
                 </Button>
 
-                <div style={{minWidth: 320, flex: "0 1 420px"}}>
+                <div className="editor-toolbar__connection">
                     <Select
                         width="max"
                         size="l"
@@ -81,20 +69,7 @@ export function EditorToolbar({
                     <Label theme="utility">No selection</Label>
                 )}
 
-                <div
-                    style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginLeft: "auto",
-                        flexWrap: "wrap",
-                    }}
-                >
-                    <Text variant="body-2" color="secondary">
-                        New tab
-                    </Text>
-                    <Hotkey value="mod+t" view="dark"/>
-
+                <div className="editor-toolbar__hotkeys">
                     <Text variant="body-2" color="secondary">
                         Run all
                     </Text>

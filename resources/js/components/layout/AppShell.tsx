@@ -16,33 +16,11 @@ export function AppShell({children}: PropsWithChildren) {
     }
 
     return (
-        <div
-            style={{
-                minHeight: '100vh',
-                display: 'grid',
-                gridTemplateRows: '56px 1fr',
-                background: '#0f1115',
-                color: '#fff',
-            }}
-        >
-            <header
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0 16px',
-                    borderBottom: '1px solid rgba(255,255,255,0.08)',
-                }}
-            >
+        <div className="app-shell">
+            <header className="app-shell__header">
                 <strong>Web SQL IDE</strong>
 
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                    }}
-                >
+                <div className="app-shell__user">
                     <Text variant="body-2" color="secondary">
                         {user?.email ?? 'Guest'}
                     </Text>
