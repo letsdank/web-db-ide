@@ -55,19 +55,15 @@ body {
 
     &__panel {
         min-height: 0;
+        height: 100%;
     }
 
-    &__panel-stack {
+    &__panel-main {
         display: flex;
         flex-direction: column;
         gap: 8px;
         min-height: 0;
         height: 100%;
-    }
-
-    &__panel-main {
-        min-height: 0;
-        flex: 1;
     }
 
     &__boot {
