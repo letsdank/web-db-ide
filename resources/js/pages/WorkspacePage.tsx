@@ -1,5 +1,5 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
-import {useCallback, useMemo, useRef, useState} from "react";
+import {useCallback, useRef, useState} from "react";
 import {updateQueryTab} from "../api/queryTabs";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
@@ -20,6 +20,7 @@ import {useWorkspaceCommandPalette} from "../features/workspace/hooks/useWorkspa
 import {useWorkspaceHotkeys} from "../features/workspace/hooks/useWorkspaceHotkeys";
 import {useWorkspaceBoot} from "../features/workspace/hooks/useWorkspaceBoot";
 import {useWorkspaceLibrary} from "../features/workspace/hooks/useWorkspaceLibrary";
+import {useActiveWorkspace} from "../features/workspace/hooks/useActiveWorkspace";
 
 export function WorkspacePage() {
     const {
@@ -77,91 +78,23 @@ export function WorkspacePage() {
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
     const editorRef = useRef<SqlEditorPaneHandle | null>(null);
 
-    const activeTab = useMemo(
-        () => tabs.find((tab) => tab.id === activeTabId) ?? null,
-        [tabs, activeTabId],
-    );
-
-    const activeConnection = useMemo(
-        () => connections.find((connection) => connection.id === activeConnectionId),
-        [connections, activeConnectionId],
-    );
-
-    const activeTabState = activeTabId ? tabStateById[activeTabId] ?? null : null;
-    const activeResult = activeTabState?.result ?? null;
-    const isExecuting = activeTabState?.isExecuting ?? false;
-
-    const activeCursorPosition = useMemo(() => {
-        const raw = activeTab?.cursor_position;
-
-        if (!raw || typeof raw !== 'object') {
-            return null;
-        }
-
-        const lineNumber = raw['lineNumber'];
-        const column = raw['column'];
-
-        if (typeof lineNumber !== 'number' || typeof column !== 'number') {
-            return null;
-        }
-
-        return {
-            lineNumber,
-            column,
-        };
-    }, [activeTab?.cursor_position]);
-
-    const activeSelectionRange = useMemo(() => {
-        const raw = activeTab?.selection_range;
-
-        if (!raw || typeof raw !== 'object') {
-            return null;
-        }
-
-        const startLineNumber = raw['startLineNumber'];
-        const endLineNumber = raw['endLineNumber'];
-
-        if (typeof startLineNumber !== 'number' || typeof endLineNumber !== 'number') {
-            return null;
-        }
-
-        return {
-            startLineNumber,
-            endLineNumber,
-        };
-    }, [activeTab?.selection_range]);
-
-    const activeSelectedLineCount = useMemo(() => {
-        if (!activeTab?.selected_text?.trim() || !activeSelectionRange) {
-            return null;
-        }
-
-        return Math.max(
-            1,
-            activeSelectionRange.endLineNumber - activeSelectionRange.startLineNumber + 1,
-        );
-    }, [activeTab?.selected_text, activeSelectionRange]);
-
-    const activeRowsMeta = useMemo(() => {
-        if (!activeResult || activeResult.status !== 'success') {
-            return {
-                rowsCount: null,
-                hasMoreRows: false,
-            };
-        }
-
-        return {
-            rowsCount: activeResult.row_count ?? activeResult.rows.length,
-            hasMoreRows: Boolean(activeResult.has_more),
-        };
-    }, [activeResult]);
-
-    const hasSelection = Boolean(activeTab?.selected_text?.trim());
-
-    const activeTabIndex = useMemo(
-        () => tabs.findIndex((tab) => tab.id === activeTabId),
-        [tabs, activeTabId],
-    );
+    const {
+        activeTab,
+        activeConnection,
+        activeResult,
+        isExecuting,
+        activeCursorPosition,
+        activeSelectedLineCount,
+        activeRowsMeta,
+        hasSelection,
+        activeTabIndex,
+    } = useActiveWorkspace({
+        tabs,
+        connections,
+        activeTabId,
+        activeConnectionId,
+        tabStateById,
+    });
 
     const focusEditor = useCallback(() => {
         editorRef.current?.focus();
