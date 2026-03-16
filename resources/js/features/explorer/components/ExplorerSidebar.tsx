@@ -155,174 +155,178 @@ export function ExplorerSidebar({
     return (
         <Card
             view="filled"
-            className="workspace-card workspace-card--scroll explorer-sidebar"
+            className="workspace-card workspace-card--hidden explorer-sidebar__card explorer-sidebar"
         >
-            <div ref={tableMenuAnchorRef} style={tableMenuAnchorStyle}/>
+            <div className="explorer-sidebar__layout">
+                <div ref={tableMenuAnchorRef} style={tableMenuAnchorStyle}/>
 
-            <WorkspaceContextMenu
-                open={tableMenuState.open}
-                anchorElement={tableMenuAnchorRef.current}
-                onClose={closeTableContextMenu}
-                actions={
-                    contextTable
-                        ? [
-                            {
-                                key: 'select-top',
-                                text: 'Open preview',
-                                onClick: () =>
-                                    onOpenTablePreview({
-                                        connectionId: contextTable.connectionId,
-                                        schema: contextTable.schema,
-                                        table: contextTable.table.table_name,
-                                    }),
-                            },
-                            {
-                                key: 'count',
-                                text: 'Count rows',
-                                onClick: () =>
-                                    onOpenTableCount({
-                                        connectionId: contextTable.connectionId,
-                                        schema: contextTable.schema,
-                                        table: contextTable.table.table_name,
-                                    })
-                            },
-                            {
-                                key: 'metadata',
-                                text: 'Open metadata',
-                                onClick: () =>
-                                    openMetadata(
-                                        contextTable.connectionId,
-                                        contextTable.schema,
-                                        contextTable.table,
-                                        contextTable.details,
-                                    ),
-                            },
-                            {
-                                key: 'copy-select',
-                                text: 'Copy SELECT to editor',
-                                onClick: () =>
-                                    onCopyTableSelect({
-                                        connectionId: contextTable.connectionId,
-                                        schema: contextTable.schema,
-                                        table: contextTable.table.table_name,
-                                    }),
-                            },
-                            {
-                                key: 'separator-1',
-                            },
-                            {
-                                key: 'copy',
-                                text: 'Copy full name',
-                                onClick: () =>
-                                    copyFullName(
-                                        contextTable.schema,
-                                        contextTable.table.table_name,
-                                    ),
-                            },
-                        ]
-                        : []
-                }
-            />
+                <WorkspaceContextMenu
+                    open={tableMenuState.open}
+                    anchorElement={tableMenuAnchorRef.current}
+                    onClose={closeTableContextMenu}
+                    actions={
+                        contextTable
+                            ? [
+                                {
+                                    key: 'select-top',
+                                    text: 'Open preview',
+                                    onClick: () =>
+                                        onOpenTablePreview({
+                                            connectionId: contextTable.connectionId,
+                                            schema: contextTable.schema,
+                                            table: contextTable.table.table_name,
+                                        }),
+                                },
+                                {
+                                    key: 'count',
+                                    text: 'Count rows',
+                                    onClick: () =>
+                                        onOpenTableCount({
+                                            connectionId: contextTable.connectionId,
+                                            schema: contextTable.schema,
+                                            table: contextTable.table.table_name,
+                                        })
+                                },
+                                {
+                                    key: 'metadata',
+                                    text: 'Open metadata',
+                                    onClick: () =>
+                                        openMetadata(
+                                            contextTable.connectionId,
+                                            contextTable.schema,
+                                            contextTable.table,
+                                            contextTable.details,
+                                        ),
+                                },
+                                {
+                                    key: 'copy-select',
+                                    text: 'Copy SELECT to editor',
+                                    onClick: () =>
+                                        onCopyTableSelect({
+                                            connectionId: contextTable.connectionId,
+                                            schema: contextTable.schema,
+                                            table: contextTable.table.table_name,
+                                        }),
+                                },
+                                {
+                                    key: 'separator-1',
+                                },
+                                {
+                                    key: 'copy',
+                                    text: 'Copy full name',
+                                    onClick: () =>
+                                        copyFullName(
+                                            contextTable.schema,
+                                            contextTable.table.table_name,
+                                        ),
+                                },
+                            ]
+                            : []
+                    }
+                />
 
-            <div className="explorer-sidebar__header">
-                <div className="explorer-sidebar__header-copy">
-                    <Text variant="header-1">Explorer</Text>
-                    <Text variant="body-2" color="secondary">
-                        Connections, schemas and tables
-                    </Text>
+                <div className="explorer-sidebar__header">
+                    <div className="explorer-sidebar__header-copy">
+                        <Text variant="header-1">Explorer</Text>
+                        <Text variant="body-2" color="secondary">
+                            Connections, schemas and tables
+                        </Text>
+                    </div>
+
+                    <Button view="action" size="m" onClick={onCreateClick}>
+                        <Icon data={CirclePlus} size={16}/>
+                        New
+                    </Button>
                 </div>
 
-                <Button view="action" size="m" onClick={onCreateClick}>
-                    <Icon data={CirclePlus} size={16}/>
-                    New
-                </Button>
-            </div>
-
-            <div className="explorer-sidebar__search">
-                <TextInput
-                    size="l"
-                    value={filter}
-                    placeholder="Filter connections"
-                    onUpdate={setFilter}
-                    startContent={<Icon data={Magnifier} size={16}/>}
-                />
-            </div>
-
-            <div className="explorer-sidebar__list">
-                {visibleConnections.map((connection) => (
-                    <ExplorerConnectionCard
-                        key={connection.id}
-                        connection={connection}
-                        isActive={connection.id === activeConnectionId}
-                        isExpanded={expandedConnectionIds.includes(connection.id)}
-                        schemas={schemasByConnectionId[connection.id] ?? []}
-                        loadingSchemas={loadingSchemasFor === connection.id}
-                        expandedSchemaKeys={expandedSchemaKeys}
-                        expandedTableKeys={expandedTableKeys}
-                        tablesBySchemaKey={tablesBySchemaKey}
-                        detailsByTableKey={detailsByTableKey}
-                        loadingTablesFor={loadingTablesFor}
-                        loadingDetailsFor={loadingDetailsFor}
-                        filter={normalizedFilter}
-                        onToggleConnection={() => toggleConnection(connection.id)}
-                        onEditConnection={() => onEditClick(connection)}
-                        onDeleteConnection={() => onDeleteClick(connection)}
-                        onToggleSchema={(schema) => toggleSchema(connection.id, schema)}
-                        onToggleTable={(schema, tableName) => toggleTable(connection.id, schema, tableName)}
-                        onOpenTableContextMenu={openTableContextMenu}
-                        onOpenSelect={(schema, table) =>
-                            onOpenTablePreview({
-                                connectionId: connection.id,
-                                schema,
-                                table: table.table_name,
-                            })
-                        }
-                        onOpenCount={(schema, table) =>
-                            onOpenTableCount({
-                                connectionId: connection.id,
-                                schema,
-                                table: table.table_name,
-                            })
-                        }
-                        onCopySelect={(schema, table) =>
-                            onCopyTableSelect({
-                                connectionId: connection.id,
-                                schema,
-                                table: table.table_name,
-                            })
-                        }
-                        onOpenMetadata={(schema, table, details) =>
-                            openMetadata(connection.id, schema, table, details)
-                        }
-                        onCopyFullName={(schema, table) =>
-                            copyFullName(schema, table.table_name)
-                        }
+                <div className="explorer-sidebar__search">
+                    <TextInput
+                        size="l"
+                        value={filter}
+                        placeholder="Filter connections"
+                        onUpdate={setFilter}
+                        startContent={<Icon data={Magnifier} size={16}/>}
                     />
-                ))}
+                </div>
 
-                {connections.length === 0 ? (
-                    <div className="explorer-sidebar__empty">
-                        <Text variant="body-2" color="secondary">
-                            No connections yet. Create one to start browsing the database.
-                        </Text>
-                    </div>
-                ) : null}
+                <div className="explorer-sidebar__content">
+                    <div className="explorer-sidebar__list">
+                        {visibleConnections.map((connection) => (
+                            <ExplorerConnectionCard
+                                key={connection.id}
+                                connection={connection}
+                                isActive={connection.id === activeConnectionId}
+                                isExpanded={expandedConnectionIds.includes(connection.id)}
+                                schemas={schemasByConnectionId[connection.id] ?? []}
+                                loadingSchemas={loadingSchemasFor === connection.id}
+                                expandedSchemaKeys={expandedSchemaKeys}
+                                expandedTableKeys={expandedTableKeys}
+                                tablesBySchemaKey={tablesBySchemaKey}
+                                detailsByTableKey={detailsByTableKey}
+                                loadingTablesFor={loadingTablesFor}
+                                loadingDetailsFor={loadingDetailsFor}
+                                filter={normalizedFilter}
+                                onToggleConnection={() => toggleConnection(connection.id)}
+                                onEditConnection={() => onEditClick(connection)}
+                                onDeleteConnection={() => onDeleteClick(connection)}
+                                onToggleSchema={(schema) => toggleSchema(connection.id, schema)}
+                                onToggleTable={(schema, tableName) => toggleTable(connection.id, schema, tableName)}
+                                onOpenTableContextMenu={openTableContextMenu}
+                                onOpenSelect={(schema, table) =>
+                                    onOpenTablePreview({
+                                        connectionId: connection.id,
+                                        schema,
+                                        table: table.table_name,
+                                    })
+                                }
+                                onOpenCount={(schema, table) =>
+                                    onOpenTableCount({
+                                        connectionId: connection.id,
+                                        schema,
+                                        table: table.table_name,
+                                    })
+                                }
+                                onCopySelect={(schema, table) =>
+                                    onCopyTableSelect({
+                                        connectionId: connection.id,
+                                        schema,
+                                        table: table.table_name,
+                                    })
+                                }
+                                onOpenMetadata={(schema, table, details) =>
+                                    openMetadata(connection.id, schema, table, details)
+                                }
+                                onCopyFullName={(schema, table) =>
+                                    copyFullName(schema, table.table_name)
+                                }
+                            />
+                        ))}
 
-                {connections.length > 0 && visibleConnections.length === 0 ? (
-                    <div className="explorer-sidebar__empty">
-                        <Text variant="body-2" color="secondary">
-                            Nothing matches the current filter.
-                        </Text>
-                    </div>
-                ) : null}
+                        {connections.length === 0 ? (
+                            <div className="explorer-sidebar__empty">
+                                <Text variant="body-2" color="secondary">
+                                    No connections yet. Create one to start browsing the database.
+                                </Text>
+                            </div>
+                        ) : null}
 
-                {!activeConnection && connections.length > 0 ? (
-                    <div className="explorer-sidebar__hint">
-                        <Text variant="caption-2" color="secondary">
-                            Select a connection to load schemas.
-                        </Text>
+                        {connections.length > 0 && visibleConnections.length === 0 ? (
+                            <div className="explorer-sidebar__empty">
+                                <Text variant="body-2" color="secondary">
+                                    Nothing matches the current filter.
+                                </Text>
+                            </div>
+                        ) : null}
+
+                        {!activeConnection && connections.length > 0 ? (
+                            <div className="explorer-sidebar__hint">
+                                <Text variant="caption-2" color="secondary">
+                                    Select a connection to load schemas.
+                                </Text>
+                            </div>
+                        ) : null}
                     </div>
-                ) : null}
+                </div>
             </div>
         </Card>
     );
