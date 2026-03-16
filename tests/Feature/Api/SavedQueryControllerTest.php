@@ -35,6 +35,7 @@ class SavedQueryControllerTest extends TestCase
             'description' => 'Shows users',
             'sql_text' => 'select * from users;',
             'folder' => 'General',
+            'visibility' => 'private',
         ]);
 
         SavedQuery::query()->create([
@@ -44,6 +45,7 @@ class SavedQueryControllerTest extends TestCase
             'description' => 'Foreign query',
             'sql_text' => 'select * from payments;',
             'folder' => 'Finance',
+            'visibility' => 'shared',
         ]);
 
         $response = $this
@@ -55,6 +57,7 @@ class SavedQueryControllerTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $ownQuery->id)
             ->assertJsonPath('data.0.title', 'Users list')
+            ->assertJsonPath('data.0.visibility', 'private')
             ->assertJsonPath('data.0.connection.name', 'App DB');
     }
 
@@ -69,6 +72,7 @@ class SavedQueryControllerTest extends TestCase
             'description' => 'Lookup users',
             'sql_text' => 'select * from users where email is not null;',
             'folder' => 'CRM',
+            'visibility' => 'private',
         ]);
 
         SavedQuery::query()->create([
@@ -78,6 +82,7 @@ class SavedQueryControllerTest extends TestCase
             'description' => 'Monthly orders',
             'sql_text' => 'select * from orders;',
             'folder' => 'Reports',
+            'visibility' => 'private',
         ]);
 
         $response = $this
@@ -105,13 +110,69 @@ class SavedQueryControllerTest extends TestCase
 
         $response
             ->assertCreated()
-            ->assertJsonPath('data.title', 'Active users');
+            ->assertJsonPath('data.title', 'Active users')
+            ->assertJsonPath('data.visibility', 'private');
 
         $savedQuery = SavedQuery::query()->firstOrFail();
 
         $this->assertSame($user->id, $savedQuery->user_id);
         $this->assertSame('Active users', $savedQuery->title);
         $this->assertSame('General', $savedQuery->folder);
+        $this->assertSame('private', $savedQuery->visibility);
+    }
+
+    public function test_store_creates_shared_saved_query_when_visibility_is_passed(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user, 'sanctum')
+            ->postJson('/api/saved-queries', [
+                'title' => 'Shared report',
+                'description' => 'Team query',
+                'sql_text' => 'select * from reports;',
+                'folder' => 'Reports',
+                'visibility' => 'shared',
+            ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('data.title', 'Shared report')
+            ->assertJsonPath('data.visibility', 'shared');
+
+        $savedQuery = SavedQuery::query()->firstOrFail();
+
+        $this->assertSame('shared', $savedQuery->visibility);
+    }
+
+    public function test_update_changes_saved_query_visibility_for_owner(): void
+    {
+        $user = User::factory()->create();
+
+        $savedQuery = SavedQuery::query()->create([
+            'user_id' => $user->id,
+            'db_connection_id' => null,
+            'title' => 'Users list',
+            'description' => null,
+            'sql_text' => 'select * from users;',
+            'folder' => 'General',
+            'visibility' => 'private',
+        ]);
+
+        $response = $this
+            ->actingAs($user, 'sanctum')
+            ->patchJson("/api/saved-queries/$savedQuery->id", [
+                'visibility' => 'shared',
+                'folder' => 'Team',
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.visibility', 'shared')
+            ->assertJsonPath('data.folder', 'Team');
+
+        $this->assertSame('shared', $savedQuery->fresh()->visibility);
+        $this->assertSame('Team', $savedQuery->fresh()->folder);
     }
 
     public function test_user_cannot_open_another_users_saved_query(): void
@@ -126,11 +187,41 @@ class SavedQueryControllerTest extends TestCase
             'description' => null,
             'sql_text' => 'select 1;',
             'folder' => null,
+            'visibility' => 'private',
         ]);
 
         $this
             ->actingAs($user, 'sanctum')
             ->getJson("/api/saved-queries/$savedQuery->id")
             ->assertNotFound();
+    }
+
+    public function test_user_cannot_update_another_users_saved_query(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $savedQuery = SavedQuery::query()->create([
+            'user_id' => $otherUser->id,
+            'db_connection_id' => null,
+            'title' => 'Foreign query',
+            'description' => null,
+            'sql_text' => 'select 1;',
+            'folder' => null,
+            'visibility' => 'private',
+        ]);
+
+        $this
+            ->actingAs($user, 'sanctum')
+            ->patchJson("/api/saved-queries/$savedQuery->id", [
+                'visibility' => 'shared',
+                'title' => 'Hacked',
+            ])
+            ->assertNotFound();
+
+        $savedQuery->refresh();
+
+        $this->assertSame('Foreign query', $savedQuery->title);
+        $this->assertSame('private', $savedQuery->visibility);
     }
 }
