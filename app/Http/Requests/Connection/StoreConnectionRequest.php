@@ -25,6 +25,7 @@ class StoreConnectionRequest extends FormRequest
             'ssl_mode' => ['nullable', 'string'],
             'schema_default' => ['nullable', 'string'],
             'color' => ['nullable', 'string'],
+            'visibility' => ['nullable', 'in:private,shared'],
             'is_read_only' => ['boolean'],
 
             // SSH

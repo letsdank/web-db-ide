@@ -8,6 +8,7 @@ export interface SavedQueryDto {
     description: string | null;
     sql_text: string;
     folder: string | null;
+    visibility: 'private' | 'shared';
     created_at: string | null;
     updated_at: string | null;
     connection: ConnectionDto | null;

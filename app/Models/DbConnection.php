@@ -30,6 +30,7 @@ class DbConnection extends Model
         'ssh_known_host_fingerprint',
         'schema_default',
         'color',
+        'visibility',
         'is_favorite',
         'is_read_only',
         'connect_timeout_seconds',
@@ -87,9 +88,19 @@ class DbConnection extends Model
         return $this->hasMany(SavedQuery::class, 'db_connection_id');
     }
 
+    public function shares(): HasMany
+    {
+        return $this->hasMany(DbConnectionShare::class, 'db_connection_id');
+    }
+
     public function usesSshTunnel(): bool
     {
         return (bool)$this->use_ssh_tunnel;
+    }
+
+    public function isShared(): bool
+    {
+        return $this->visibility === 'shared';
     }
 
     public function getHasSshPasswordAttribute(): bool

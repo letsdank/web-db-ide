@@ -60,6 +60,7 @@ class SavedQueryController extends Controller
             'description' => $request->validated('description'),
             'sql_text' => $request->validated('sql_text'),
             'folder' => $request->validated('folder'),
+            'visibility' => $request->validated('visibility') ?? 'private',
         ]);
 
         $savedQuery->load('connection:id,name,driver,host,port,database_name');
@@ -122,6 +123,7 @@ class SavedQueryController extends Controller
             'description' => $savedQuery->description,
             'sql_text' => $savedQuery->sql_text,
             'folder' => $savedQuery->folder,
+            'visibility' => $savedQuery->visibility,
             'created_at' => optional($savedQuery->created_at)?->toISOString(),
             'updated_at' => optional($savedQuery->updated_at)?->toISOString(),
             'connection' => $savedQuery->relationLoaded('connection') && $savedQuery->connection

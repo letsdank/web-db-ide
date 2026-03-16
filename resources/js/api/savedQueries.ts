@@ -8,6 +8,7 @@ export interface CreateSavedQueryPayload {
     description?: string | null;
     sql_text: string;
     folder?: string | null;
+    visibility?: 'private' | 'shared';
 }
 
 export async function fetchSavedQueries(): Promise<SavedQueryDto[]> {

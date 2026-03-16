@@ -41,6 +41,7 @@ class DbConnectionController extends Controller
             'ssl_mode' => $request->ssl_mode,
             'schema_default' => $request->schema_default,
             'color' => $request->color,
+            'visibility' => $request->input('visibility', 'private'),
             'is_read_only' => $request->boolean('is_read_only'),
 
             // SSH
@@ -181,6 +182,7 @@ class DbConnectionController extends Controller
             'ssl_mode' => $data['ssl_mode'] ?? $base?->ssl_mode,
             'schema_default' => $data['schema_default'] ?? $base?->schema_default,
             'color' => $data['color'] ?? $base?->color,
+            'visibility' => $data['visibility'] ?? $base?->visibility ?? 'private',
             'is_read_only' => Arr::get($data, 'is_read_only', $base?->is_read_only ?? false),
             'connect_timeout_seconds' => Arr::get($data, 'connect_timeout_seconds', $base?->connect_timeout_seconds ?? 10),
             'query_timeout_seconds' => Arr::get($data, 'query_timeout_seconds', $base?->query_timeout_seconds),

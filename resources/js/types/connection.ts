@@ -10,6 +10,7 @@ export interface ConnectionDto {
     ssl_mode?: string | null;
     schema_default?: string | null;
     color?: string | null;
+    visibility: 'private' | 'shared';
     is_favorite: boolean;
     is_read_only: boolean;
     connect_timeout_seconds?: number;
@@ -52,6 +53,7 @@ export interface CreateConnectionPayload {
     schema_default?: string | null;
     ssl_mode?: string | null;
     color?: string | null;
+    visibility?: 'private' | 'shared';
 
     use_ssh_tunnel?: boolean;
     ssh_host?: string | null;
@@ -74,6 +76,7 @@ export interface UpdateConnectionPayload {
     schema_default?: string | null;
     ssl_mode?: string | null;
     color?: string | null;
+    visibility?: 'private' | 'shared';
 
     use_ssh_tunnel?: boolean;
     ssh_host?: string | null;
