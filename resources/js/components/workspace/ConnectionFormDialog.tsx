@@ -6,6 +6,7 @@ import {
     TestConnectionResultDto,
     UpdateConnectionPayload
 } from "../../types/connection";
+import {useI18n} from "../../i18n";
 
 type SshAuthMode = 'password' | 'private_key';
 
@@ -101,6 +102,7 @@ export function ConnectionFormDialog({
 
     const isEditMode = Boolean(initialConnection);
     const dialogTitleId = 'db-connection-dialog-title';
+    const {t} = useI18n();
 
     const canSubmit = useMemo(() => {
         if (!form.name.trim()) return false;
@@ -239,19 +241,19 @@ export function ConnectionFormDialog({
         >
             <Dialog.Header
                 id={dialogTitleId}
-                caption={isEditMode ? "Edit connection" : "New connection"}
+                caption={isEditMode ? t('connections.editConnection') : t('connections.newConnection')}
             />
 
             <Dialog.Body>
                 <div className="connection-dialog__body">
                     <div className="connection-dialog__section-stack">
                         <div className="connection-dialog__section">
-                            <Text variant="subheader-3">Database</Text>
+                            <Text variant="subheader-3">{t('connections.database')}</Text>
 
                             <div className="connection-dialog__grid">
                                 <TextInput
                                     value={form.name}
-                                    placeholder="Connection name"
+                                    placeholder={t('connections.placeholders.connectionName')}
                                     onUpdate={(value) => patch('name', value)}
                                 />
 
@@ -266,45 +268,45 @@ export function ConnectionFormDialog({
 
                                 <TextInput
                                     value={form.host}
-                                    placeholder="Host"
+                                    placeholder={t('connections.placeholders.host')}
                                     onUpdate={(value) => patch('host', value)}
                                 />
 
                                 <TextInput
                                     value={form.port}
-                                    placeholder="Port"
+                                    placeholder={t('connections.placeholders.port')}
                                     onUpdate={(value) => patch('port', value)}
                                 />
 
                                 <TextInput
                                     value={form.database_name}
-                                    placeholder="Database"
+                                    placeholder={t('connections.placeholders.database')}
                                     onUpdate={(value) => patch('database_name', value)}
                                 />
 
                                 <TextInput
                                     value={form.username}
-                                    placeholder="Username"
+                                    placeholder={t('connections.placeholders.username')}
                                     onUpdate={(value) => patch('username', value)}
                                 />
 
                                 <TextInput
                                     type="password"
                                     value={form.password}
-                                    placeholder={isEditMode ? 'Password (leave empty to keep current)' : 'Password'}
+                                    placeholder={isEditMode ? t('connections.placeholders.passwordKeep') :t('connections.placeholders.password')}
                                     onUpdate={(value) => patch('password', value)}
                                 />
 
                                 <TextInput
                                     value={form.schema_default}
-                                    placeholder="Default schema (optional)"
+                                    placeholder={t('connections.placeholders.defaultSchema')}
                                     onUpdate={(value) => patch('schema_default', value)}
                                 />
 
                                 <Select
                                     width="max"
                                     hasClear
-                                    placeholder="SSL mode"
+                                    placeholder={t('connections.placeholders.sslMode')}
                                     value={form.ssl_mode ? [form.ssl_mode] : []}
                                     onUpdate={(value) => patch('ssl_mode', value[0] ?? "")}
                                     options={[
@@ -319,7 +321,7 @@ export function ConnectionFormDialog({
 
                                 <TextInput
                                     value={form.color}
-                                    placeholder="Color tag (optional)"
+                                    placeholder={t('connections.placeholders.colorTag')}
                                     onUpdate={(value) => patch('color', value)}
                                 />
                             </div>
@@ -327,13 +329,13 @@ export function ConnectionFormDialog({
 
                         <div className="connection-dialog__section">
                             <div className="connection-dialog__section-header">
-                                <Text variant="subheader-3">SSH tunnel</Text>
+                                <Text variant="subheader-3">{t('connections.sshTunnel')}</Text>
 
                                 <Checkbox
                                     checked={form.use_ssh_tunnel}
                                     onUpdate={(checked) => patch("use_ssh_tunnel", checked)}
                                 >
-                                    Use SSH tunnel
+                                    {t('connections.useSshTunnel')}
                                 </Checkbox>
                             </div>
 
@@ -342,38 +344,38 @@ export function ConnectionFormDialog({
                                     <div className="connection-dialog__grid">
                                         <TextInput
                                             value={form.ssh_host}
-                                            placeholder="SSH host"
+                                            placeholder={t('connections.placeholders.sshHost')}
                                             onUpdate={(value) => patch('ssh_host', value)}
                                         />
 
                                         <TextInput
                                             value={form.ssh_port}
-                                            placeholder="SSH port"
+                                            placeholder={t('connections.placeholders.sshPort')}
                                             onUpdate={(value) => patch('ssh_port', value)}
                                         />
 
                                         <TextInput
                                             value={form.ssh_username}
-                                            placeholder="SSH username"
+                                            placeholder={t('connections.placeholders.sshUsername')}
                                             onUpdate={(value) => patch('ssh_username', value)}
                                         />
 
                                         <TextInput
                                             value={form.ssh_known_host_fingerprint}
-                                            placeholder="Host fingerprint (optional)"
+                                            placeholder={t('connections.placeholders.hostFingerprint')}
                                             onUpdate={(value) => patch('ssh_known_host_fingerprint', value)}
                                         />
                                     </div>
 
                                     <div className="connection-dialog__auth-mode">
-                                        <Text variant="body-2">Authentication</Text>
+                                        <Text variant="body-2">{t('connections.authentication')}</Text>
 
                                         <RadioGroup
                                             value={sshAuthMode}
                                             onUpdate={(value) => setSshAuthMode(value as SshAuthMode)}
                                             options={[
-                                                {value: "password", content: "Password"},
-                                                {value: "private_key", content: "Private key"},
+                                                {value: "password", content: t('connections.password')},
+                                                {value: "private_key", content: t('connections.privateKey')},
                                             ]}
                                         />
                                     </div>
@@ -381,10 +383,10 @@ export function ConnectionFormDialog({
                                     {sshAuthMode === "password" ? (
                                         <div className="connection-dialog__auth-mode">
                                             <div className="connection-dialog__field-header">
-                                                <Text variant="body-2">SSH password</Text>
+                                                <Text variant="body-2">{t('connections.sshPassword')}</Text>
 
                                                 {isEditMode && initialConnection?.has_ssh_password ? (
-                                                    <Label theme="success">Stored</Label>
+                                                    <Label theme="success">{t('connections.stored')}</Label>
                                                 ) : null}
                                             </div>
 
@@ -393,8 +395,8 @@ export function ConnectionFormDialog({
                                                 value={form.ssh_password}
                                                 placeholder={
                                                     isEditMode
-                                                        ? "SSH password (leave empty to keep current)"
-                                                        : "SSH password"
+                                                        ? t('connections.placeholders.sshPasswordKeep')
+                                                        : t('connections.placeholders.sshPassword')
                                                 }
                                                 onUpdate={(value) => patch("ssh_password", value)}
                                             />
@@ -402,10 +404,10 @@ export function ConnectionFormDialog({
                                     ) : (
                                         <div className="connection-dialog__field">
                                             <div className="connection-dialog__field-header">
-                                                <Text variant="body-2">SSH private key</Text>
+                                                <Text variant="body-2">{t('connections.sshPrivateKey')}</Text>
 
                                                 {isEditMode && initialConnection?.has_ssh_private_key ? (
-                                                    <Label theme="success">Stored</Label>
+                                                    <Label theme="success">{t('connections.stored')}</Label>
                                                 ) : null}
                                             </div>
 
@@ -413,18 +415,18 @@ export function ConnectionFormDialog({
                                                 value={form.ssh_private_key}
                                                 placeholder={
                                                     isEditMode
-                                                        ? "Private key (leave empty to keep current)"
-                                                        : "Paste private key"
+                                                        ? t('connections.placeholders.privateKeyKeep')
+                                                        : t('connections.placeholders.privateKey')
                                                 }
                                                 minRows={8}
                                                 onUpdate={(value) => patch("ssh_private_key", value)}
                                             />
 
                                             <div className="connection-dialog__field-header">
-                                                <Text variant="body-2">SSH key passphrase</Text>
+                                                <Text variant="body-2">{t('connections.sshKeyPassphrase')}</Text>
 
                                                 {isEditMode && initialConnection?.has_ssh_passphrase ? (
-                                                    <Label theme="success">Stored</Label>
+                                                    <Label theme="success">{t('connections.stored')}</Label>
                                                 ) : null}
                                             </div>
 
@@ -433,8 +435,8 @@ export function ConnectionFormDialog({
                                                 value={form.ssh_passphrase}
                                                 placeholder={
                                                     isEditMode
-                                                        ? "Passphrase (leave empty to keep current)"
-                                                        : "Passphrase (optional)"
+                                                        ? t('connections.placeholders.passphraseKeep')
+                                                        : t('connections.placeholders.passphrase')
                                                 }
                                                 onUpdate={(value) => patch("ssh_passphrase", value)}
                                             />
@@ -446,7 +448,7 @@ export function ConnectionFormDialog({
 
                         {error ? (
                             <div className="connection-dialog__field">
-                                <Label theme="danger">Connection failed</Label>
+                                <Label theme="danger">{t('connections.connectionFailed')}</Label>
                                 <Text variant="body-2" color="danger">
                                     {error}
                                 </Text>
@@ -455,7 +457,7 @@ export function ConnectionFormDialog({
 
                         {testError ? (
                             <div className="connection-dialog__field">
-                                <Label theme="danger">Connection test failed</Label>
+                                <Label theme="danger">{t('connections.connectionTestFailed')}</Label>
                                 <Text variant="body-2" color="danger">
                                     {testError}
                                 </Text>
@@ -464,16 +466,20 @@ export function ConnectionFormDialog({
 
                         {testResult ? (
                             <div className="connection-dialog__field">
-                                <Label theme="success">Connection successful</Label>
+                                <Label theme="success">{t('connections.connectionSuccessful')}</Label>
                                 <Text variant="body-2" color="secondary">
-                                    Connected to {testResult.database_name} as {testResult.user_name} in {testResult.duration_ms} ms
+                                    {t('connections.connectedTo', {
+                                        database: testResult.database_name,
+                                        user: testResult.user_name,
+                                        duration: testResult.duration_ms,
+                                    })}
                                 </Text>
                             </div>
                         ) : null}
 
                         <Dialog.Footer
-                            textButtonApply={isEditMode ? "Save changes" : "Create connection"}
-                            textButtonCancel="Cancel"
+                            textButtonApply={isEditMode ? t('connections.saveChanges') : t('connections.createConnection')}
+                            textButtonCancel={t('common.cancel')}
                             propsButtonApply={{
                                 view: "action",
                                 loading,
@@ -492,7 +498,7 @@ export function ConnectionFormDialog({
                                 disabled={!canSubmit || loading}
                                 onClick={handleTestConnection}
                             >
-                                Test connection
+                                {t('common.testConnection')}
                             </Button>
                         </Dialog.Footer>
                     </div>

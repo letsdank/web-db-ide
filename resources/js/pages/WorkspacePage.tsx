@@ -20,6 +20,7 @@ import {useWorkspaceLibrary} from "../features/workspace/hooks/useWorkspaceLibra
 import {useActiveWorkspace} from "../features/workspace/hooks/useActiveWorkspace";
 import {useWorkspaceDraft} from "../features/workspace/hooks/useWorkspaceDraft";
 import {buildCountSql, buildPreviewSql, buildSelectSql} from "../features/explorer/lib/sql";
+import {useI18n} from "../i18n";
 
 export function WorkspacePage() {
     const {
@@ -76,6 +77,7 @@ export function WorkspacePage() {
 
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
     const editorRef = useRef<SqlEditorPaneHandle | null>(null);
+    const {t} = useI18n();
 
     const focusEditor = useCallback(() => {
         editorRef.current?.focus();
@@ -295,7 +297,7 @@ export function WorkspacePage() {
     });
 
     if (isBooting) {
-        return <div className="workspace-page__boot">Loading...</div>;
+        return <div className="workspace-page__boot">{t('common.loading')}</div>;
     }
 
     return (

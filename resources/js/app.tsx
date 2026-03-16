@@ -6,6 +6,7 @@ import {ThemeProvider, ToasterComponent, ToasterProvider} from "@gravity-ui/uiki
 import "../css/app.scss";
 import {toaster} from "@gravity-ui/uikit/toaster-singleton";
 import {AuthBootstrap} from "./features/auth/components/AuthBootstrap";
+import {AppShell} from "./components/layout/AppShell";
 
 const root = ReactDOM.createRoot(document.getElementById("app")!);
 
@@ -14,7 +15,9 @@ root.render(
         <ThemeProvider theme="dark">
             <ToasterProvider toaster={toaster}>
                 <AuthBootstrap>
-                    <WorkspacePage/>
+                    <AppShell>
+                        <WorkspacePage/>
+                    </AppShell>
                 </AuthBootstrap>
                 <ToasterComponent/>
             </ToasterProvider>

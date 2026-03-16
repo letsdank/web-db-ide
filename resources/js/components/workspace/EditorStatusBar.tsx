@@ -1,4 +1,5 @@
 import {Card, Label, Text} from "@gravity-ui/uikit";
+import {useI18n} from "../../i18n";
 
 interface Props {
     connectionName: string | null;
@@ -44,13 +45,14 @@ export function EditorStatusBar({
                                     hasMoreRows
                                 }: Props) {
     const hasSelection = Boolean(selectedText?.trim().length);
+    const {t} = useI18n();
 
     return (
         <Card view="filled" className="editor-status-bar__card">
             <div className="editor-status-bar__content">
                 <div className="editor-status-bar__group">
                     <Label theme={connectionName ? "info" : "utility"}>
-                        {connectionName || "No connection"}
+                        {connectionName || t('workspace.noConnection')}
                     </Label>
 
                     <StatusMeta
@@ -74,14 +76,14 @@ export function EditorStatusBar({
                                 ? selectedLineCount && selectedLineCount > 1
                                     ? `${selectedLineCount} lines`
                                     : "1 line"
-                                : "None"
+                                : t('workspace.none')
                         }
                     />
                 </div>
 
                 <div className="editor-status-bar__group">
                     <StatusMeta
-                        label="Rows"
+                        label={t('workspace.rows')}
                         value={
                             rowsCount !== null
                                 ? `${rowsCount}${hasMoreRows ? "+" : ""}`
@@ -90,7 +92,7 @@ export function EditorStatusBar({
                     />
 
                     <Label theme={isExecuting ? "warning" : "normal"}>
-                        {isExecuting ? "Executing..." : "Idle"}
+                        {isExecuting ? t('workspace.executing') : t('workspace.idle')}
                     </Label>
                 </div>
             </div>

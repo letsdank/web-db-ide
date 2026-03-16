@@ -2,6 +2,7 @@ import {WorkspaceRightPanel} from "../../stores/workspaceStore";
 import {QueryHistoryDto} from "../../types/queryHistory";
 import {SavedQueryDto} from "../../types/savedQuery";
 import {Button, Card, Label, SegmentedRadioGroup, Text} from "@gravity-ui/uikit";
+import {useI18n} from "../../i18n";
 
 interface Props {
     panel: WorkspaceRightPanel;
@@ -22,15 +23,17 @@ export function RightSidebarPanels({
                                        onOpenSavedQuery,
                                        onSaveCurrentQuery,
                                    }: Props) {
+    const {t}=useI18n();
+
     return (
         <Card view="filled" className="right-sidebar-panels__card">
             <div className="right-sidebar-panels__layout">
                 <div className="right-sidebar-panels__header">
                     <div className="right-sidebar-panels__title-row">
-                        <Text variant="header-1">Workspace</Text>
+                        <Text variant="header-1">{t('workspace.workspace')}</Text>
 
                         <Button view="outlined" size="m" onClick={onSaveCurrentQuery}>
-                            Save query
+                            {t('workspace.saveQuery')}
                         </Button>
                     </div>
 
@@ -38,8 +41,8 @@ export function RightSidebarPanels({
                         size="m"
                         value={panel}
                         options={[
-                            {value: 'history', content: 'History'},
-                            {value: 'saved', content: 'Saved'},
+                            {value: 'history', content: t('workspace.history')},
+                            {value: 'saved', content: t('workspace.saved')},
                         ]}
                         onUpdate={(value) => onChangePanel(value as WorkspaceRightPanel)}
                     />
@@ -81,7 +84,7 @@ export function RightSidebarPanels({
                             ))
                         ) : (
                             <Text variant="body-2" color="secondary">
-                                No history yet.
+                                {t('workspace.noHistory')}
                             </Text>
                         )
                     ) : savedQueries.length > 0 ? (
@@ -114,7 +117,7 @@ export function RightSidebarPanels({
                         ))
                     ) : (
                         <Text variant="body-2" color="secondary">
-                            No saved queries yet.
+                            {t('workspace.noSavedQueries')}
                         </Text>
                     )}
                 </div>

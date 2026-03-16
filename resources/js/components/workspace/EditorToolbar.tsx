@@ -1,5 +1,6 @@
 import {ConnectionDto} from "../../types/connection";
 import {Button, Card, Hotkey, Label, Select, Text} from "@gravity-ui/uikit";
+import {useI18n} from "../../i18n";
 
 interface Props {
     connections: ConnectionDto[];
@@ -21,6 +22,7 @@ export function EditorToolbar({
                                   onRunSelection,
                               }: Props) {
     const selectValue = activeConnectionId ? [String(activeConnectionId)] : [];
+    const {t}=useI18n();
 
     return (
         <Card view="filled" className="editor-toolbar__card">
@@ -32,7 +34,7 @@ export function EditorToolbar({
                     disabled={!activeConnectionId || isExecuting}
                     loading={isExecuting}
                 >
-                    Run all
+                    {t('workspace.runAll')}
                 </Button>
 
                 <Button
@@ -41,7 +43,7 @@ export function EditorToolbar({
                     onClick={onRunSelection}
                     disabled={!activeConnectionId || isExecuting || !hasSelection}
                 >
-                    Run selection
+                    {t('workspace.runSelection')}
                 </Button>
 
                 <div className="editor-toolbar__connection">
@@ -50,7 +52,7 @@ export function EditorToolbar({
                         size="l"
                         filterable
                         hasClear
-                        placeholder="Select connection"
+                        placeholder={t('workspace.selectConnection')}
                         value={selectValue}
                         onUpdate={(value) => {
                             const first = value[0];
@@ -64,33 +66,33 @@ export function EditorToolbar({
                 </div>
 
                 {hasSelection ? (
-                    <Label theme="info">Selection available</Label>
+                    <Label theme="info">{t('workspace.selectionAvailable')}</Label>
                 ) : (
-                    <Label theme="utility">No selection</Label>
+                    <Label theme="utility">{t('workspace.noSelection')}</Label>
                 )}
 
                 <div className="editor-toolbar__hotkeys">
                     <Text variant="body-2" color="secondary">
-                        New tab
+                        {t('workspace.newTab')}
                     </Text>
                     <Hotkey value="shift+mod+t" view="dark"/>
 
                     <Text variant="body-2" color="secondary">
-                        Run all
+                        {t('workspace.runAll')}
                     </Text>
                     <Hotkey value="mod+enter" view="dark"/>
 
                     {hasSelection ? (
                         <>
                             <Text variant="body-2" color="secondary">
-                                Run selection
+                                {t('workspace.runSelection')}
                             </Text>
                             <Hotkey value="shift+mod+enter" view="dark"/>
                         </>
                     ) : null}
 
                     <Text variant="body-2" color="secondary">
-                        Palette
+                        {t('workspace.palette')}
                     </Text>
                     <Hotkey value="mod+k" view="dark"/>
                 </div>
