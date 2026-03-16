@@ -91,6 +91,8 @@ const ru = {
         confirmExecution: 'Подтвердите выполнение.',
         sqlPreview: 'Фрагмент SQL: {preview}',
         failedToExecuteQuery: 'Не удалось выполнить запрос.',
+        privateVisibility: 'Приватное',
+        sharedVisibility: 'Общее',
     },
 
     connections: {
@@ -115,6 +117,9 @@ const ru = {
         createConnection: 'Создать подключение',
         saveChanges: 'Сохранить изменения',
         connectedTo: 'Подключено к {database} как {user} за {duration} мс',
+        visibility: 'Видимость',
+        privateVisibility: 'Приватное',
+        sharedVisibility: 'Общее',
         placeholders: {
             connectionName: 'Имя подключения',
             host: 'Хост',

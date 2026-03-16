@@ -9,6 +9,7 @@ import {
 import {useI18n} from "../../i18n";
 
 type SshAuthMode = 'password' | 'private_key';
+type VisibilityMode = 'private' | 'shared';
 
 interface Props {
     open: boolean;
@@ -31,6 +32,7 @@ interface FormState {
     schema_default: string;
     ssl_mode: string;
     color: string;
+    visibility: VisibilityMode;
 
     use_ssh_tunnel: boolean;
     ssh_host: string;
@@ -54,6 +56,7 @@ function makeInitialForm(connection?: ConnectionDto | null): FormState {
         schema_default: connection?.schema_default ?? 'public',
         ssl_mode: connection?.ssl_mode ?? '',
         color: connection?.color ?? '',
+        visibility: connection?.visibility ?? 'private',
 
         use_ssh_tunnel: Boolean(connection?.use_ssh_tunnel),
         ssh_host: connection?.ssh_host ?? '',
@@ -153,6 +156,7 @@ export function ConnectionFormDialog({
             schema_default: form.schema_default?.trim() || null,
             ssl_mode: form.ssl_mode?.trim() || null,
             color: form.color?.trim() || null,
+            visibility: form.visibility,
             use_ssh_tunnel: form.use_ssh_tunnel,
             ssh_host: form.use_ssh_tunnel ? form.ssh_host.trim() || null : null,
             ssh_port: form.use_ssh_tunnel ? Number(form.ssh_port || 22) : null,
@@ -293,7 +297,7 @@ export function ConnectionFormDialog({
                                 <TextInput
                                     type="password"
                                     value={form.password}
-                                    placeholder={isEditMode ? t('connections.placeholders.passwordKeep') :t('connections.placeholders.password')}
+                                    placeholder={isEditMode ? t('connections.placeholders.passwordKeep') : t('connections.placeholders.password')}
                                     onUpdate={(value) => patch('password', value)}
                                 />
 
@@ -325,6 +329,19 @@ export function ConnectionFormDialog({
                                     onUpdate={(value) => patch('color', value)}
                                 />
                             </div>
+                        </div>
+
+                        <div className="connection-dialog__auth-mode">
+                            <Text variant="body-2">{t('connection.visibility')}</Text>
+
+                            <RadioGroup
+                                value={form.visibility}
+                                onUpdate={(value)=>patch('visibility',value as VisibilityMode)}
+                                options={[
+                                    {value:'private',content:t('connections.privateVisibility')},
+                                    {value:'shared',content:t('connections.sharedVisibility')},
+                                ]}
+                            />
                         </div>
 
                         <div className="connection-dialog__section">

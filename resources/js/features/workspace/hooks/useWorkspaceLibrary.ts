@@ -39,6 +39,7 @@ export function useWorkspaceLibrary({
                 title: activeTab.title || t('workspace.newQuery'),
                 sql_text: activeTab.sql_text,
                 folder: t('workspace.generalFolder'),
+                visibility: 'private',
             });
 
             addSavedQuery(saved);

@@ -13,7 +13,7 @@ export async function fetchConnections(): Promise<ConnectionDto[]> {
 }
 
 export async function createConnection(payload: CreateConnectionPayload): Promise<ConnectionDto> {
-    const response = await apiClient.post<{ data: ConnectionDto }>('/connections', payload,);
+    const response = await apiClient.post<{ data: ConnectionDto }>('/connections', payload);
 
     return response.data.data;
 }

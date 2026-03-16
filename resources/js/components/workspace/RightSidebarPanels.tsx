@@ -23,7 +23,7 @@ export function RightSidebarPanels({
                                        onOpenSavedQuery,
                                        onSaveCurrentQuery,
                                    }: Props) {
-    const {t}=useI18n();
+    const {t} = useI18n();
 
     return (
         <Card view="filled" className="right-sidebar-panels__card">
@@ -97,9 +97,17 @@ export function RightSidebarPanels({
                                 <div className="right-sidebar-panels__item-meta">
                                     <Text variant="subheader-2">{item.title}</Text>
 
-                                    {item.folder ? (
-                                        <Label theme="unknown">{item.folder}</Label>
-                                    ) : null}
+                                    <div className="right-sidebar-panels__item-meta">
+                                        <Label theme={item.visibility === 'shared' ? 'info' : 'unknown'}>
+                                            {item.visibility === 'shared'
+                                                ? t('workspace.sharedVisibility')
+                                                : t('workspace.privateVisibility')}
+                                        </Label>
+
+                                        {item.folder ? (
+                                            <Label theme="unknown">{item.folder}</Label>
+                                        ) : null}
+                                    </div>
                                 </div>
 
                                 {item.connection ? (

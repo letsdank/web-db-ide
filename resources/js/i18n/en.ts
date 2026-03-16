@@ -91,6 +91,8 @@ const en = {
         lines: 'lines',
         ln: 'Ln',
         col: 'Col',
+        privateVisibility: 'Private',
+        sharedVisibility: 'Shared',
     },
 
     connections: {
@@ -115,6 +117,9 @@ const en = {
         createConnection: 'Create connection',
         saveChanges: 'Save changes',
         connectedTo: 'Connected to {database} as {user} in {duration} ms',
+        visibility: 'Visibility',
+        privateVisibility: 'Private',
+        sharedVisibility: 'Shared',
         placeholders: {
             connectionName: 'Connection name',
             host: 'Host',

@@ -109,6 +109,12 @@ export function ExplorerConnectionCard({
                                 <div className="explorer-connection-card__badges">
                                     <Label theme="utility">{connection.driver}</Label>
 
+                                    <Label theme={connection.visibility === 'shared' ? 'info' : 'unknown'}>
+                                        {connection.visibility === 'shared'
+                                            ? t('connections.sharedVisibility')
+                                            : t('connections.privateVisibility')}
+                                    </Label>
+
                                     {connection.is_read_only ? (
                                         <Label theme="warning">{t('connections.readOnly')}</Label>
                                     ) : null}
