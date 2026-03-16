@@ -4,7 +4,11 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "test:frontend": "vitest run",
+        "test:frontend:watch": "vitest",
+        "test:backend": "php artisan test",
+        "test": "npm run test:frontend && php artisan test"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -16,7 +20,8 @@
         "sass": "^1.98.0",
         "tailwindcss": "^4.0.0",
         "typescript": "^5.9.3",
-        "vite": "^7.0.7"
+        "vite": "^7.0.7",
+        "vitest": "^3.2.4"
     },
     "dependencies": {
         "@gravity-ui/icons": "^2.17.0",

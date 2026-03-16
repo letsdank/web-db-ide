@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SavedQuery\StoreSavedQueryRequest;
 use App\Http\Requests\SavedQuery\UpdateSavedQueryRequest;
 use App\Models\SavedQuery;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
