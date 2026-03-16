@@ -4,6 +4,7 @@ import {useCallback} from "react";
 import {createSavedQuery} from "../../../api/savedQueries";
 import {QueryHistoryDto} from "../../../types/queryHistory";
 import {useI18n} from "../../../i18n";
+import {SaveQueryDialogSubmitPayload} from "../../../components/workspace/SaveQueryDialog";
 
 interface Params {
     activeTab: QueryTabDto | null;
@@ -28,26 +29,24 @@ export function useWorkspaceLibrary({
                                     }: Params) {
     const {t} = useI18n();
 
-    const handleSaveCurrentQuery = useCallback(async () => {
+    const handleSaveCurrentQuery = useCallback(async (payload: SaveQueryDialogSubmitPayload) => {
         if (!activeTab) {
             return;
         }
 
-        try {
-            const saved = await createSavedQuery({
-                db_connection_id: activeConnectionId,
-                title: activeTab.title || t('workspace.newQuery'),
-                sql_text: activeTab.sql_text,
-                folder: t('workspace.generalFolder'),
-                visibility: 'private',
-            });
+        const saved = await createSavedQuery({
+            db_connection_id: activeConnectionId,
+            title: payload.title,
+            sql_text: activeTab.sql_text,
+            folder: payload.folder,
+            visibility: payload.visibility,
+        });
 
-            addSavedQuery(saved);
-            setRightPanel('saved');
-        } catch (error) {
-            console.error(error);
-        }
-    }, [activeConnectionId, activeTab, addSavedQuery, setRightPanel, t]);
+        addSavedQuery(saved);
+        setRightPanel('saved');
+
+        return saved;
+    }, [activeConnectionId, activeTab, addSavedQuery, setRightPanel]);
 
     const handleOpenHistoryItem = useCallback(async (item: QueryHistoryDto) => {
         await handleCreateTab({

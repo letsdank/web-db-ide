@@ -332,7 +332,7 @@ export function ConnectionFormDialog({
                         </div>
 
                         <div className="connection-dialog__auth-mode">
-                            <Text variant="body-2">{t('connection.visibility')}</Text>
+                            <Text variant="body-2">{t('connections.visibility')}</Text>
 
                             <RadioGroup
                                 value={form.visibility}

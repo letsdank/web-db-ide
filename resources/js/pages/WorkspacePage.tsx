@@ -21,6 +21,7 @@ import {useActiveWorkspace} from "../features/workspace/hooks/useActiveWorkspace
 import {useWorkspaceDraft} from "../features/workspace/hooks/useWorkspaceDraft";
 import {buildCountSql, buildPreviewSql, buildSelectSql} from "../features/explorer/lib/sql";
 import {useI18n} from "../i18n";
+import {SaveQueryDialog, SaveQueryDialogSubmitPayload} from "../components/workspace/SaveQueryDialog";
 
 export function WorkspacePage() {
     const {
@@ -76,6 +77,10 @@ export function WorkspacePage() {
     } = useWorkspaceStore();
 
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+    const [isSaveQueryDialogOpen, setIsSaveQueryDialogOpen] = useState(false);
+    const [isSavingQuery, setIsSavingQuery] = useState(false);
+    const [saveQueryDialogError, setSaveQueryDialogError] = useState<string | null>(null);
+
     const editorRef = useRef<SqlEditorPaneHandle | null>(null);
     const {t} = useI18n();
 
@@ -197,6 +202,43 @@ export function WorkspacePage() {
         handleCreateTab,
     });
 
+    const openSaveQueryDialog = useCallback(() => {
+        if (!activeTab) {
+            return;
+        }
+
+        setSaveQueryDialogError(null);
+        setIsSaveQueryDialogOpen(true);
+    }, [activeTab]);
+
+    const closeSaveQueryDialog = useCallback(() => {
+        if (isSavingQuery) {
+            return;
+        }
+
+        setIsSaveQueryDialogOpen(false);
+        setSaveQueryDialogError(null);
+    }, [isSavingQuery]);
+
+    const handleSubmitSaveQuery = useCallback(async (payload: SaveQueryDialogSubmitPayload) => {
+        try {
+            setIsSavingQuery(true);
+            setSaveQueryDialogError(null);
+
+            await handleSaveCurrentQuery(payload);
+
+            setIsSaveQueryDialogOpen(false);
+        } catch (error: any) {
+            setSaveQueryDialogError(
+                error?.response?.data?.message ||
+                error?.message ||
+                t('workspace.failedToSaveQuery'),
+            );
+        } finally {
+            setIsSavingQuery(false);
+        }
+    }, [handleSaveCurrentQuery, t]);
+
     const handleOpenTablePreview = useCallback(async (payload: {
         connectionId: number;
         schema: string | null;
@@ -312,6 +354,18 @@ export function WorkspacePage() {
                 onTest={handleTestConnection}
             />
 
+            <SaveQueryDialog
+                open={isSaveQueryDialogOpen}
+                loading={isSavingQuery}
+                error={saveQueryDialogError}
+                initialTitle={activeTab?.title?.trim() || t('workspace.newQuery')}
+                initialFolder={t('workspace.generalFolder')}
+                initialVisibility="private"
+                sqlText={activeTab?.sql_text ?? ''}
+                onClose={closeSaveQueryDialog}
+                onSubmit={handleSubmitSaveQuery}
+            />
+
             <CommandPalette
                 open={isCommandPaletteOpen}
                 items={commandPaletteItems}
@@ -406,10 +460,11 @@ export function WorkspacePage() {
                         panel={rightPanel}
                         history={queryHistory}
                         savedQueries={savedQueries}
+                        canSaveCurrentQuery={Boolean(activeTab)}
                         onChangePanel={setRightPanel}
                         onOpenHistoryItem={handleOpenHistoryItem}
                         onOpenSavedQuery={handleOpenSavedQuery}
-                        onSaveCurrentQuery={handleSaveCurrentQuery}
+                        onOpenSaveQueryDialog={openSaveQueryDialog}
                     />
                 }
             />

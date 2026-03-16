@@ -130,3 +130,16 @@
         }
     }
 }
+
+.save-query-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    &__field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+    }
+}

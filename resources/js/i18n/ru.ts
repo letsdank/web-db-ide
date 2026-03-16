@@ -93,6 +93,14 @@ const ru = {
         failedToExecuteQuery: 'Не удалось выполнить запрос.',
         privateVisibility: 'Приватное',
         sharedVisibility: 'Общее',
+        saveQueryDialogTitle: 'Сохранить запрос',
+        queryTitle: 'Название запроса',
+        queryTitlePlaceholder: 'Введите название запроса',
+        folder: 'Папка',
+        folderPlaceholder: 'Введите название папки',
+        queryPreview: 'Предпросмотр SQL',
+        emptyQuery: 'Пустой запрос',
+        failedToSaveQuery: 'Не удалось сохранить запрос.',
     },
 
     connections: {

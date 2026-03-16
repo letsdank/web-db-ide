@@ -93,6 +93,14 @@ const en = {
         col: 'Col',
         privateVisibility: 'Private',
         sharedVisibility: 'Shared',
+        saveQueryDialogTitle: 'Save query',
+        queryTitle: 'Query title',
+        queryTitlePlaceholder: 'Enter query title',
+        folder: 'Folder',
+        folderPlaceholder: 'Enter folder name',
+        queryPreview: 'SQL preview',
+        emptyQuery: 'Empty query',
+        failedToSaveQuery: 'Failed to save query.',
     },
 
     connections: {

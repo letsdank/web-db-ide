@@ -8,20 +8,22 @@ interface Props {
     panel: WorkspaceRightPanel;
     history: QueryHistoryDto[];
     savedQueries: SavedQueryDto[];
+    canSaveCurrentQuery: boolean;
     onChangePanel: (panel: WorkspaceRightPanel) => void;
     onOpenHistoryItem: (item: QueryHistoryDto) => void;
     onOpenSavedQuery: (item: SavedQueryDto) => void;
-    onSaveCurrentQuery: () => void;
+    onOpenSaveQueryDialog: () => void;
 }
 
 export function RightSidebarPanels({
                                        panel,
                                        history,
                                        savedQueries,
+                                       canSaveCurrentQuery,
                                        onChangePanel,
                                        onOpenHistoryItem,
                                        onOpenSavedQuery,
-                                       onSaveCurrentQuery,
+                                       onOpenSaveQueryDialog,
                                    }: Props) {
     const {t} = useI18n();
 
@@ -32,7 +34,12 @@ export function RightSidebarPanels({
                     <div className="right-sidebar-panels__title-row">
                         <Text variant="header-1">{t('workspace.workspace')}</Text>
 
-                        <Button view="outlined" size="m" onClick={onSaveCurrentQuery}>
+                        <Button
+                            view="outlined"
+                            size="m"
+                            disabled={!canSaveCurrentQuery}
+                            onClick={onOpenSaveQueryDialog}
+                        >
                             {t('workspace.saveQuery')}
                         </Button>
                     </div>
@@ -119,7 +126,7 @@ export function RightSidebarPanels({
                                 ) : null}
 
                                 <Text variant="body-2">
-                                    {item.sql_text.slice(0, 140) || 'Empty query'}
+                                    {item.sql_text.slice(0, 140) || t('workspace.emptyQuery')}
                                 </Text>
                             </button>
                         ))
