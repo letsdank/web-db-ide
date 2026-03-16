@@ -1,7 +1,59 @@
 import {ConnectionDto} from "../../../types/connection";
 import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
-import {useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {fetchSchemas, fetchTableDetails, fetchTables} from "../../../api/explorer";
+
+const EXPLORER_TREE_STORAGE_KEY = 'web-db-ide-explorer-tree';
+
+interface PersistedExplorerTreeState {
+    expandedConnectionIds: number[];
+    expandedSchemaKeys: string[];
+    expandedTableKeys: string[];
+}
+
+function loadPersistedTreeState(): PersistedExplorerTreeState {
+    if (typeof window === 'undefined') {
+        return {
+            expandedConnectionIds: [],
+            expandedSchemaKeys: [],
+            expandedTableKeys: [],
+        };
+    }
+
+    try {
+        const raw = window.localStorage.getItem(EXPLORER_TREE_STORAGE_KEY);
+
+        if (!raw) {
+            return {
+                expandedConnectionIds: [],
+                expandedSchemaKeys: [],
+                expandedTableKeys: [],
+            };
+        }
+
+        const parsed = JSON.parse(raw) as Partial<PersistedExplorerTreeState>;
+
+        return {
+            expandedConnectionIds: Array.isArray(parsed.expandedConnectionIds)
+                ? parsed.expandedConnectionIds.filter((value): value is number => typeof value === 'number')
+                : [],
+            expandedSchemaKeys: Array.isArray(parsed.expandedSchemaKeys)
+                ? parsed.expandedSchemaKeys.filter((value): value is string => typeof value === 'string')
+                : [],
+            expandedTableKeys: Array.isArray(parsed.expandedTableKeys)
+                ? parsed.expandedTableKeys.filter((value): value is string => typeof value === 'string')
+                : [],
+        };
+    } catch (error) {
+        console.error(error);
+
+        return {
+            expandedConnectionIds: [],
+            expandedSchemaKeys: [],
+            expandedTableKeys: [],
+        };
+    }
+}
 
 interface UseExplorerTreeParams {
     connections: ConnectionDto[];
@@ -25,9 +77,43 @@ export function useExplorerTree({
     const [tablesBySchemaKey, setTablesBySchemaKey] = useState<Record<string, ExplorerTableDto[]>>({});
     const [detailsByTableKey, setDetailsByTableKey] = useState<Record<string, ExplorerTableDetailsDto>>({});
 
-    const [expandedConnectionIds, setExpandedConnectionIds] = useState<number[]>([]);
-    const [expandedSchemaKeys, setExpandedSchemaKeys] = useState<string[]>([]);
-    const [expandedTableKeys, setExpandedTableKeys] = useState<string[]>([]);
+    const persistedTreeState = useMemo(() => loadPersistedTreeState(), []);
+
+    const [expandedConnectionIds, setExpandedConnectionIds] = useState<number[]>(
+        persistedTreeState.expandedConnectionIds,
+    );
+    const [expandedSchemaKeys, setExpandedSchemaKeys] = useState<string[]>(
+        persistedTreeState.expandedSchemaKeys,
+    );
+    const [expandedTableKeys, setExpandedTableKeys] = useState<string[]>(
+        persistedTreeState.expandedTableKeys,
+    );
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        const payload: PersistedExplorerTreeState = {
+            expandedConnectionIds,
+            expandedSchemaKeys,
+            expandedTableKeys,
+        };
+
+        window.localStorage.setItem(EXPLORER_TREE_STORAGE_KEY, JSON.stringify(payload));
+    }, [expandedConnectionIds, expandedSchemaKeys, expandedTableKeys]);
+
+    useEffect(() => {
+        if (!activeConnectionId) {
+            return;
+        }
+
+        setExpandedConnectionIds((prev) =>
+            prev.includes(activeConnectionId)
+                ? prev
+                : [...prev, activeConnectionId],
+        );
+    }, [activeConnectionId]);
 
     const [loadingSchemasFor, setLoadingSchemasFor] = useState<number | null>(null);
     const [loadingTablesFor, setLoadingTablesFor] = useState<string | null>(null);
@@ -112,45 +198,35 @@ export function useExplorerTree({
         }
     }
 
-    async function toggleConnection(connectionId: number) {
-        onSelectConnection(connectionId);
-
-        const isExpanded = expandedConnectionIds.includes(connectionId);
-
+    const toggleConnection = useCallback((connectionId: number) => {
         setExpandedConnectionIds((prev) =>
-            isExpanded ? prev.filter((id) => id !== connectionId) : [...prev, connectionId],
+            prev.includes(connectionId)
+                ? prev.filter((id) => id !== connectionId)
+                : [...prev, connectionId],
         );
 
-        if (!isExpanded && !schemasByConnectionId[connectionId]) {
-            await loadSchemas(connectionId);
-        }
-    }
+        onSelectConnection(connectionId);
+    }, [onSelectConnection]);
 
-    async function toggleSchema(connectionId: number, schema: string) {
-        const key = `${connectionId}:${schema}`;
-        const isExpanded = expandedSchemaKeys.includes(key);
+    const toggleSchema = useCallback((connectionId: number, schema: string) => {
+        const schemaKey = `${connectionId}:${schema}`;
 
         setExpandedSchemaKeys((prev) =>
-            isExpanded ? prev.filter((item) => item !== key) : [...prev, key],
+            prev.includes(schemaKey)
+                ? prev.filter((key) => key !== schemaKey)
+                : [...prev, schemaKey],
         );
+    }, []);
 
-        if (!isExpanded && !tablesBySchemaKey[key]) {
-            await loadTables(connectionId, schema);
-        }
-    }
-
-    async function toggleTable(connectionId: number, schema: string, table: string) {
-        const key = `${connectionId}:${schema}:${table}`;
-        const isExpanded = expandedTableKeys.includes(key);
+    const toggleTable = useCallback((connectionId: number, schema: string, tableName: string) => {
+        const tableKey = `${connectionId}:${schema}:${tableName}`;
 
         setExpandedTableKeys((prev) =>
-            isExpanded ? prev.filter((item) => item !== key) : [...prev, key],
+            prev.includes(tableKey)
+                ? prev.filter((key) => key !== tableKey)
+                : [...prev, tableKey],
         );
-
-        if (!isExpanded && !detailsByTableKey[key]) {
-            await loadTableDetails(connectionId, schema, table);
-        }
-    }
+    }, []);
 
     return {
         activeConnection,

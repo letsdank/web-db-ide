@@ -97,6 +97,22 @@ const ru = {
             passphraseKeep: 'Парольная фраза (оставьте пустым, чтобы не менять)',
         },
     },
+
+    explorer: {
+        title: 'Проводник',
+        subtitle: 'Подключения, схемы и таблицы',
+        new: 'Создать',
+        filterConnections: 'Фильтр подключений',
+        noConnections: 'Подключений пока нет. Создайте первое, чтобы начать работу.',
+        noFilterMatches: 'По текущему фильтру ничего не найдено.',
+        selectConnectionHint: 'Выберите подключение, чтобы загрузить схемы.',
+        hiddenActiveConnection: 'Активное подключение скрыто текущим фильтром.',
+        openPreview: 'Открыть preview',
+        countRows: 'Подсчитать строки',
+        openMetadata: 'Открыть метаданные',
+        copySelectToEditor: 'Вставить SELECT в редактор',
+        copyFullName: 'Копировать полное имя',
+    },
 } as const;
 
 export default ru;

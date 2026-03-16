@@ -7,6 +7,7 @@ import {WorkspaceContextMenu} from "../../../components/workspace/WorkspaceConte
 import {ExplorerConnectionCard} from "./ExplorerConnectionCard";
 import {useMemo, useState} from "react";
 import {CirclePlus, Magnifier} from "@gravity-ui/icons";
+import {useI18n} from "../../../i18n";
 
 interface Props {
     connections: ConnectionDto[];
@@ -67,6 +68,8 @@ export function ExplorerSidebar({
                                     onOpenTableCount,
                                     onCopyTableSelect,
                                 }: Props) {
+    const {t} = useI18n();
+
     const [filter, setFilter] = useState('');
 
     const {
@@ -121,6 +124,11 @@ export function ExplorerSidebar({
         });
     }, [connections, normalizedFilter]);
 
+    const hasHiddenActiveConnection = Boolean(
+        activeConnectionId &&
+        !visibleConnections.some((connection) => connection.id === activeConnectionId),
+    );
+
     async function openMetadata(
         connectionId: number,
         schema: string,
@@ -169,7 +177,7 @@ export function ExplorerSidebar({
                             ? [
                                 {
                                     key: 'select-top',
-                                    text: 'Open preview',
+                                    text: t('explorer.openPreview'),
                                     onClick: () =>
                                         onOpenTablePreview({
                                             connectionId: contextTable.connectionId,
@@ -179,7 +187,7 @@ export function ExplorerSidebar({
                                 },
                                 {
                                     key: 'count',
-                                    text: 'Count rows',
+                                    text: t('explorer.countRows'),
                                     onClick: () =>
                                         onOpenTableCount({
                                             connectionId: contextTable.connectionId,
@@ -189,7 +197,7 @@ export function ExplorerSidebar({
                                 },
                                 {
                                     key: 'metadata',
-                                    text: 'Open metadata',
+                                    text: t('explorer.openMetadata'),
                                     onClick: () =>
                                         openMetadata(
                                             contextTable.connectionId,
@@ -200,7 +208,7 @@ export function ExplorerSidebar({
                                 },
                                 {
                                     key: 'copy-select',
-                                    text: 'Copy SELECT to editor',
+                                    text: t('explorer.copySelectToEditor'),
                                     onClick: () =>
                                         onCopyTableSelect({
                                             connectionId: contextTable.connectionId,
@@ -213,7 +221,7 @@ export function ExplorerSidebar({
                                 },
                                 {
                                     key: 'copy',
-                                    text: 'Copy full name',
+                                    text: t('explorer.copyFullName'),
                                     onClick: () =>
                                         copyFullName(
                                             contextTable.schema,
@@ -227,15 +235,15 @@ export function ExplorerSidebar({
 
                 <div className="explorer-sidebar__header">
                     <div className="explorer-sidebar__header-copy">
-                        <Text variant="header-1">Explorer</Text>
+                        <Text variant="header-1">{t('explorer.title')}</Text>
                         <Text variant="body-2" color="secondary">
-                            Connections, schemas and tables
+                            {t('explorer.subtitle')}
                         </Text>
                     </div>
 
                     <Button view="action" size="m" onClick={onCreateClick}>
                         <Icon data={CirclePlus} size={16}/>
-                        New
+                        {t('explorer.new')}
                     </Button>
                 </div>
 
@@ -243,7 +251,7 @@ export function ExplorerSidebar({
                     <TextInput
                         size="l"
                         value={filter}
-                        placeholder="Filter connections"
+                        placeholder={t('explorer.filterConnections')}
                         onUpdate={setFilter}
                         startContent={<Icon data={Magnifier} size={16}/>}
                     />
@@ -305,7 +313,7 @@ export function ExplorerSidebar({
                         {connections.length === 0 ? (
                             <div className="explorer-sidebar__empty">
                                 <Text variant="body-2" color="secondary">
-                                    No connections yet. Create one to start browsing the database.
+                                    {t('explorer.noConnections')}
                                 </Text>
                             </div>
                         ) : null}
@@ -313,7 +321,15 @@ export function ExplorerSidebar({
                         {connections.length > 0 && visibleConnections.length === 0 ? (
                             <div className="explorer-sidebar__empty">
                                 <Text variant="body-2" color="secondary">
-                                    Nothing matches the current filter.
+                                    {t('explorer.noFilterMatches')}
+                                </Text>
+                            </div>
+                        ) : null}
+
+                        {hasHiddenActiveConnection ? (
+                            <div className="explorer-sidebar__hint">
+                                <Text variant="caption-2" color="secondary">
+                                    {t('explorer.hiddenActiveConnection')}
                                 </Text>
                             </div>
                         ) : null}
@@ -321,7 +337,7 @@ export function ExplorerSidebar({
                         {!activeConnection && connections.length > 0 ? (
                             <div className="explorer-sidebar__hint">
                                 <Text variant="caption-2" color="secondary">
-                                    Select a connection to load schemas.
+                                    {t('explorer.selectConnectionHint')}
                                 </Text>
                             </div>
                         ) : null}

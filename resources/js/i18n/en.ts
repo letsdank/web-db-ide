@@ -97,6 +97,22 @@ const en = {
             passphraseKeep: 'Passphrase (leave empty to keep current)',
         },
     },
+
+    explorer: {
+        title: 'Explorer',
+        subtitle: 'Connections, schemas and tables',
+        new: 'New',
+        filterConnections: 'Filter connections',
+        noConnections: 'No connections yet. Create one to start browsing the database.',
+        noFilterMatches: 'Nothing matches the current filter.',
+        selectConnectionHint: 'Select a connection to load schemas.',
+        hiddenActiveConnection: 'The active connection is hidden by the current filter.',
+        openPreview: 'Open preview',
+        countRows: 'Count rows',
+        openMetadata: 'Open metadata',
+        copySelectToEditor: 'Copy SELECT to editor',
+        copyFullName: 'Copy full name',
+    },
 } as const;
 
 export default en;
