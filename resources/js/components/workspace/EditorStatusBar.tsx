@@ -64,18 +64,18 @@ export function EditorStatusBar({
                         label="Cursor"
                         value={
                             cursorLine !== null && cursorColumn !== null
-                                ? `Ln ${cursorLine}, Col ${cursorColumn}`
+                                ? `${t('workspace.ln')} ${cursorLine}, ${t('workspace.col')} ${cursorColumn}`
                                 : "-"
                         }
                     />
 
                     <StatusMeta
-                        label="Selection"
+                        label={t('workspace.selection')}
                         value={
                             hasSelection
                                 ? selectedLineCount && selectedLineCount > 1
-                                    ? `${selectedLineCount} lines`
-                                    : "1 line"
+                                    ? `${selectedLineCount} ${t('workspace.lines')}`
+                                    : `1 ${t('workspace.line')}`
                                 : t('workspace.none')
                         }
                     />

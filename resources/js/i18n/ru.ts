@@ -76,6 +76,10 @@ const ru = {
         unpinActiveTab: 'Открепить активную вкладку',
         closeActiveTab: 'Закрыть активную вкладку',
         newConnection: 'Новое подключение',
+        line: 'строка',
+        lines: 'строки',
+        ln: 'Стр',
+        col: 'Кол',
     },
 
     connections: {

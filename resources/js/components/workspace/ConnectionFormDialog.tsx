@@ -448,7 +448,7 @@ export function ConnectionFormDialog({
 
                         {error ? (
                             <div className="connection-dialog__field">
-                                <Label theme="danger">{t('connections.connectionFailed')}</Label>
+                                <Label theme="danger">{t('workspace.connectionFailed')}</Label>
                                 <Text variant="body-2" color="danger">
                                     {error}
                                 </Text>
@@ -457,7 +457,7 @@ export function ConnectionFormDialog({
 
                         {testError ? (
                             <div className="connection-dialog__field">
-                                <Label theme="danger">{t('connections.connectionTestFailed')}</Label>
+                                <Label theme="danger">{t('workspace.connectionTestFailed')}</Label>
                                 <Text variant="body-2" color="danger">
                                     {testError}
                                 </Text>
@@ -466,7 +466,7 @@ export function ConnectionFormDialog({
 
                         {testResult ? (
                             <div className="connection-dialog__field">
-                                <Label theme="success">{t('connections.connectionSuccessful')}</Label>
+                                <Label theme="success">{t('workspace.connectionSuccessful')}</Label>
                                 <Text variant="body-2" color="secondary">
                                     {t('connections.connectedTo', {
                                         database: testResult.database_name,

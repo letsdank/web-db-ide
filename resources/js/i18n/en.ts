@@ -76,6 +76,10 @@ const en = {
         pinActiveTab: 'Pin active tab',
         unpinActiveTab: 'Unpin active tab',
         closeActiveTab: 'Close active tab',
+        line: 'line',
+        lines: 'lines',
+        ln: 'Ln',
+        col: 'Col',
     },
 
     connections: {
