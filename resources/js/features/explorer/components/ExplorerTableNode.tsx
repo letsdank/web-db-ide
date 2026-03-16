@@ -2,6 +2,7 @@ import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer
 import React from "react";
 import {Button, ClipboardButton, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ChevronDown, ChevronRight, Ellipsis, LayoutHeaderCellsLargeFill} from "@gravity-ui/icons";
+import {useI18n} from "../../../i18n";
 
 interface Props {
     connectionId: number;
@@ -32,6 +33,8 @@ export function ExplorerTableNode({
                                       onCopyFullName,
                                       onCopySelect,
                                   }: Props) {
+    const {t} = useI18n();
+
     return (
         <div className="explorer-table-node">
             <div
@@ -68,30 +71,30 @@ export function ExplorerTableNode({
                     <ClipboardButton
                         size="m"
                         text={table.table_name}
-                        tooltipInitialText="Copy table name"
-                        tooltipSuccessText="Copied"
+                        tooltipInitialText={t('explorer.copyTableName')}
+                        tooltipSuccessText={t('explorer.copied')}
                     />
 
                     <DropdownMenu
                         items={[
                             {
-                                text: 'Open preview',
+                                text: t('explorer.openPreview'),
                                 action: onOpenSelect,
                             },
                             {
-                                text: 'Count rows',
+                                text: t('explorer.countRows'),
                                 action: onOpenCount,
                             },
                             {
-                                text: 'Copy SELECT to editor',
+                                text: t('explorer.copySelectToEditor'),
                                 action: onCopySelect,
                             },
                             {
-                                text: 'Open metadata',
+                                text: t('explorer.openMetadata'),
                                 action: onOpenMetadata,
                             },
                             {
-                                text: 'Copy full name',
+                                text: t('explorer.copyFullName'),
                                 action: onCopyFullName,
                             },
                         ]}
@@ -110,7 +113,7 @@ export function ExplorerTableNode({
                         <div className="explorer-table-node__loading">
                             <Loader size="s"/>
                             <Text variant="body-2" color="secondary">
-                                Loading columns...
+                                {t('explorer.loadingColumns')}
                             </Text>
                         </div>
                     ) : details ? (
@@ -131,12 +134,12 @@ export function ExplorerTableNode({
 
                             <div className="explorer-table-node__meta">
                                 <Text variant="caption-2" color="secondary">
-                                    {details.columns.length} columns
+                                    {t('explorer.columnsCount', {count: details.columns.length})}
                                 </Text>
 
                                 {details.indexes.length > 0 ? (
                                     <Text variant="caption-2" color="secondary">
-                                        {details.indexes.length} indexes
+                                        {t('explorer.indexesCount', {count: details.indexes.length})}
                                     </Text>
                                 ) : null}
                             </div>

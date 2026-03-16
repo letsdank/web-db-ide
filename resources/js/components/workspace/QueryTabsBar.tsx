@@ -4,6 +4,7 @@ import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
 import {Button, DropdownMenu, Icon, Tab, TabList, TabProvider, Text, TextInput} from "@gravity-ui/uikit";
 import {CirclePlus, Ellipsis} from "@gravity-ui/icons";
 import {useEffect, useMemo, useRef, useState} from "react";
+import {useI18n} from "../../i18n";
 
 interface Props {
     tabs: QueryTabDto[];
@@ -34,6 +35,8 @@ export function QueryTabsBar({
                                  onMoveRight,
                                  onRename,
                              }: Props) {
+    const {t} = useI18n();
+
     const {
         state,
         anchorRef,
@@ -63,7 +66,7 @@ export function QueryTabsBar({
 
     function startRename(tab: QueryTabDto) {
         setEditingTabId(tab.id);
-        setEditingTitle(tab.title || 'New Query');
+        setEditingTitle(tab.title || t('workspace.newQuery'));
     }
 
     function cancelRename() {
@@ -72,11 +75,11 @@ export function QueryTabsBar({
     }
 
     function submitRename(tab: QueryTabDto) {
-        const normalizedTitle = editingTitle.trim() || 'New Query';
+        const normalizedTitle = editingTitle.trim() || t('workspace.newQuery');
 
         cancelRename();
 
-        if (normalizedTitle === (tab.title || 'New Query')) {
+        if (normalizedTitle === (tab.title || t('workspace.newQuery'))) {
             return;
         }
 
@@ -110,44 +113,44 @@ export function QueryTabsBar({
                         ? [
                             {
                                 key: 'new',
-                                text: 'Open new tab',
+                                text: t('workspace.openNewTab'),
                                 onClick: onCreate,
                             },
                             {
                                 key: 'rename',
-                                text: 'Rename tab',
+                                text: t('workspace.renameTab'),
                                 onClick: () => startRename(contextTab),
                             },
                             {
                                 key: 'duplicate',
-                                text: 'Duplicate tab',
+                                text: t('workspace.duplicateTab'),
                                 onClick: () => onDuplicate(contextTab),
                             },
                             {
                                 key: 'move-left',
-                                text: 'Move left',
+                                text: t('workspace.moveLeft'),
                                 disabled: !canMoveLeft(contextTab),
                                 onClick: () => onMoveLeft(contextTab),
                             },
                             {
                                 key: 'move-right',
-                                text: 'Move right',
+                                text: t('workspace.moveRight'),
                                 disabled: !canMoveRight(contextTab),
                                 onClick: () => onMoveRight(contextTab),
                             },
                             {
                                 key: 'pin',
-                                text: contextTab.is_pinned ? 'Unpin tab' : 'Pin tab',
+                                text: contextTab.is_pinned ? t('workspace.unpinTab') : t('workspace.pinTab'),
                                 onClick: () => onTogglePin(contextTab),
                             },
                             {
                                 key: 'close-others',
-                                text: 'Close other tabs',
+                                text: t('workspace.closeOtherTabs'),
                                 onClick: () => onCloseOthers(contextTab.id),
                             },
                             {
                                 key: 'close',
-                                text: 'Close tab',
+                                text: t('workspace.closeTab'),
                                 danger: true,
                                 disabled: Boolean(contextTab.is_pinned),
                                 onClick: () => onClose(contextTab.id),
@@ -175,7 +178,11 @@ export function QueryTabsBar({
                             const canTabMoveRight = canMoveRight(tab);
                             const isEditing = editingTabId === tab.id;
 
-                            const labelContent = isDirty ? 'Unsaved' : isPinned ? 'Pinned' : null;
+                            const labelContent = isDirty
+                                ? t('workspace.unsaved')
+                                : isPinned
+                                    ? t('workspace.pinned') :
+                                    null;
 
                             const label = {
                                 content: labelContent ? <span>{labelContent}</span> : null,
@@ -190,7 +197,7 @@ export function QueryTabsBar({
                                 >
                                     <Tab
                                         value={String(tab.id)}
-                                        title={tab.title || "New Query"}
+                                        title={tab.title || t('workspace.newQuery')}
                                         label={label}
                                     >
                                         <span
@@ -232,7 +239,7 @@ export function QueryTabsBar({
                                                     variant="body-2"
                                                     className="query-tabs-bar__title"
                                                 >
-                                                    {tab.title || "New Query"}
+                                                    {tab.title || t('workspace.newQuery')}
                                                 </Text>
                                             )}
                                         </span>
@@ -241,34 +248,34 @@ export function QueryTabsBar({
                                     <DropdownMenu
                                         items={[
                                             {
-                                                text: "Rename",
+                                                text: t('workspace.rename'),
                                                 action: () => startRename(tab),
                                             },
 
                                             {
-                                                text: "Duplicate",
+                                                text: t('workspace.duplicate'),
                                                 action: () => onDuplicate(tab),
                                             },
                                             {
-                                                text: "Move left",
+                                                text: t('workspace.moveLeft'),
                                                 action: () => onMoveLeft(tab),
                                                 disabled: !canTabMoveLeft,
                                             },
                                             {
-                                                text: "Move right",
+                                                text: t('workspace.moveRight'),
                                                 action: () => onMoveRight(tab),
                                                 disabled: !canTabMoveRight,
                                             },
                                             {
-                                                text: isPinned ? "Unpin" : "Pin",
+                                                text: isPinned ? t('workspace.unpinTab') : t('workspace.pinTab'),
                                                 action: () => onTogglePin(tab),
                                             },
                                             {
-                                                text: "Close others",
+                                                text: t('workspace.closeOtherTabs'),
                                                 action: () => onCloseOthers(tab.id),
                                             },
                                             {
-                                                text: "Close",
+                                                text: t('workspace.close'),
                                                 action: () => onClose(tab.id),
                                                 theme: "danger",
                                                 disabled: isPinned,
@@ -294,7 +301,7 @@ export function QueryTabsBar({
 
             <Button view="action" size="m" onClick={onCreate}>
                 <Icon data={CirclePlus} size={16}/>
-                New tab
+                {t('workspace.newTab')}
             </Button>
         </div>
     );

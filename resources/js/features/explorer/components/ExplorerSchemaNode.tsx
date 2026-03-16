@@ -3,6 +3,7 @@ import React, {useMemo} from "react";
 import {Button, Icon, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerTableNode} from "./ExplorerTableNode";
 import {ChevronDown, ChevronRight, Folder} from "@gravity-ui/icons";
+import {useI18n} from "../../../i18n";
 
 interface Props {
     connectionId: number;
@@ -51,6 +52,8 @@ export function ExplorerSchemaNode({
                                        onCopyFullName,
                                        onCopySelect,
                                    }: Props) {
+    const {t}=useI18n();
+
     const visibleTables = useMemo(() => {
         if (!filter) {
             return tables;
@@ -97,7 +100,7 @@ export function ExplorerSchemaNode({
                         <div className="explorer-schema-node__loading">
                             <Loader size="s"/>
                             <Text variant="body-2" color="secondary">
-                                Loading tables...
+                                {t('explorer.loadingTables')}
                             </Text>
                         </div>
                     ) : visibleTables.length > 0 ? (
@@ -135,7 +138,7 @@ export function ExplorerSchemaNode({
                     ) : (
                         <div className="explorer-schema-node__empty">
                             <Text variant="caption-2" color="secondary">
-                                No tables in schema.
+                                {t('explorer.noTablesInSchema')}
                             </Text>
                         </div>
                     )}

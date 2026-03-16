@@ -4,6 +4,7 @@ import React, {useMemo} from "react";
 import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerSchemaNode} from "./ExplorerSchemaNode";
 import {ChevronDown, ChevronRight, Database, Ellipsis} from "@gravity-ui/icons";
+import {useI18n} from "../../../i18n";
 
 interface Props {
     connection: ConnectionDto;
@@ -64,6 +65,8 @@ export function ExplorerConnectionCard({
                                            onCopyFullName,
                                            onCopySelect,
                                        }: Props) {
+    const {t} = useI18n();
+
     const visibleSchemas = useMemo(() => {
         if (!filter) {
             return schemas;
@@ -107,11 +110,11 @@ export function ExplorerConnectionCard({
                                     <Label theme="utility">{connection.driver}</Label>
 
                                     {connection.is_read_only ? (
-                                        <Label theme="warning">read only</Label>
+                                        <Label theme="warning">{t('connections.readOnly')}</Label>
                                     ) : null}
 
                                     {connection.use_ssh_tunnel ? (
-                                        <Label theme="info">ssh</Label>
+                                        <Label theme="info">{t('connections.ssh')}</Label>
                                     ) : null}
                                 </div>
                             </div>
@@ -133,11 +136,11 @@ export function ExplorerConnectionCard({
                     <DropdownMenu
                         items={[
                             {
-                                text: 'Edit connection',
+                                text: t('connections.editConnection'),
                                 action: onEditConnection,
                             },
                             {
-                                text: 'Delete connection',
+                                text: t('connections.deleteConnection'),
                                 action: onDeleteConnection,
                                 theme: 'danger',
                             },
@@ -166,7 +169,7 @@ export function ExplorerConnectionCard({
                         <div className="explorer-connection-card__loading">
                             <Loader size="m"/>
                             <Text variant="body-2" color="secondary">
-                                Loading schemas...
+                                {t('connections.loadingSchemas')}
                             </Text>
                         </div>
                     ) : visibleSchemas.length > 0 ? (
@@ -199,7 +202,9 @@ export function ExplorerConnectionCard({
                     ) : (
                         <div className="explorer-connection-card__empty">
                             <Text variant="body-2" color="secondary">
-                                {filter ? "No schemas or tables matches the filter." : "No schemas available."}
+                                {filter
+                                    ? t('connections.noSchemasOrTableMatchFilter')
+                                    : t('connections.noSchemasAvailable')}
                             </Text>
                         </div>
                     )}
