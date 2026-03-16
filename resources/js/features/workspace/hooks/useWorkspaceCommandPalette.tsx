@@ -5,6 +5,7 @@ import {useMemo} from "react";
 import {CommandPaletteItem} from "../../../types/commandPalette";
 import {Icon} from "@gravity-ui/uikit";
 import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magnifier} from "@gravity-ui/icons";
+import {useI18n} from "../../../i18n";
 
 interface Params {
     activeConnectionId: number | null;
@@ -45,6 +46,8 @@ export function useWorkspaceCommandPalette({
                                                handleCloseTab,
                                                handleTogglePin,
                                            }: Params) {
+    const {t} = useI18n();
+
     return useMemo<CommandPaletteItem[]>(() => {
         const activeConnection = activeConnectionId
             ? connections.find((connection) => connection.id === activeConnectionId)
@@ -53,8 +56,8 @@ export function useWorkspaceCommandPalette({
         const actionItems: CommandPaletteItem[] = [
             {
                 id: 'action:new-tab',
-                title: 'New query tab',
-                subtitle: 'Create an empty SQL tab',
+                title: t('workspace.newQueryTab'),
+                subtitle: t('workspace.createEmptySqlTab'),
                 kind: 'action',
                 icon: <Icon data={CirclePlus} size={18}/>,
                 keywords: ['new tab create query sql'],
@@ -62,8 +65,8 @@ export function useWorkspaceCommandPalette({
             },
             {
                 id: 'action:new-connection',
-                title: 'New connection',
-                subtitle: 'Open connection creation dialog',
+                title: t('workspace.newConnection'),
+                subtitle: t('workspace.openConnectionCreationDialog'),
                 kind: 'action',
                 icon: <Icon data={Database} size={18}/>,
                 keywords: ['connection database create add'],
@@ -71,8 +74,8 @@ export function useWorkspaceCommandPalette({
             },
             {
                 id: 'action:run-query',
-                title: 'Run full query',
-                subtitle: activeTab?.title ?? 'Active tab',
+                title: t('workspace.runFullQuery'),
+                subtitle: activeTab?.title ?? t('workspace.activeTab'),
                 kind: 'action',
                 icon: <Icon data={Magnifier} size={18}/>,
                 keywords: ['run execute query sql current active full all'],
@@ -80,8 +83,10 @@ export function useWorkspaceCommandPalette({
             },
             {
                 id: 'action:run-selection',
-                title: 'Run selection',
-                subtitle: hasSelection ? 'Selected SQL fragment' : 'No SQL selected',
+                title: t('workspace.runSelection'),
+                subtitle: hasSelection
+                    ? t('workspace.selectedSqlFragment')
+                    : t('workspace.noSqlSelected'),
                 kind: 'action',
                 icon: <Icon data={Magnifier} size={18}/>,
                 keywords: ['run execute selection highlighted sql fragment'],
@@ -89,8 +94,8 @@ export function useWorkspaceCommandPalette({
             },
             {
                 id: 'action:show-history',
-                title: 'Open history panel',
-                subtitle: 'Switch right sidebar to History',
+                title: t('workspace.openHistoryPanel'),
+                subtitle: t('workspace.switchRightSidebarToHistory'),
                 kind: 'action',
                 icon: <Icon data={ClockArrowRotateLeft} size={18}/>,
                 keywords: ['history sidebar panel'],
@@ -98,8 +103,8 @@ export function useWorkspaceCommandPalette({
             },
             {
                 id: 'action:show-saved',
-                title: 'Open saved queries panel',
-                subtitle: 'Switch right sidebar to Saved',
+                title: t('workspace.openSavedQueriesPanel'),
+                subtitle: t('workspace.switchRightSidebarToSaved'),
                 kind: 'action',
                 icon: <Icon data={LayoutCells} size={18}/>,
                 keywords: ['saved queries sidebar panel'],
@@ -111,8 +116,8 @@ export function useWorkspaceCommandPalette({
             actionItems.push(
                 {
                     id: 'action:duplicate-active-tab',
-                    title: 'Duplicate active tab',
-                    subtitle: activeTab.title || 'Current tab',
+                    title: t('workspace.duplicateActiveTab'),
+                    subtitle: activeTab.title || t('workspace.currentTab'),
                     kind: 'action',
                     icon: <Icon data={FileText} size={18}/>,
                     keywords: ['duplicate tab copy current'],
@@ -120,8 +125,10 @@ export function useWorkspaceCommandPalette({
                 },
                 {
                     id: 'action:toggle-pin-active-tab',
-                    title: activeTab.is_pinned ? 'Unpin active tab' : 'Pin active tab',
-                    subtitle: activeTab.title || 'Current tab',
+                    title: activeTab.is_pinned
+                        ? t('workspace.unpinActiveTab')
+                        : t('workspace.pinActiveTab'),
+                    subtitle: activeTab.title || t('workspace.currentTab'),
                     kind: 'action',
                     icon: <Icon data={FileText} size={18}/>,
                     keywords: ['pin unpin tab current'],
@@ -132,8 +139,8 @@ export function useWorkspaceCommandPalette({
             if (!activeTab.is_pinned) {
                 actionItems.push({
                     id: 'action:close-active-tab',
-                    title: 'Close active tab',
-                    subtitle: activeTab.title || 'Current tab',
+                    title: t('workspace.closeActiveTab'),
+                    subtitle: activeTab.title || t('workspace.currentTab'),
                     kind: 'action',
                     icon: <Icon data={FileText} size={18}/>,
                     keywords: ['close tab current'],
@@ -145,7 +152,7 @@ export function useWorkspaceCommandPalette({
         if (activeConnection) {
             actionItems.push({
                 id: 'action:select-active-connection',
-                title: 'Current connection',
+                title: t('workspace.currentConnection'),
                 subtitle: `${activeConnection.name} · ${activeConnection.database_name}`,
                 kind: 'action',
                 icon: <Icon data={Database} size={18}/>,
@@ -156,10 +163,10 @@ export function useWorkspaceCommandPalette({
 
         const tabItems: CommandPaletteItem[] = tabs.map((tab) => ({
             id: `tab:${tab.id}`,
-            title: tab.title || 'New Query',
+            title: tab.title || t('workspace.newQuery'),
             subtitle: tab.db_connection_id
                 ? connections.find((connection) => connection.id === tab.db_connection_id)?.name ?? 'Tab'
-                : 'Unbound tab',
+                : t('workspace.unboundTab'),
             kind: 'tab',
             icon: <Icon data={FileText} size={18}/>,
             keywords: [
@@ -190,7 +197,7 @@ export function useWorkspaceCommandPalette({
             title: item.title,
             subtitle: item.connection
                 ? `${item.connection.name} · ${item.connection.database_name}`
-                : item.folder || 'Saved query',
+                : item.folder || t('workspace.savedQueries'),
             kind: 'saved-query',
             icon: <Icon data={FileText} size={18}/>,
             keywords: [

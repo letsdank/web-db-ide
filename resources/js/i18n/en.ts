@@ -71,6 +71,7 @@ const en = {
         openConnectionCreationDialog: 'Open connection creation dialog',
         runFullQuery: 'Run full query',
         currentConnection: 'Current connection',
+        newConnection: 'New connection',
         duplicateActiveTab: 'Duplicate active tab',
         pinActiveTab: 'Pin active tab',
         unpinActiveTab: 'Unpin active tab',
