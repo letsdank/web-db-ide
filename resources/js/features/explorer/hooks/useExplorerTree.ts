@@ -157,7 +157,7 @@ export function useExplorerTree({
         }
     }
 
-    async function loadTables(connectionId: number, schema: string) {
+    const loadTables = useCallback(async (connectionId: number, schema: string) => {
         const key = `${connectionId}:${schema}`;
 
         setLoadingTablesFor(key);
@@ -174,7 +174,7 @@ export function useExplorerTree({
         } finally {
             setLoadingTablesFor((current) => (current === key ? null : current));
         }
-    }
+    }, []);
 
     async function loadTableDetails(connectionId: number, schema: string, table: string) {
         const key = `${connectionId}:${schema}:${table}`;
@@ -211,12 +211,20 @@ export function useExplorerTree({
     const toggleSchema = useCallback((connectionId: number, schema: string) => {
         const schemaKey = `${connectionId}:${schema}`;
 
-        setExpandedSchemaKeys((prev) =>
-            prev.includes(schemaKey)
-                ? prev.filter((key) => key !== schemaKey)
-                : [...prev, schemaKey],
-        );
-    }, []);
+        setExpandedSchemaKeys((prev) => {
+            const isExpanded = prev.includes(schemaKey);
+
+            if (isExpanded) {
+                return prev.filter((key) => key !== schemaKey);
+            }
+
+            return [...prev, schemaKey];
+        });
+
+        if (!tablesBySchemaKey[schemaKey]) {
+            void loadTables(connectionId, schema);
+        }
+    }, [loadTables, tablesBySchemaKey]);
 
     const toggleTable = useCallback((connectionId: number, schema: string, tableName: string) => {
         const tableKey = `${connectionId}:${schema}:${tableName}`;
