@@ -3,6 +3,7 @@ import {SavedQueryDto} from "../../../types/savedQuery";
 import {useCallback} from "react";
 import {createSavedQuery} from "../../../api/savedQueries";
 import {QueryHistoryDto} from "../../../types/queryHistory";
+import {useI18n} from "../../../i18n";
 
 interface Params {
     activeTab: QueryTabDto | null;
@@ -25,6 +26,8 @@ export function useWorkspaceLibrary({
                                         setRightPanel,
                                         handleCreateTab,
                                     }: Params) {
+    const {t} = useI18n();
+
     const handleSaveCurrentQuery = useCallback(async () => {
         if (!activeTab) {
             return;
@@ -33,9 +36,9 @@ export function useWorkspaceLibrary({
         try {
             const saved = await createSavedQuery({
                 db_connection_id: activeConnectionId,
-                title: activeTab.title || 'New Query',
+                title: activeTab.title || t('workspace.newQuery'),
                 sql_text: activeTab.sql_text,
-                folder: 'General',
+                folder: t('workspace.generalFolder'),
             });
 
             addSavedQuery(saved);
@@ -43,15 +46,15 @@ export function useWorkspaceLibrary({
         } catch (error) {
             console.error(error);
         }
-    }, [activeConnectionId, activeTab, addSavedQuery, setRightPanel]);
+    }, [activeConnectionId, activeTab, addSavedQuery, setRightPanel, t]);
 
     const handleOpenHistoryItem = useCallback(async (item: QueryHistoryDto) => {
         await handleCreateTab({
-            title: 'History Query',
+            title: t('workspace.historyQuery'),
             sql_text: item.sql_text,
             db_connection: item.db_connection_id,
         });
-    }, [handleCreateTab]);
+    }, [handleCreateTab, t]);
 
     const handleOpenSavedQuery = useCallback(async (item: SavedQueryDto) => {
         await handleCreateTab({

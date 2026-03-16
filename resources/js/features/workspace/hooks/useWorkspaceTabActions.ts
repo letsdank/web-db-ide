@@ -1,6 +1,7 @@
 import {QueryTabDto} from "../../../types/queryTab";
 import {useCallback} from "react";
 import {createQueryTab, deleteQueryTab, reorderQueryTabs, updateQueryTab} from "../../../api/queryTabs";
+import {useI18n} from "../../../i18n";
 
 interface Params {
     tabs: QueryTabDto[];
@@ -96,10 +97,12 @@ export function useWorkspaceTabActions({
                                            ensureTabState,
                                            scheduleTabDraftPersist,
                                        }: Params) {
+    const {t} = useI18n();
+
     const handleCreateTab = useCallback(async (initial?: CreateTabInitial) => {
         try {
             const createdTab = await createQueryTab({
-                title: initial?.title ?? "New Query",
+                title: initial?.title ?? t('workspace.newQuery'),
                 sql_text: initial?.sql_text ?? "",
                 db_connection_id: initial?.db_connection_id ?? activeConnectionId,
                 result_limit: 500,
@@ -114,7 +117,7 @@ export function useWorkspaceTabActions({
         } catch (error) {
             console.error(error);
         }
-    }, [activeConnectionId, addTab, setActiveConnectionId, setActiveTabId]);
+    }, [activeConnectionId, addTab, setActiveConnectionId, setActiveTabId, t]);
 
     const handleSelectTab = useCallback(async (id: number) => {
         setActiveTabId(id);
@@ -186,14 +189,16 @@ export function useWorkspaceTabActions({
 
     const handleDuplicateTab = useCallback(async (tab: QueryTabDto) => {
         await handleCreateTab({
-            title: `${tab.title} copy`,
+            title: t('workspace.duplicateTabTitle', {
+                title: tab.title || t('workspace.newQuery'),
+            }),
             sql_text: tab.sql_text,
             db_connection_id: tab.db_connection_id,
         });
-    }, [handleCreateTab]);
+    }, [handleCreateTab, t]);
 
     const handleRenameTab = useCallback(async (tab: QueryTabDto, title: string) => {
-        const normalizedTitle = title.trim() || "New Query";
+        const normalizedTitle = title.trim() || t('workspace.newQuery');
         const previousTab = tab;
 
         const nextTab: QueryTabDto = {
@@ -213,7 +218,7 @@ export function useWorkspaceTabActions({
             console.error(error);
             upsertTab(previousTab);
         }
-    }, [upsertTab]);
+    }, [upsertTab, t]);
 
     const handleMoveTab = useCallback(async (tab: QueryTabDto, direction: "left" | "right") => {
         const nextTabs = moveTabInsideGroup(tabs, tab.id, direction);
@@ -289,7 +294,7 @@ export function useWorkspaceTabActions({
     const handleApplyQueryToActiveTab = useCallback(async (payload: ApplyQueryToTabPayload) => {
         if (!activeTabId) {
             await handleCreateTab({
-                title: payload.title ?? "New Query",
+                title: payload.title ?? t('workspace.newQuery'),
                 sql_text: payload.sql_text,
                 db_connection_id: payload.db_connection_id ?? activeConnectionId,
             });
@@ -329,6 +334,7 @@ export function useWorkspaceTabActions({
         setActiveConnectionId,
         tabs,
         upsertTab,
+        t,
     ]);
 
     return {

@@ -3,6 +3,7 @@ import {useCallback} from "react";
 import {executeQuery} from "../../../api/queries";
 import {updateQueryTab} from "../../../api/queryTabs";
 import {fetchQueryHistory} from "../../../api/queryHistory";
+import {useI18n} from "../../../i18n";
 
 
 const DESTRUCTIVE_SQL_KEYWORDS = [
@@ -70,6 +71,8 @@ export function useWorkspaceExecution({
                                           setQueryHistory,
                                           setRightPanel,
                                       }: Params) {
+    const {t} = useI18n();
+
     const confirmDestructiveQuery = useCallback((sql: string): boolean => {
         if (!isPotentiallyDestructiveSql(sql)) {
             return true;
@@ -79,13 +82,13 @@ export function useWorkspaceExecution({
 
         return window.confirm(
             [
-                'Potentially destructive SQL detected.',
-                'Please confirm execution.',
+                t('workspace.destructiveSqlDetected'),
+                t('workspace.confirmExecution'),
                 '',
-                preview ? `SQL preview: ${preview}` : '',
+                preview ? t('workspace.sqlPreview', {preview}) : '',
             ].join('\n'),
         );
-    }, []);
+    }, [t]);
 
     const handleRun = useCallback(async (target: 'auto' | 'selection' | 'full' = 'auto') => {
         if (!activeTab || !activeConnectionId) {
@@ -153,7 +156,7 @@ export function useWorkspaceExecution({
                 setTabResult(activeTab.id, {
                     execution_id: crypto.randomUUID(),
                     status: 'error',
-                    error: responseData?.message || error?.message || 'Failed to execute query.',
+                    error: responseData?.message || error?.message || t('workspace.failedToExecuteQuery'),
                 });
             }
         } finally {
@@ -169,6 +172,7 @@ export function useWorkspaceExecution({
         setTabExecuting,
         setTabResult,
         upsertTab,
+        t,
     ]);
 
     const handleRunSelection = useCallback(async () => {
@@ -253,7 +257,7 @@ export function useWorkspaceExecution({
                 setTabResult(activeTab.id, {
                     execution_id: crypto.randomUUID(),
                     status: 'error',
-                    error: responseData?.message || error?.message || 'Failed to execute query.',
+                    error: responseData?.message || error?.message || t('workspace.failedToExecuteQuery'),
                 });
             }
         } finally {
@@ -270,6 +274,7 @@ export function useWorkspaceExecution({
         setTabExecuting,
         setTabResult,
         upsertTab,
+        t,
     ]);
 
     return {

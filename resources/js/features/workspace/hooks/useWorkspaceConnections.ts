@@ -14,6 +14,7 @@ import {
     testExistingConnection,
     updateConnection
 } from "../../../api/connections";
+import {useI18n} from "../../../i18n";
 
 interface Params {
     editingConnection: ConnectionDto | null;
@@ -49,6 +50,8 @@ export function useWorkspaceConnections({
                                             setConnectionDialogError,
                                             closeConnectionDialog,
                                         }: Params) {
+    const {t} = useI18n();
+
     const detachTabsFromConnection = useCallback(async (connectionId: number) => {
         const affectedTabs = tabs.filter((tab) => tab.db_connection_id === connectionId);
 
@@ -110,8 +113,8 @@ export function useWorkspaceConnections({
                 error?.response?.data?.message ||
                 error?.message ||
                 (editingConnection
-                    ? "Failed to update connection."
-                    : "Failed to create connection."),
+                    ? t('workspace.failedToUpdateConnection')
+                    : t('workspace.failedToCreateConnection')),
             );
         } finally {
             setIsCreatingConnection(false);
@@ -127,10 +130,13 @@ export function useWorkspaceConnections({
         setIsCreatingConnection,
         updateConnectionInList,
         upsertTab,
+        t,
     ]);
 
     const handleDeleteConnection = useCallback(async (connection: { id: number; name: string }) => {
-        const confirmed = window.confirm(`Delete connection "${connection.name}"?`);
+        const confirmed = window.confirm(
+            t('workspace.deleteConnectionConfirm', {name: connection.name}),
+        );
 
         if (!confirmed) {
             return;
@@ -155,6 +161,7 @@ export function useWorkspaceConnections({
         detachTabsFromConnection,
         removeConnection,
         setActiveConnectionId,
+        t,
     ]);
 
     const handleTestConnection = useCallback(async (
