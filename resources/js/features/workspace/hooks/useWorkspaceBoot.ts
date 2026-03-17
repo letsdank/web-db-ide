@@ -51,7 +51,7 @@ export function useWorkspaceBoot({
                 const initialTab = tabsData[0] ?? null;
                 const initialConnectionId =
                     initialTab?.db_connection_id ??
-                    connectionsData[0].id ??
+                    connectionsData[0]?.id ??
                     null;
 
                 setActiveTabId(initialTab?.id ?? null);

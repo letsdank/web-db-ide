@@ -8,7 +8,7 @@ import {QueryTabDto} from "../../../types/queryTab";
 import {QueryHistoryDto} from "../../../types/queryHistory";
 import {SavedQueryDto} from "../../../types/savedQuery";
 import {useWorkspaceBoot} from "./useWorkspaceBoot";
-import {render} from "@testing-library/react";
+import {render, waitFor} from "@testing-library/react";
 
 vi.mock('../../../api/connections', async () => ({
     fetchConnections: vi.fn(),
@@ -140,10 +140,13 @@ describe('useWorkspaceBoot', () => {
             makeTab({id: 6, db_connection_id: 10, sort_order: 1, title: 'Users tab'}),
         ];
 
+        const history = [makeHistory()];
+        const savedQueries = [makeSavedQuery()];
+
         vi.mocked(connectionsApi.fetchConnections).mockResolvedValue(connections);
         vi.mocked(queryTabsApi.fetchQueryTabs).mockResolvedValue(tabs);
-        vi.mocked(queryHistoryApi.fetchQueryHistory).mockResolvedValue([makeHistory()]);
-        vi.mocked(savedQueriesApi.fetchSavedQueries).mockResolvedValue([makeSavedQuery()]);
+        vi.mocked(queryHistoryApi.fetchQueryHistory).mockResolvedValue(history);
+        vi.mocked(savedQueriesApi.fetchSavedQueries).mockResolvedValue(savedQueries);
 
         function Harness() {
             useWorkspaceBoot({
@@ -162,22 +165,18 @@ describe('useWorkspaceBoot', () => {
 
         render(<Harness/>);
 
-        await vi.waitFor(() => {
-            expect(connectionsApi.fetchConnections).toHaveBeenCalledTimes(1);
-            expect(queryTabsApi.fetchQueryTabs).toHaveBeenCalledTimes(1);
-            expect(queryHistoryApi.fetchQueryHistory).toHaveBeenCalledTimes(1);
-            expect(savedQueriesApi.fetchSavedQueries).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            expect(setBooting).toHaveBeenCalledWith(false);
         });
 
         expect(setConnections).toHaveBeenCalledWith(connections);
         expect(setTabs).toHaveBeenCalledWith(tabs);
-        expect(setQueryHistory).toHaveBeenCalledWith([makeHistory()]);
-        expect(setSavedQueries).toHaveBeenCalledWith([makeSavedQuery()]);
+        expect(setQueryHistory).toHaveBeenCalledWith(history);
+        expect(setSavedQueries).toHaveBeenCalledWith(savedQueries);
 
         expect(setActiveTabId).toHaveBeenCalledWith(5);
         expect(setActiveConnectionId).toHaveBeenCalledWith(11);
         expect(ensureTabState).toHaveBeenCalledWith(5);
-        expect(setBooting).toHaveBeenCalledWith(false);
     });
 
     it('falls back to first connection when there are no tabs', async () => {
@@ -216,18 +215,21 @@ describe('useWorkspaceBoot', () => {
 
         render(<Harness/>);
 
-        await vi.waitFor(() => {
-            expect(setConnections).toHaveBeenCalledWith(connections);
-            expect(setTabs).toHaveBeenCalledWith([]);
+        await waitFor(() => {
+            expect(setBooting).toHaveBeenCalledWith(false);
         })
 
-        expect(setActiveTabId).not.toHaveBeenCalled();
+        expect(setConnections).toHaveBeenCalledWith(connections);
+        expect(setTabs).toHaveBeenCalledWith([]);
+        expect(setQueryHistory).toHaveBeenCalledWith([]);
+        expect(setSavedQueries).toHaveBeenCalledWith([]);
+
+        expect(setActiveTabId).toHaveBeenCalledWith(null);
         expect(ensureTabState).not.toHaveBeenCalled();
         expect(setActiveConnectionId).toHaveBeenCalledWith(22);
-        expect(setBooting).toHaveBeenCalledWith(false);
     });
 
-    it('keeps active connection null when there are no tabs and no connections', async () => {
+    it('sets active tab and active connection to null where there are no tabs and no connections', async () => {
         const setConnections = vi.fn();
         const setTabs = vi.fn();
         const setQueryHistory = vi.fn();
@@ -241,6 +243,8 @@ describe('useWorkspaceBoot', () => {
         vi.mocked(queryTabsApi.fetchQueryTabs).mockResolvedValue([]);
         vi.mocked(queryHistoryApi.fetchQueryHistory).mockResolvedValue([]);
         vi.mocked(savedQueriesApi.fetchSavedQueries).mockResolvedValue([]);
+
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
         function Harness() {
             useWorkspaceBoot({
@@ -259,15 +263,21 @@ describe('useWorkspaceBoot', () => {
 
         render(<Harness/>);
 
-        await vi.waitFor(() => {
-            expect(setConnections).toHaveBeenCalledWith([]);
-            expect(setTabs).toHaveBeenCalledWith([]);
+        await waitFor(() => {
+            expect(setBooting).toHaveBeenCalledWith(false);
         });
 
-        expect(setActiveTabId).not.toHaveBeenCalled();
-        expect(setActiveConnectionId).not.toHaveBeenCalled();
+        expect(setConnections).toHaveBeenCalledWith([]);
+        expect(setTabs).toHaveBeenCalledWith([]);
+        expect(setQueryHistory).toHaveBeenCalledWith([]);
+        expect(setSavedQueries).toHaveBeenCalledWith([]);
+
+        expect(setActiveTabId).toHaveBeenCalledWith(null);
+        expect(setActiveConnectionId).toHaveBeenCalledWith(null);
         expect(ensureTabState).not.toHaveBeenCalled();
-        expect(setBooting).toHaveBeenCalledWith(false);
+        expect(errorSpy).not.toHaveBeenCalled();
+
+        errorSpy.mockRestore();
     });
 
     it('still stops booting when one of boot requests fails', async () => {
@@ -304,11 +314,15 @@ describe('useWorkspaceBoot', () => {
 
         render(<Harness/>);
 
-        await vi.waitFor(() => {
+        await waitFor(() => {
             expect(setBooting).toHaveBeenCalledWith(false);
         });
 
         expect(errorSpy).toHaveBeenCalled();
+        expect(setConnections).not.toHaveBeenCalled();
+        expect(setTabs).not.toHaveBeenCalled();
+        expect(setQueryHistory).not.toHaveBeenCalled();
+        expect(setSavedQueries).not.toHaveBeenCalled();
 
         errorSpy.mockRestore();
     });
