@@ -50,6 +50,7 @@ interface WorkspaceState {
     setQueryHistory: (items: QueryHistoryDto[]) => void;
     setSavedQueries: (items: SavedQueryDto[]) => void;
     addSavedQuery: (item: SavedQueryDto) => void;
+    updateSavedQueryInList: (item: SavedQueryDto) => void;
 
     setRightPanel: (panel: WorkspaceRightPanel) => void;
 
@@ -277,6 +278,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     addSavedQuery: (item) =>
         set((state) => ({
             savedQueries: [item, ...state.savedQueries],
+        })),
+    updateSavedQueryInList: (item) =>
+        set((state) => ({
+            savedQueries: state.savedQueries.map((savedQuery) =>
+                savedQuery.id === item.id ? item : savedQuery,
+            ),
         })),
 
     setRightPanel: (panel) => set({rightPanel: panel}),

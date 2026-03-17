@@ -107,6 +107,10 @@ const en = {
         ownedResources: 'Owned',
         sharedResources: 'Shared',
         resourceVisibilityFilter: 'Visibility',
+        editSavedQuery:'Edit saved query',
+        editSavedQueryDialogTitle:'Edit saved query',
+        updateSavedQuery:'Update query',
+        failedToUpdateSavedQuery:'Failed to update saved query.',
     },
 
     connections: {

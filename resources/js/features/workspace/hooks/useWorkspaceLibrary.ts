@@ -1,7 +1,7 @@
 import {QueryTabDto} from "../../../types/queryTab";
 import {SavedQueryDto} from "../../../types/savedQuery";
 import {useCallback} from "react";
-import {createSavedQuery} from "../../../api/savedQueries";
+import {createSavedQuery, updateSavedQuery} from "../../../api/savedQueries";
 import {QueryHistoryDto} from "../../../types/queryHistory";
 import {useI18n} from "../../../i18n";
 import {SaveQueryDialogSubmitPayload} from "../../../components/workspace/SaveQueryDialog";
@@ -11,6 +11,7 @@ interface Params {
     activeConnectionId: number | null;
 
     addSavedQuery: (query: SavedQueryDto) => void;
+    updateSavedQueryInList: (query: SavedQueryDto) => void;
     setRightPanel: (panel: 'history' | 'saved') => void;
 
     handleCreateTab: (initial?: {
@@ -24,6 +25,7 @@ export function useWorkspaceLibrary({
                                         activeTab,
                                         activeConnectionId,
                                         addSavedQuery,
+                                        updateSavedQueryInList,
                                         setRightPanel,
                                         handleCreateTab,
                                     }: Params) {
@@ -48,6 +50,22 @@ export function useWorkspaceLibrary({
         return saved;
     }, [activeConnectionId, activeTab, addSavedQuery, setRightPanel]);
 
+    const handleUpdateSavedQuery = useCallback(async (
+        savedQuery: SavedQueryDto,
+        payload: SaveQueryDialogSubmitPayload,
+    ) => {
+        const updated = await updateSavedQuery(savedQuery.id, {
+            title: payload.title,
+            folder: payload.folder,
+            visibility: payload.visibility,
+        });
+
+        updateSavedQueryInList(updated);
+        setRightPanel('saved');
+
+        return updated;
+    }, [setRightPanel, updateSavedQueryInList]);
+
     const handleOpenHistoryItem = useCallback(async (item: QueryHistoryDto) => {
         await handleCreateTab({
             title: t('workspace.historyQuery'),
@@ -66,6 +84,7 @@ export function useWorkspaceLibrary({
 
     return {
         handleSaveCurrentQuery,
+        handleUpdateSavedQuery,
         handleOpenHistoryItem,
         handleOpenSavedQuery,
     };

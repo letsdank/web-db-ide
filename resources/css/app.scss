@@ -230,6 +230,13 @@ body {
         gap: 8px;
     }
 
+    &__saved-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr)auto;
+        gap: 8px;
+        align-items: center;
+    }
+
     &__item {
         text-align: left;
         border: 1px solid var(--g-color-line-generic);
@@ -238,6 +245,16 @@ body {
         padding: 12px;
         cursor: pointer;
         color: inherit;
+    }
+
+    &__item--with-actions {
+        min-width: 0;
+    }
+
+    &__item-actions {
+        display: flex;
+        align-items: flex-start;
+        padding-top: 4px;
     }
 
     &__item-meta {

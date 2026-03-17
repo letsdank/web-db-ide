@@ -3,12 +3,13 @@ import {useWorkspaceLibrary} from "./useWorkspaceLibrary";
 import React from "react";
 import {SavedQueryDto} from "../../../types/savedQuery";
 import * as savedQueriesApi from '../../../api/savedQueries';
-import {render, screen} from "@testing-library/react";
+import {render} from "@testing-library/react";
 import {SaveQueryDialogSubmitPayload} from "../../../components/workspace/SaveQueryDialog";
 
 vi.mock('../../../api/savedQueries', async () => {
     return {
         createSavedQuery: vi.fn(),
+        updateSavedQuery: vi.fn(),
     };
 });
 
@@ -57,6 +58,7 @@ describe('useWorkspaceLibrary', () => {
                 addSavedQuery,
                 setRightPanel,
                 handleCreateTab,
+                updateSavedQueryInList: vi.fn(),
             });
 
             React.useEffect(() => {
@@ -110,6 +112,7 @@ describe('useWorkspaceLibrary', () => {
                 addSavedQuery: vi.fn(),
                 setRightPanel: vi.fn(),
                 handleCreateTab,
+                updateSavedQueryInList: vi.fn(),
             });
 
             React.useEffect(() => {
@@ -163,6 +166,7 @@ describe('useWorkspaceLibrary', () => {
                 addSavedQuery: vi.fn(),
                 setRightPanel: vi.fn(),
                 handleCreateTab,
+                updateSavedQueryInList: vi.fn(),
             });
 
             React.useEffect(() => {
@@ -193,5 +197,88 @@ describe('useWorkspaceLibrary', () => {
             sql_text: 'select * from orders;',
             db_connection: 6,
         });
+    });
+
+    it('updates saved query and keep saved panel active', async () => {
+        const updateSavedQueryInList = vi.fn();
+        const setRightPanel = vi.fn();
+        const handleCreateTab = vi.fn();
+
+        const savedQuery: SavedQueryDto = {
+            id: 5,
+            user_id: 1,
+            db_connection_id: 12,
+            title: 'Team users updated',
+            description: null,
+            sql_text: 'select * from users;',
+            folder: 'Team',
+            visibility: 'shared',
+            created_at: null,
+            updated_at: null,
+            connection: null,
+        };
+
+        vi.mocked(savedQueriesApi.updateSavedQuery).mockResolvedValue(savedQuery);
+
+        let hookApi!: ReturnType<typeof useWorkspaceLibrary>;
+
+        function TestHarness() {
+            const api = useWorkspaceLibrary({
+                activeTab: {
+                    id: 7,
+                    user_id: 1,
+                    db_connection_id: 12,
+                    title: 'Users query',
+                    sql_text: 'select * from users;',
+                    sort_order: 10,
+                    is_pinned: false,
+                    created_at: null,
+                    updated_at: null,
+                },
+                activeConnectionId: 12,
+                addSavedQuery: vi.fn(),
+                updateSavedQueryInList,
+                setRightPanel,
+                handleCreateTab,
+            });
+
+            React.useEffect(() => {
+                hookApi = api;
+            }, [api]);
+
+            return <div>ready</div>;
+        }
+
+        render(<TestHarness/>);
+
+        await hookApi.handleUpdateSavedQuery(
+            {
+                id: 5,
+                user_id: 1,
+                db_connection_id: 12,
+                title: 'Team users',
+                description: null,
+                sql_text: 'select * from users;',
+                folder: 'General',
+                visibility: 'private',
+                created_at: null,
+                updated_at: null,
+                connection: null,
+            },
+            {
+                title: 'Team users updated',
+                folder: 'Team',
+                visibility: 'shared',
+            },
+        );
+
+        expect(savedQueriesApi.updateSavedQuery).toHaveBeenCalledWith(5, {
+            title: 'Team users updated',
+            folder: 'Team',
+            visibility: 'shared',
+        });
+
+        expect(updateSavedQueryInList).toHaveBeenCalledWith(savedQuery);
+        expect(setRightPanel).toHaveBeenCalledWith('saved');
     });
 });

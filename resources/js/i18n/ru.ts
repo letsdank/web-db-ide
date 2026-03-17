@@ -107,6 +107,10 @@ const ru = {
         ownedResources: 'Мои',
         sharedResources: 'Общие',
         resourceVisibilityFilter: 'Видимость',
+        editSavedQuery: 'Редактировать сохранённый запрос',
+        editSavedQueryDialogTitle: 'Редактировать сохранённый запрос',
+        updateSavedQuery: 'Обновить запрос',
+        failedToUpdateSavedQuery: 'Не удалось обновить сохранённый запрос.',
     },
 
     connections: {

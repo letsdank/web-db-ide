@@ -3,6 +3,7 @@ import React from "react";
 import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {ConnectionFormDialog} from "./ConnectionFormDialog";
 import {ConnectionDto} from "../../types/connection";
+import {SaveQueryDialog} from "./SaveQueryDialog";
 
 vi.mock('@gravity-ui/uikit', () => {
     return {
@@ -335,5 +336,23 @@ describe('ConnectionFormDialog', () => {
                 ssh_passphrase: 'phrase',
             }),
         );
+    });
+
+    it('renders edit mode title and apply button text', () => {
+        render(
+            <SaveQueryDialog
+                open
+                mode="edit"
+                initialTitle="Users query"
+                initialFolder="General"
+                initialVisibility="private"
+                sqlText="select * from users;"
+                onClose={() => undefined}
+                onSubmit={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByText('Edit saved query')).not.toBeNull();
+        expect(screen.getByText('Update query')).not.toBeNull();
     });
 });

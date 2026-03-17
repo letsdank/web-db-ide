@@ -3,6 +3,7 @@ import {useEffect, useMemo, useState} from "react";
 import {Dialog, RadioGroup, Text, TextArea, TextInput} from "@gravity-ui/uikit";
 
 export type SaveQueryVisibility = 'private' | 'shared';
+export type SaveQueryDialogMode = 'create' | 'edit';
 
 export interface SaveQueryDialogSubmitPayload {
     title: string;
@@ -14,6 +15,7 @@ interface Props {
     open: boolean;
     loading?: boolean;
     error?: string | null;
+    mode?: SaveQueryDialogMode;
     initialTitle: string;
     initialFolder?: string | null;
     initialVisibility?: SaveQueryVisibility;
@@ -26,6 +28,7 @@ export function SaveQueryDialog({
                                     open,
                                     loading = false,
                                     error = null,
+                                    mode = 'create',
                                     initialTitle,
                                     initialFolder = null,
                                     initialVisibility = 'private',
@@ -69,6 +72,14 @@ export function SaveQueryDialog({
         return null;
     }
 
+    const dialogTitle = mode === 'edit'
+        ? t('workspace.editSavedQueryDialogTitle')
+        : t('workspace.saveQueryDialogTitle');
+
+    const submitText = mode === 'edit'
+        ? t('workspace.updateSavedQuery')
+        : t('common.save');
+
     return (
         <Dialog
             open={open}
@@ -76,7 +87,7 @@ export function SaveQueryDialog({
             size="m"
             hasCloseButton={!loading}
         >
-            <Dialog.Header caption={t('workspace.saveQueryDialogTitle')}/>
+            <Dialog.Header caption={dialogTitle}/>
 
             <Dialog.Body>
                 <div className="save-query-dialog">
@@ -132,7 +143,7 @@ export function SaveQueryDialog({
             </Dialog.Body>
 
             <Dialog.Footer
-                textButtonApply={t('common.save')}
+                textButtonApply={submitText}
                 textButtonCancel={t('common.cancel')}
                 propsButtonApply={{
                     view: 'action',

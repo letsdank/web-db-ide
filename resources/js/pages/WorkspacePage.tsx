@@ -22,6 +22,7 @@ import {useWorkspaceDraft} from "../features/workspace/hooks/useWorkspaceDraft";
 import {buildCountSql, buildPreviewSql, buildSelectSql} from "../features/explorer/lib/sql";
 import {useI18n} from "../i18n";
 import {SaveQueryDialog, SaveQueryDialogSubmitPayload} from "../components/workspace/SaveQueryDialog";
+import {SavedQueryDto} from "../types/savedQuery";
 
 export function WorkspacePage() {
     const {
@@ -52,6 +53,7 @@ export function WorkspacePage() {
         savedQueries,
         setSavedQueries,
         addSavedQuery,
+        updateSavedQueryInList,
 
         rightPanel,
         setRightPanel,
@@ -80,6 +82,7 @@ export function WorkspacePage() {
     const [isSaveQueryDialogOpen, setIsSaveQueryDialogOpen] = useState(false);
     const [isSavingQuery, setIsSavingQuery] = useState(false);
     const [saveQueryDialogError, setSaveQueryDialogError] = useState<string | null>(null);
+    const [editingSavedQuery, setEditingSavedQuery] = useState<SavedQueryDto | null>(null);
 
     const editorRef = useRef<SqlEditorPaneHandle | null>(null);
     const {t} = useI18n();
@@ -192,12 +195,14 @@ export function WorkspacePage() {
 
     const {
         handleSaveCurrentQuery,
+        handleUpdateSavedQuery,
         handleOpenHistoryItem,
         handleOpenSavedQuery,
     } = useWorkspaceLibrary({
         activeTab,
         activeConnectionId,
         addSavedQuery,
+        updateSavedQueryInList,
         setRightPanel,
         handleCreateTab,
     });
@@ -207,9 +212,17 @@ export function WorkspacePage() {
             return;
         }
 
+        setEditingSavedQuery(null);
         setSaveQueryDialogError(null);
         setIsSaveQueryDialogOpen(true);
     }, [activeTab]);
+
+    const openEditSavedQueryDialog = useCallback((savedQuery: SavedQueryDto) => {
+        setEditingSavedQuery(savedQuery);
+        setSaveQueryDialogError(null);
+        setIsSaveQueryDialogOpen(true);
+        setRightPanel('saved');
+    }, [setRightPanel]);
 
     const closeSaveQueryDialog = useCallback(() => {
         if (isSavingQuery) {
@@ -217,6 +230,7 @@ export function WorkspacePage() {
         }
 
         setIsSaveQueryDialogOpen(false);
+        setEditingSavedQuery(null);
         setSaveQueryDialogError(null);
     }, [isSavingQuery]);
 
@@ -225,19 +239,26 @@ export function WorkspacePage() {
             setIsSavingQuery(true);
             setSaveQueryDialogError(null);
 
-            await handleSaveCurrentQuery(payload);
+            if (editingSavedQuery) {
+                await handleUpdateSavedQuery(editingSavedQuery, payload);
+            } else {
+                await handleSaveCurrentQuery(payload);
+            }
 
             setIsSaveQueryDialogOpen(false);
+            setEditingSavedQuery(null);
         } catch (error: any) {
             setSaveQueryDialogError(
                 error?.response?.data?.message ||
                 error?.message ||
-                t('workspace.failedToSaveQuery'),
+                (editingSavedQuery
+                    ? t('workspace.failedToUpdateSavedQuery')
+                    : t('workspace.failedToSaveQuery')),
             );
         } finally {
             setIsSavingQuery(false);
         }
-    }, [handleSaveCurrentQuery, t]);
+    }, [editingSavedQuery, handleSaveCurrentQuery, handleUpdateSavedQuery, t]);
 
     const handleOpenTablePreview = useCallback(async (payload: {
         connectionId: number;
@@ -358,10 +379,11 @@ export function WorkspacePage() {
                 open={isSaveQueryDialogOpen}
                 loading={isSavingQuery}
                 error={saveQueryDialogError}
-                initialTitle={activeTab?.title?.trim() || t('workspace.newQuery')}
-                initialFolder={t('workspace.generalFolder')}
-                initialVisibility="private"
-                sqlText={activeTab?.sql_text ?? ''}
+                mode={editingSavedQuery ? 'edit' : 'create'}
+                initialTitle={editingSavedQuery?.title??activeTab?.title??t('workspace.savedQuery')}
+                initialFolder={editingSavedQuery?.folder??null}
+                initialVisibility={editingSavedQuery?.visibility??'private'}
+                sqlText={editingSavedQuery?.sql_text??activeTab?.sql_text??''}
                 onClose={closeSaveQueryDialog}
                 onSubmit={handleSubmitSaveQuery}
             />
@@ -465,6 +487,7 @@ export function WorkspacePage() {
                         onOpenHistoryItem={handleOpenHistoryItem}
                         onOpenSavedQuery={handleOpenSavedQuery}
                         onOpenSaveQueryDialog={openSaveQueryDialog}
+                        onEditSavedQuery={openEditSavedQueryDialog}
                     />
                 }
             />
