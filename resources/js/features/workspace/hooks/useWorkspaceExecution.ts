@@ -18,7 +18,7 @@ const DESTRUCTIVE_SQL_KEYWORDS = [
     'revoke',
 ] as const;
 
-function stripSqlComments(sql: string): string {
+export function stripSqlComments(sql: string): string {
     return sql
         // block comments
         .replace(/\/\*[\s\S]*?\*\//g, ' ')
@@ -27,7 +27,7 @@ function stripSqlComments(sql: string): string {
         .trim();
 }
 
-function isPotentiallyDestructiveSql(sql: string): boolean {
+export function isPotentiallyDestructiveSql(sql: string): boolean {
     const normalized = stripSqlComments(sql).toLowerCase();
 
     if (!normalized) {
@@ -39,7 +39,7 @@ function isPotentiallyDestructiveSql(sql: string): boolean {
     );
 }
 
-function truncateSqlPreview(sql: string, maxLength = 220): string {
+export function truncateSqlPreview(sql: string, maxLength = 220): string {
     const compact = sql.replace(/\s+/g, ' ').trim();
 
     if (compact.length <= maxLength) {
