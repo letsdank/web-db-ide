@@ -25,15 +25,21 @@ function makeConnection(overrides: Partial<ConnectionDto> = {}): ConnectionDto {
         ssh_host: null,
         ssh_port: null,
         ssh_username: null,
+        ssh_password: null,
+        ssh_private_key: null,
+        ssh_passphrase: null,
         ssh_known_host_fingerprint: null,
         has_ssh_password: false,
         has_ssh_private_key: false,
         has_ssh_passphrase: false,
-        connect_timeout_seconds: undefined,
-        query_timeout_seconds: undefined,
+        connect_timeout_seconds: 10,
+        query_timeout_seconds: 30,
+        meta: null,
         last_used_at: null,
-        created_at: undefined,
-        updated_at: undefined,
+        created_at: null,
+        updated_at: null,
+        is_owner: true,
+        access_scope: 'owned',
         ...overrides,
     };
 }
@@ -115,13 +121,19 @@ describe('useActiveWorkspace', () => {
         const connections = [makeConnection({id: 10})];
 
         const queryResult = {
-            columns: ['id', 'name'],
-            rows: [
-                {id: 1, name: 'Alice'},
-                {id: 2, name: 'Bob'},
+            execution_id: 'exec-1',
+            status: 'success' as const,
+            duration_ms: 15,
+            columns: [
+                {name: 'id', native_type: 'int4'},
+                {name: 'name', native_type: 'text'},
             ],
-            rowsCount: 2,
-            hasMoreRows: true,
+            rows: [
+                [1, 'Alice'],
+                [2, 'Bob'],
+            ],
+            row_count: 2,
+            has_more: true,
         };
 
         const tabStateById = {
@@ -143,8 +155,8 @@ describe('useActiveWorkspace', () => {
         expect(result.isExecuting).toBe(true);
         expect(result.activeResult).toEqual(queryResult);
         expect(result.activeRowsMeta).toEqual({
-            rowsCount: null,
-            hasMoreRows: false,
+            rowsCount: 2,
+            hasMoreRows: true,
         });
     });
 

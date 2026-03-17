@@ -151,14 +151,14 @@ export function useWorkspaceExecution({
 
             const errorLike = typeof error === 'object' && error !== null
                 ? error as {
-                    response?: { data?: Partial<ExecuteQueryError> & { message?: string } };
+                    response?: { data?: ExecuteQueryError & { message?: string } };
                     message?: string;
                 }
                 : null;
 
             const responseData = errorLike?.response?.data;
 
-            if (responseData?.status === 'error') {
+            if (responseData?.status === 'error' && responseData.execution_id && responseData.error) {
                 setTabResult(activeTab.id, responseData);
             } else {
                 setTabResult(activeTab.id, {
@@ -259,14 +259,14 @@ export function useWorkspaceExecution({
 
             const errorLike = typeof error === 'object' && error !== null
                 ? error as {
-                    response?: { data?: Partial<ExecuteQueryError> & { message?: string } };
+                    response?: { data?: ExecuteQueryError & { message?: string } };
                     message?: string;
                 }
                 : null;
 
             const responseData = errorLike?.response?.data;
 
-            if (responseData?.status === 'error') {
+            if (responseData?.status === 'error' && responseData.execution_id && responseData.error) {
                 setTabResult(activeTab.id, responseData);
             } else {
                 setTabResult(activeTab.id, {

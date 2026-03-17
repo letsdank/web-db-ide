@@ -8,7 +8,6 @@ export const dictionaries = {
 };
 
 export type Locale = keyof typeof dictionaries;
-type Dictionary = typeof dictionaries.en;
 
 function getByPath(obj: unknown, path: string): unknown {
     return path.split('.').reduce<unknown>((acc, part) => {
@@ -36,8 +35,8 @@ export function translate(
     key: string,
     params?: Record<string, string | number | null | undefined>,
 ): string {
-    const dictionary: Dictionary = dictionaries[locale] ?? dictionaries.en;
-    const fallback: Dictionary = dictionaries.en;
+    const dictionary = dictionaries[locale] ?? dictionaries.en;
+    const fallback = dictionaries.en;
 
     const value = getByPath(dictionary, key) ?? getByPath(fallback, key);
 

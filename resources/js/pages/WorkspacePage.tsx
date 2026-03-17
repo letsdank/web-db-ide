@@ -26,6 +26,7 @@ import type {SaveQueryDialogSubmitPayload} from "../components/workspace/SaveQue
 import {SaveQueryDialog} from "../components/workspace/SaveQueryDialog";
 import type {SavedQueryDto} from "../types/savedQuery";
 import {useExplorerTree} from "../features/explorer/hooks/useExplorerTree";
+import type {ExplorerColumnDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../types/explorer";
 
 export function WorkspacePage() {
     const {
@@ -350,28 +351,28 @@ export function WorkspacePage() {
         payload: {
             connectionId: number;
             schema: string;
-            table: { table_name: string };
-            details?: { columns?: Array<{ name: string; data_type: string | null; is_nullable: boolean }> };
+            table: ExplorerTableDto;
+            details?: ExplorerTableDetailsDto;
         },
     ) => {
         event.preventDefault();
 
         if (!payload.details) {
-            await loadTableDetails(payload.connectionId, payload.schema, payload.table.table_name);
+            void loadTableDetails(payload.connectionId, payload.schema, payload.table.table_name);
         }
     }, [loadTableDetails]);
 
     const handleOpenTableMetadata = useCallback(async (
         connectionId: number,
         schema: string,
-        table: { table_name: string },
-        details?: { columns?: Array<{ name: string; data_type: string | null; is_nullable: boolean }> },
+        table: ExplorerTableDto,
+        details?: ExplorerTableDetailsDto,
     ) => {
         const resolvedDetails = details ?? await loadTableDetails(connectionId, schema, table.table_name);
 
         const columnLines = resolvedDetails?.columns?.length
-            ? resolvedDetails.columns.map((column) =>
-                `${column.name} ${column.data_type ?? 'unknown'}${column.is_nullable ? '' : ' not null'}`,
+            ? resolvedDetails.columns.map((column: ExplorerColumnDto) =>
+                `${column.column_name} ${column.data_type ?? 'unknown'}${column.is_nullable ? '' : ' not null'}`,
             ).join('\n')
             : '-- no columns available';
 
@@ -506,14 +507,14 @@ export function WorkspacePage() {
                             })
                         }
                         onOpenMetadata={handleOpenTableMetadata}
-                        onCopyFullName={async (_connectionId, schema, table) => {
-                            await navigator.clipboard.writeText(
+                        onCopyFullName={(_connectionId, schema, table) => {
+                            void navigator.clipboard.writeText(
                                 schema ? `${schema}.${table.table_name}` : table.table_name,
                             );
                         }}
-                        onCopySelect={(_connectionId, schema, table) =>
+                        onCopySelect={(connectionId, schema, table) =>
                             handleCopyTableSelect({
-                                connectionId: activeConnectionId ?? 0,
+                                connectionId,
                                 schema,
                                 table: table.table_name,
                             })

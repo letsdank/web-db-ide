@@ -205,6 +205,16 @@ describe('ConnectionFormDialog', () => {
             has_ssh_private_key: false,
             has_ssh_passphrase: false,
             last_used_at: null,
+            ssh_password: null,
+            ssh_private_key: null,
+            ssh_passphrase: null,
+            connect_timeout_seconds: 10,
+            query_timeout_seconds: 30,
+            meta: null,
+            created_at: null,
+            updated_at: null,
+            is_owner: true,
+            access_scope: 'owned',
         };
 
         render(
