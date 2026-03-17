@@ -3,7 +3,12 @@ import {QueryHistoryDto} from "../../types/queryHistory";
 import {SavedQueryDto} from "../../types/savedQuery";
 import {Button, Card, DropdownMenu, Icon, Label, SegmentedRadioGroup, Text} from "@gravity-ui/uikit";
 import {useI18n} from "../../i18n";
-import {getResourceMarker, getResourceMarkerLabelKey, matchesVisibilityFilter} from "../../lib/resourceMarkers";
+import {
+    getResourceMarker,
+    getResourceMarkerLabelKey,
+    isOwnedResource,
+    matchesVisibilityFilter
+} from "../../lib/resourceMarkers";
 import {useMemo, useState} from "react";
 import {ResourceVisibilityFilter} from "../../types/resourceFilter";
 import {Ellipsis} from "@gravity-ui/icons";
@@ -123,7 +128,8 @@ export function RightSidebarPanels({
                     ) : filteredSavedQueries.length > 0 ? (
                         filteredSavedQueries.map((item) => {
                             const marker = getResourceMarker(item);
-                            const markerLabelKey=getResourceMarkerLabelKey(item);
+                            const markerLabelKey = getResourceMarkerLabelKey(item);
+                            const canManageSavedQuery = isOwnedResource(item);
 
                             return (
                                 <div
@@ -161,26 +167,31 @@ export function RightSidebarPanels({
                                         </Text>
                                     </button>
 
-                                    <div className="right-sidebar-panels__item-actions">
-                                        <DropdownMenu
-                                            items={[
-                                                {
-                                                    text: t('workspace.editSavedQuery'),
-                                                    action: () => onEditSavedQuery(item),
-                                                },
-                                            ]}
-                                            renderSwitcher={(props) => (
-                                                <Button
-                                                    {...props}
-                                                    size="s"
-                                                    view="flat-secondary"
-                                                    onlyIcon
-                                                >
-                                                    <Icon data={Ellipsis} size={16}/>
-                                                </Button>
-                                            )}
-                                        />
-                                    </div>
+                                    {canManageSavedQuery ? (
+                                        <div className="right-sidebar-panels__item-actions">
+                                            <DropdownMenu
+                                                items={[
+                                                    {
+                                                        text: t('workspace.editSavedQuery'),
+                                                        action: () => onEditSavedQuery(item),
+                                                    },
+                                                ]}
+                                                renderSwitcher={({onClick, onKeyDown}) => (
+                                                    <Button
+                                                        size="s"
+                                                        view="flat-secondary"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            onClick?.(event);
+                                                        }}
+                                                        onKeyDown={onKeyDown}
+                                                    >
+                                                        <Icon data={Ellipsis} size={16}/>
+                                                    </Button>
+                                                )}
+                                            />
+                                        </div>
+                                    ) : null}
                                 </div>
                             );
                         })

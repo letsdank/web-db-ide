@@ -5,7 +5,7 @@ import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit
 import {ExplorerSchemaNode} from "./ExplorerSchemaNode";
 import {ChevronDown, ChevronRight, Database, Ellipsis} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
-import {getResourceMarker} from "../../../lib/resourceMarkers";
+import {getResourceMarker, getResourceMarkerLabelKey, isOwnedResource} from "../../../lib/resourceMarkers";
 
 interface Props {
     connection: ConnectionDto;
@@ -68,7 +68,9 @@ export function ExplorerConnectionCard({
                                        }: Props) {
     const {t} = useI18n();
 
-    const marker = getResourceMarker(connection.visibility);
+    const marker = getResourceMarker(connection);
+    const markerLabelKey = getResourceMarkerLabelKey(connection);
+    const canManageConnection = isOwnedResource(connection);
 
     const visibleSchemas = useMemo(() => {
         if (!filter) {
@@ -113,9 +115,7 @@ export function ExplorerConnectionCard({
                                     <Label theme="utility">{connection.driver}</Label>
 
                                     <Label theme={marker.theme}>
-                                        {marker.kind === 'shared'
-                                            ? t('workspace.sharedMarker')
-                                            : t('workspace.ownedMarker')}
+                                        {t(markerLabelKey)}
                                     </Label>
 
                                     {connection.is_read_only ? (
@@ -141,35 +141,37 @@ export function ExplorerConnectionCard({
                     </span>
                 </button>
 
-                <div className="explorer-connection-card__actions">
-                    <DropdownMenu
-                        items={[
-                            {
-                                text: t('connections.editConnection'),
-                                action: onEditConnection,
-                            },
-                            {
-                                text: t('connections.deleteConnection'),
-                                action: onDeleteConnection,
-                                theme: 'danger',
-                            },
-                        ]}
-                        renderSwitcher={(props) => (
-                            <Button
-                                {...props}
-                                size="s"
-                                view="flat-secondary"
-                                onlyIcon
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    props.onClick?.(event);
-                                }}
-                            >
-                                <Icon data={Ellipsis} size={16}/>
-                            </Button>
-                        )}
-                    />
-                </div>
+                {canManageConnection ? (
+                    <div className="explorer-connection-card__actions">
+                        <DropdownMenu
+                            items={[
+                                {
+                                    text: t('connections.editConnection'),
+                                    action: onEditConnection,
+                                },
+                                {
+                                    text: t('connections.deleteConnection'),
+                                    action: onDeleteConnection,
+                                    theme: 'danger',
+                                },
+                            ]}
+                            renderSwitcher={({onClick, onKeyDown}) => (
+                                <Button
+                                    size="s"
+                                    view="flat-secondary"
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        onClick?.(event);
+                                    }}
+                                    onKeyDown={onKeyDown}
+
+                                >
+                                    <Icon data={Ellipsis} size={16}/>
+                                </Button>
+                            )}
+                        />
+                    </div>
+                ) : null}
             </div>
 
             {isExpanded ? (

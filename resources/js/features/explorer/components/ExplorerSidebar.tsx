@@ -78,8 +78,6 @@ export function ExplorerSidebar({
     const [filter, setFilter] = useState('');
     const [visibilityFilter, setVisibilityFilter] = useState<ResourceVisibilityFilter>('all');
 
-    const normalizedFilter = filter.trim().toLowerCase();
-
     const safeExpandedConnectionIds = expandedConnectionIds ?? [];
     const safeExpandedSchemaKeys = expandedSchemaKeys ?? [];
     const safeExpandedTableKeys = expandedTableKeys ?? [];
@@ -171,7 +169,7 @@ export function ExplorerSidebar({
                                     detailsByTableKey={safeDetailsByTableKey}
                                     loadingTablesFor={loadingTablesFor}
                                     loadingDetailsFor={loadingDetailsFor}
-                                    filter={normalizedFilter}
+                                    filter={filter.trim().toLowerCase()}
                                     onToggleConnection={() => onToggleConnection(connection.id)}
                                     onEditConnection={() => onEditConnection(connection)}
                                     onDeleteConnection={() => onDeleteConnection(connection)}
