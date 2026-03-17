@@ -90,10 +90,24 @@ export function ExplorerSidebar({
     const safeDetailsByTableKey = detailsByTableKey ?? {};
 
     const visibleConnections = useMemo(() => {
-        return connections.filter((connection) =>
-            matchesVisibilityFilter(connection.visibility, visibilityFilter),
-        );
-    }, [connections, visibilityFilter]);
+        const normalizedFilter = filter.trim().toLowerCase();
+
+        return connections.filter((connection) => {
+            const matchesSearch = !normalizedFilter || [
+                connection.name,
+                connection.database_name,
+                connection.host,
+                connection.driver,
+                connection.username,
+            ]
+                .filter(Boolean)
+                .some((value) => value.toLowerCase().includes(normalizedFilter));
+
+            const matchesVisibility = matchesVisibilityFilter(connection, visibilityFilter);
+
+            return matchesSearch && matchesVisibility;
+        });
+    }, [connections, filter, visibilityFilter]);
 
     return (
         <Card view="filled" className="explorer-sidebar__card">

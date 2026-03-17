@@ -11,5 +11,7 @@ export interface SavedQueryDto {
     visibility: 'private' | 'shared';
     created_at: string | null;
     updated_at: string | null;
+    is_owner: boolean;
+    access_scope: 'owned' | 'shared_with_me';
     connection: ConnectionDto | null;
 }

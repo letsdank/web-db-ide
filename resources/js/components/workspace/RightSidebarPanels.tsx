@@ -3,7 +3,7 @@ import {QueryHistoryDto} from "../../types/queryHistory";
 import {SavedQueryDto} from "../../types/savedQuery";
 import {Button, Card, DropdownMenu, Icon, Label, SegmentedRadioGroup, Text} from "@gravity-ui/uikit";
 import {useI18n} from "../../i18n";
-import {getResourceMarker, matchesVisibilityFilter} from "../../lib/resourceMarkers";
+import {getResourceMarker, getResourceMarkerLabelKey, matchesVisibilityFilter} from "../../lib/resourceMarkers";
 import {useMemo, useState} from "react";
 import {ResourceVisibilityFilter} from "../../types/resourceFilter";
 import {Ellipsis} from "@gravity-ui/icons";
@@ -36,7 +36,7 @@ export function RightSidebarPanels({
 
     const filteredSavedQueries = useMemo(() => {
         return savedQueries.filter((item) =>
-            matchesVisibilityFilter(item.visibility, visibilityFilter),
+            matchesVisibilityFilter(item, visibilityFilter),
         );
     }, [savedQueries, visibilityFilter]);
 
@@ -122,7 +122,8 @@ export function RightSidebarPanels({
                         )
                     ) : filteredSavedQueries.length > 0 ? (
                         filteredSavedQueries.map((item) => {
-                            const marker = getResourceMarker(item.visibility);
+                            const marker = getResourceMarker(item);
+                            const markerLabelKey=getResourceMarkerLabelKey(item);
 
                             return (
                                 <div
@@ -138,9 +139,7 @@ export function RightSidebarPanels({
 
                                             <div className="right-sidebar-panels__item-meta">
                                                 <Label theme={marker.theme}>
-                                                    {marker.kind === 'shared'
-                                                        ? t('workspace.sharedMarker')
-                                                        : t('workspace.ownedMarker')}
+                                                    {t(markerLabelKey)}
                                                 </Label>
 
                                                 {item.folder ? (

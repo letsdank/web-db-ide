@@ -1,14 +1,20 @@
 import {ResourceVisibilityFilter} from "../types/resourceFilter";
-
-export type ResourceVisibility = 'private' | 'shared';
+import {ConnectionDto} from "../types/connection";
+import {SavedQueryDto} from "../types/savedQuery";
 
 export interface ResourceMarker {
     kind: 'owned' | 'shared';
     theme: 'success' | 'info';
 }
 
-export function getResourceMarker(visibility: ResourceVisibility): ResourceMarker {
-    if (visibility === 'shared') {
+export interface ResourceAccessDescriptor {
+    is_owner?: boolean;
+    access_scope?: 'owned' | 'shared_with_me' | null;
+    visibility?: 'private' | 'shared';
+}
+
+export function getResourceMarker(resource: ResourceAccessDescriptor): ResourceMarker {
+    if (resource.access_scope === 'shared_with_me' || resource.is_owner === false) {
         return {
             kind: 'shared',
             theme: 'info',
@@ -22,7 +28,7 @@ export function getResourceMarker(visibility: ResourceVisibility): ResourceMarke
 }
 
 export function matchesVisibilityFilter(
-    visibility: ResourceVisibility,
+    resource: ResourceAccessDescriptor,
     filter: ResourceVisibilityFilter,
 ): boolean {
     if (filter === 'all') {
@@ -30,8 +36,25 @@ export function matchesVisibilityFilter(
     }
 
     if (filter === 'owned') {
-        return visibility === 'private';
+        return resource.access_scope === 'owned' || resource.is_owner === true;
     }
 
-    return visibility === 'shared';
+    return resource.access_scope === 'shared_with_me' || resource.is_owner === false;
 }
+
+export function isSharedWithMe(resource: ResourceAccessDescriptor): boolean {
+    return resource.access_scope === 'shared_with_me' || resource.is_owner === false;
+}
+
+export function isOwnedResource(resource: ResourceAccessDescriptor): boolean {
+    return resource.access_scope === 'owned' || resource.is_owner === true;
+}
+
+export function getResourceMarkerLabelKey(resource: ResourceAccessDescriptor): 'workspace.ownedMarker' | 'workspace.sharedMarker' {
+    return getResourceMarker(resource).kind === 'shared'
+        ? 'workspace.sharedMarker'
+        : 'workspace.ownedMarker';
+}
+
+export type ResourceWithAccess = Pick<ConnectionDto, 'is_owner' | 'access_scope' | 'visibility'>
+    | Pick<SavedQueryDto, 'is_owner' | 'access_scope' | 'visibility'>;

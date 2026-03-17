@@ -6,7 +6,7 @@ import {CommandPaletteItem} from "../../../types/commandPalette";
 import {Icon} from "@gravity-ui/uikit";
 import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magnifier} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
-import {getResourceMarker} from "../../../lib/resourceMarkers";
+import {getResourceMarker, getResourceMarkerLabelKey} from "../../../lib/resourceMarkers";
 
 interface Params {
     activeConnectionId: number | null;
@@ -151,15 +151,20 @@ export function useWorkspaceCommandPalette({
         }
 
         if (activeConnection) {
-            const activeMarker = getResourceMarker(activeConnection.visibility);
+            const activeMarker = getResourceMarker(activeConnection);
+            const activeMarkerLabelKey = getResourceMarkerLabelKey(activeConnection);
 
             actionItems.push({
                 id: 'action:select-active-connection',
                 title: t('workspace.currentConnection'),
-                subtitle: `${activeMarker.kind === 'shared' ? t('workspace.sharedMarker') : t('workspace.ownedMarker')} · ${activeConnection.name} · ${activeConnection.database_name}`,
+                subtitle: `${t(activeMarkerLabelKey)} · ${activeConnection.name} · ${activeConnection.database_name}`,
                 kind: 'action',
                 icon: <Icon data={Database} size={18}/>,
-                keywords: ['current connection active database'],
+                keywords: [
+                    'current connection active database',
+                    activeMarker.kind,
+                    activeConnection.access_scope ?? '',
+                ],
                 onSelect: () => handleSelectConnection(activeConnection.id),
             });
         }
@@ -181,12 +186,13 @@ export function useWorkspaceCommandPalette({
         }));
 
         const connectionItems: CommandPaletteItem[] = connections.map((connection) => {
-            const marker = getResourceMarker(connection.visibility);
+            const marker = getResourceMarker(connection);
+            const markerLabelKey = getResourceMarkerLabelKey(connection);
 
             return {
                 id: `connection:${connection.id}`,
                 title: connection.name,
-                subtitle: `${marker.kind === 'shared' ? t('workspace.sharedMarker') : t('workspace.ownedMarker')} · ${connection.database_name} · ${connection.host}:${connection.port}`,
+                subtitle: `${t(markerLabelKey)} · ${connection.database_name} · ${connection.host}:${connection.port}`,
                 kind: 'connection' as const,
                 icon: <Icon data={Database} size={18}/>,
                 keywords: [
@@ -194,13 +200,16 @@ export function useWorkspaceCommandPalette({
                     connection.database_name,
                     connection.host,
                     connection.username,
+                    marker.kind,
+                    connection.access_scope ?? '',
                 ],
                 onSelect: () => handleSelectConnection(connection.id),
             }
         });
 
         const savedQueryItems: CommandPaletteItem[] = savedQueries.map((item) => {
-            const marker = getResourceMarker(item.visibility);
+            const marker = getResourceMarker(item);
+            const markerLabelKey = getResourceMarkerLabelKey(item);
             const baseSubtitle = item.connection
                 ? `${item.connection.name} · ${item.connection.database_name}`
                 : item.folder || t('workspace.savedQuery');
@@ -208,7 +217,7 @@ export function useWorkspaceCommandPalette({
             return {
                 id: `saved-query:${item.id}`,
                 title: item.title,
-                subtitle: `${marker.kind === 'shared' ? t('workspace.sharedMarker') : t('workspace.ownedMarker')} · ${baseSubtitle}`,
+                subtitle: `${t(markerLabelKey)} · ${baseSubtitle}`,
                 kind: 'saved-query' as const,
                 icon: <Icon data={FileText} size={18}/>,
                 keywords: [
@@ -216,6 +225,7 @@ export function useWorkspaceCommandPalette({
                     item.folder ?? '',
                     item.description ?? '',
                     marker.kind,
+                    item.access_scope ?? '',
                 ],
                 onSelect: () => handleOpenSavedQuery(item),
             };
