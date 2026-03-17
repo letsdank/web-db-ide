@@ -103,6 +103,10 @@ const en = {
         failedToSaveQuery: 'Failed to save query.',
         ownedMarker: 'Owned',
         sharedMarker: 'Shared',
+        allResources: 'All',
+        ownedResources: 'Owned',
+        sharedResources: 'Shared',
+        resourceVisibilityFilter: 'Visibility',
     },
 
     connections: {

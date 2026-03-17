@@ -1,238 +1,103 @@
 import {ConnectionDto} from "../../../types/connection";
 import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
-import {useContextMenu} from "../../../hooks/useContextMenu";
-import {ExplorerTableContextPayload, useExplorerTree} from "../hooks/useExplorerTree";
-import {Button, Card, Icon, Text, TextInput} from "@gravity-ui/uikit";
-import {WorkspaceContextMenu} from "../../../components/workspace/WorkspaceContextMenu";
+import {Button, Card, Icon, SegmentedRadioGroup, Text, TextInput} from "@gravity-ui/uikit";
 import {ExplorerConnectionCard} from "./ExplorerConnectionCard";
-import {useMemo, useState} from "react";
+import React, {useMemo, useState} from "react";
 import {CirclePlus, Magnifier} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
+import {ResourceVisibilityFilter} from "../../../types/resourceFilter";
+import {matchesVisibilityFilter} from "../../../lib/resourceMarkers";
 
 interface Props {
     connections: ConnectionDto[];
     activeConnectionId: number | null;
-    onSelect: (id: number | null) => void;
-    onCreateClick: () => void;
-    onEditClick: (connection: ConnectionDto) => void;
-    onDeleteClick: (connection: ConnectionDto) => void;
-    onOpenSql: (payload: {
-        title: string;
-        sql_text: string;
-        db_connection_id: number | null;
-    }) => void;
-
-    onOpenTablePreview: (payload: {
-        connectionId: number;
-        schema: string | null;
-        table: string;
-    }) => void;
-    onOpenTableCount: (payload: {
-        connectionId: number;
-        schema: string | null;
-        table: string;
-    }) => void;
-    onCopyTableSelect: (payload: {
-        connectionId: number;
-        schema: string | null;
-        table: string;
-    }) => void;
-}
-
-function buildDescribeSql(details: ExplorerTableDetailsDto) {
-    const lines = details.columns.map((column) => {
-        const nullable = column.is_nullable === 'YES' ? 'NULL' : 'NOT NULL';
-        const defaultValue = column.column_default ? ` DEFAULT ${column.column_default}` : '';
-
-        return `-- ${column.column_name}: ${column.data_type} ${nullable}${defaultValue}`;
-    });
-
-    return [
-        `-- Table: "${details.schema}"."${details.table}"`,
-        `-- Columns: ${details.columns.length}`,
-        `-- Indexes: ${details.indexes.length}`,
-        '',
-        ...lines,
-    ].join('\n');
+    loadingSchemasByConnectionId: Record<number, boolean>;
+    schemasByConnectionId: Record<number, string[]>;
+    expandedConnectionIds: number[];
+    expandedSchemaKeys: string[];
+    expandedTableKeys: string[];
+    tablesBySchemaKey: Record<string, ExplorerTableDto[]>;
+    detailsByTableKey: Record<string, ExplorerTableDetailsDto>;
+    loadingTablesFor: string | null;
+    loadingDetailsFor: string | null;
+    hiddenActiveConnectionByFilter: boolean;
+    onCreateConnection: () => void;
+    onToggleConnection: (connectionId: number) => void;
+    onEditConnection: (connection: ConnectionDto) => void;
+    onDeleteConnection: (connection: ConnectionDto) => void;
+    onToggleSchema: (connectionId: number, schema: string) => void;
+    onToggleTable: (connectionId: number, schema: string, tableName: string) => void;
+    onOpenTableContextMenu: (
+        event: React.MouseEvent,
+        payload: {
+            connectionId: number;
+            schema: string;
+            table: ExplorerTableDto;
+            details?: ExplorerTableDetailsDto;
+        }
+    ) => void;
+    onOpenSelect: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onOpenCount: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onOpenMetadata: (
+        connectionId: number,
+        schema: string,
+        table: ExplorerTableDto,
+        details?: ExplorerTableDetailsDto
+    ) => void;
+    onCopyFullName: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onCopySelect: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
 }
 
 export function ExplorerSidebar({
                                     connections,
                                     activeConnectionId,
-                                    onSelect,
-                                    onCreateClick,
-                                    onEditClick,
-                                    onDeleteClick,
-                                    onOpenSql,
-                                    onOpenTablePreview,
-                                    onOpenTableCount,
-                                    onCopyTableSelect,
+                                    loadingSchemasByConnectionId,
+                                    schemasByConnectionId,
+                                    expandedConnectionIds,
+                                    expandedSchemaKeys,
+                                    expandedTableKeys,
+                                    tablesBySchemaKey,
+                                    detailsByTableKey,
+                                    loadingTablesFor,
+                                    loadingDetailsFor,
+                                    hiddenActiveConnectionByFilter,
+                                    onCreateConnection,
+                                    onToggleConnection,
+                                    onEditConnection,
+                                    onDeleteConnection,
+                                    onToggleSchema,
+                                    onToggleTable,
+                                    onOpenTableContextMenu,
+                                    onOpenSelect,
+                                    onOpenCount,
+                                    onOpenMetadata,
+                                    onCopyFullName,
+                                    onCopySelect,
                                 }: Props) {
     const {t} = useI18n();
-
     const [filter, setFilter] = useState('');
-
-    const {
-        state: tableMenuState,
-        anchorRef: tableMenuAnchorRef,
-        anchorStyle: tableMenuAnchorStyle,
-        openContextMenu: openTableContextMenu,
-        closeContextMenu: closeTableContextMenu,
-    } = useContextMenu<ExplorerTableContextPayload>();
-
-    const {
-        activeConnection,
-        schemasByConnectionId,
-        tablesBySchemaKey,
-        detailsByTableKey,
-        expandedConnectionIds,
-        expandedSchemaKeys,
-        expandedTableKeys,
-        loadingSchemasFor,
-        loadingTablesFor,
-        loadingDetailsFor,
-        toggleConnection,
-        toggleSchema,
-        toggleTable,
-        loadTableDetails,
-    } = useExplorerTree({
-        connections,
-        activeConnectionId,
-        onSelectConnection: onSelect,
-    });
+    const [visibilityFilter, setVisibilityFilter] = useState<ResourceVisibilityFilter>('all');
 
     const normalizedFilter = filter.trim().toLowerCase();
 
+    const safeExpandedConnectionIds = expandedConnectionIds ?? [];
+    const safeExpandedSchemaKeys = expandedSchemaKeys ?? [];
+    const safeExpandedTableKeys = expandedTableKeys ?? [];
+
+    const safeLoadingSchemasByConnectionId = loadingSchemasByConnectionId ?? {};
+    const safeSchemasByConnectionId = schemasByConnectionId ?? {};
+    const safeTablesBySchemaKey = tablesBySchemaKey ?? {};
+    const safeDetailsByTableKey = detailsByTableKey ?? {};
+
     const visibleConnections = useMemo(() => {
-        if (!normalizedFilter) {
-            return connections;
-        }
-
-        return connections.filter((connection) => {
-            const haystack = [
-                connection.name,
-                connection.driver,
-                connection.host,
-                connection.database_name,
-                connection.username,
-            ]
-                .filter(Boolean)
-                .join(' ')
-                .toLowerCase();
-
-            return haystack.includes(normalizedFilter);
-        });
-    }, [connections, normalizedFilter]);
-
-    const hasHiddenActiveConnection = Boolean(
-        activeConnectionId &&
-        !visibleConnections.some((connection) => connection.id === activeConnectionId),
-    );
-
-    async function openMetadata(
-        connectionId: number,
-        schema: string,
-        table: ExplorerTableDto,
-        details?: ExplorerTableDetailsDto,
-    ) {
-        const resolved =
-            details ??
-            await loadTableDetails(connectionId, schema, table.table_name);
-
-        if (!resolved) {
-            return;
-        }
-
-        onOpenSql({
-            title: `${schema}.${table.table_name} meta`,
-            sql_text: buildDescribeSql(resolved),
-            db_connection_id: connectionId,
-        });
-    }
-
-    async function copyFullName(schema: string, table: string) {
-        try {
-            await navigator.clipboard.writeText(`"${schema}"."${table}"`);
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    const contextTable = tableMenuState.payload;
+        return connections.filter((connection) =>
+            matchesVisibilityFilter(connection.visibility, visibilityFilter),
+        );
+    }, [connections, visibilityFilter]);
 
     return (
-        <Card
-            view="filled"
-            className="workspace-card workspace-card--hidden explorer-sidebar__card explorer-sidebar"
-        >
+        <Card view="filled" className="explorer-sidebar__card">
             <div className="explorer-sidebar__layout">
-                <div ref={tableMenuAnchorRef} style={tableMenuAnchorStyle}/>
-
-                <WorkspaceContextMenu
-                    open={tableMenuState.open}
-                    anchorElement={tableMenuAnchorRef.current}
-                    onClose={closeTableContextMenu}
-                    actions={
-                        contextTable
-                            ? [
-                                {
-                                    key: 'select-top',
-                                    text: t('explorer.openPreview'),
-                                    onClick: () =>
-                                        onOpenTablePreview({
-                                            connectionId: contextTable.connectionId,
-                                            schema: contextTable.schema,
-                                            table: contextTable.table.table_name,
-                                        }),
-                                },
-                                {
-                                    key: 'count',
-                                    text: t('explorer.countRows'),
-                                    onClick: () =>
-                                        onOpenTableCount({
-                                            connectionId: contextTable.connectionId,
-                                            schema: contextTable.schema,
-                                            table: contextTable.table.table_name,
-                                        })
-                                },
-                                {
-                                    key: 'metadata',
-                                    text: t('explorer.openMetadata'),
-                                    onClick: () =>
-                                        openMetadata(
-                                            contextTable.connectionId,
-                                            contextTable.schema,
-                                            contextTable.table,
-                                            contextTable.details,
-                                        ),
-                                },
-                                {
-                                    key: 'copy-select',
-                                    text: t('explorer.copySelectToEditor'),
-                                    onClick: () =>
-                                        onCopyTableSelect({
-                                            connectionId: contextTable.connectionId,
-                                            schema: contextTable.schema,
-                                            table: contextTable.table.table_name,
-                                        }),
-                                },
-                                {
-                                    key: 'separator-1',
-                                },
-                                {
-                                    key: 'copy',
-                                    text: t('explorer.copyFullName'),
-                                    onClick: () =>
-                                        copyFullName(
-                                            contextTable.schema,
-                                            contextTable.table.table_name,
-                                        ),
-                                },
-                            ]
-                            : []
-                    }
-                />
-
                 <div className="explorer-sidebar__header">
                     <div className="explorer-sidebar__header-copy">
                         <Text variant="header-1">{t('explorer.title')}</Text>
@@ -241,106 +106,78 @@ export function ExplorerSidebar({
                         </Text>
                     </div>
 
-                    <Button view="action" size="m" onClick={onCreateClick}>
+                    <Button view="action" size="m" onClick={onCreateConnection}>
                         <Icon data={CirclePlus} size={16}/>
-                        {t('explorer.new')}
+                        {t('explorer.newConnection')}
                     </Button>
                 </div>
 
                 <div className="explorer-sidebar__search">
                     <TextInput
-                        size="l"
                         value={filter}
-                        placeholder={t('explorer.filterConnections')}
+                        placeholder={t('explorer.searchPlaceholder')}
                         onUpdate={setFilter}
                         startContent={<Icon data={Magnifier} size={16}/>}
                     />
+
+                    <SegmentedRadioGroup
+                        size="m"
+                        value={visibilityFilter}
+                        options={[
+                            {value: 'all', content: t('workspace.allResources')},
+                            {value: 'owned', content: t('workspace.ownedResources')},
+                            {value: 'shared', content: t('workspace.sharedResources')},
+                        ]}
+                        onUpdate={(value) => setVisibilityFilter(value as ResourceVisibilityFilter)}
+                    />
                 </div>
+
+                {hiddenActiveConnectionByFilter ? (
+                    <div className="explorer-sidebar__hidden-hint">
+                        <Text variant="caption-2" color="warning">
+                            {t('explorer.hiddenActiveConnectionHint')}
+                        </Text>
+                    </div>
+                ) : null}
 
                 <div className="explorer-sidebar__content">
                     <div className="explorer-sidebar__list">
-                        {visibleConnections.map((connection) => (
-                            <ExplorerConnectionCard
-                                key={connection.id}
-                                connection={connection}
-                                isActive={connection.id === activeConnectionId}
-                                isExpanded={expandedConnectionIds.includes(connection.id)}
-                                schemas={schemasByConnectionId[connection.id] ?? []}
-                                loadingSchemas={loadingSchemasFor === connection.id}
-                                expandedSchemaKeys={expandedSchemaKeys}
-                                expandedTableKeys={expandedTableKeys}
-                                tablesBySchemaKey={tablesBySchemaKey}
-                                detailsByTableKey={detailsByTableKey}
-                                loadingTablesFor={loadingTablesFor}
-                                loadingDetailsFor={loadingDetailsFor}
-                                filter={normalizedFilter}
-                                onToggleConnection={() => toggleConnection(connection.id)}
-                                onEditConnection={() => onEditClick(connection)}
-                                onDeleteConnection={() => onDeleteClick(connection)}
-                                onToggleSchema={(schema) => toggleSchema(connection.id, schema)}
-                                onToggleTable={(schema, tableName) => toggleTable(connection.id, schema, tableName)}
-                                onOpenTableContextMenu={openTableContextMenu}
-                                onOpenSelect={(schema, table) =>
-                                    onOpenTablePreview({
-                                        connectionId: connection.id,
-                                        schema,
-                                        table: table.table_name,
-                                    })
-                                }
-                                onOpenCount={(schema, table) =>
-                                    onOpenTableCount({
-                                        connectionId: connection.id,
-                                        schema,
-                                        table: table.table_name,
-                                    })
-                                }
-                                onCopySelect={(schema, table) =>
-                                    onCopyTableSelect({
-                                        connectionId: connection.id,
-                                        schema,
-                                        table: table.table_name,
-                                    })
-                                }
-                                onOpenMetadata={(schema, table, details) =>
-                                    openMetadata(connection.id, schema, table, details)
-                                }
-                                onCopyFullName={(schema, table) =>
-                                    copyFullName(schema, table.table_name)
-                                }
-                            />
-                        ))}
-
-                        {connections.length === 0 ? (
+                        {visibleConnections.length > 0 ? (
+                            visibleConnections.map((connection) => (
+                                <ExplorerConnectionCard
+                                    key={connection.id}
+                                    connection={connection}
+                                    isActive={connection.id === activeConnectionId}
+                                    isExpanded={safeExpandedConnectionIds.includes(connection.id)}
+                                    schemas={safeSchemasByConnectionId[connection.id] ?? []}
+                                    loadingSchemas={Boolean(safeLoadingSchemasByConnectionId[connection.id])}
+                                    expandedSchemaKeys={safeExpandedSchemaKeys}
+                                    expandedTableKeys={safeExpandedTableKeys}
+                                    tablesBySchemaKey={safeTablesBySchemaKey}
+                                    detailsByTableKey={safeDetailsByTableKey}
+                                    loadingTablesFor={loadingTablesFor}
+                                    loadingDetailsFor={loadingDetailsFor}
+                                    filter={normalizedFilter}
+                                    onToggleConnection={() => onToggleConnection(connection.id)}
+                                    onEditConnection={() => onEditConnection(connection)}
+                                    onDeleteConnection={() => onDeleteConnection(connection)}
+                                    onToggleSchema={(schema) => onToggleSchema(connection.id, schema)}
+                                    onToggleTable={(schema, tableName) => onToggleTable(connection.id, schema, tableName)}
+                                    onOpenTableContextMenu={onOpenTableContextMenu}
+                                    onOpenSelect={(schema, table) => onOpenSelect(connection.id, schema, table)}
+                                    onOpenCount={(schema, table) => onOpenCount(connection.id, schema, table)}
+                                    onOpenMetadata={(schema, table, details) => onOpenMetadata(connection.id, schema, table, details)}
+                                    onCopyFullName={(schema, table) => onCopyFullName(connection.id, schema, table)}
+                                    onCopySelect={(schema, table) => onCopySelect(connection.id, schema, table)}
+                                />
+                            ))
+                        ) : (
                             <div className="explorer-sidebar__empty">
                                 <Text variant="body-2" color="secondary">
-                                    {t('explorer.noConnections')}
+                                    {t('connections.empty')}
                                 </Text>
                             </div>
-                        ) : null}
-
-                        {connections.length > 0 && visibleConnections.length === 0 ? (
-                            <div className="explorer-sidebar__empty">
-                                <Text variant="body-2" color="secondary">
-                                    {t('explorer.noFilterMatches')}
-                                </Text>
-                            </div>
-                        ) : null}
-
-                        {hasHiddenActiveConnection ? (
-                            <div className="explorer-sidebar__hint">
-                                <Text variant="caption-2" color="secondary">
-                                    {t('explorer.hiddenActiveConnection')}
-                                </Text>
-                            </div>
-                        ) : null}
-
-                        {!activeConnection && connections.length > 0 ? (
-                            <div className="explorer-sidebar__hint">
-                                <Text variant="caption-2" color="secondary">
-                                    {t('explorer.selectConnectionHint')}
-                                </Text>
-                            </div>
-                        ) : null}
+                        )}
                     </div>
                 </div>
             </div>

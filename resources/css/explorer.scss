@@ -51,6 +51,10 @@
         padding: 12px;
         background: var(--g-color-base-background);
     }
+
+    &__hidden-hint {
+        padding: 0 4px;
+    }
 }
 
 .explorer-connection-card {

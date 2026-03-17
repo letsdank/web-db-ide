@@ -3,7 +3,9 @@ import {QueryHistoryDto} from "../../types/queryHistory";
 import {SavedQueryDto} from "../../types/savedQuery";
 import {Button, Card, Label, SegmentedRadioGroup, Text} from "@gravity-ui/uikit";
 import {useI18n} from "../../i18n";
-import {getResourceMarker} from "../../lib/resourceMarkers";
+import {getResourceMarker, matchesVisibilityFilter} from "../../lib/resourceMarkers";
+import {useMemo, useState} from "react";
+import {ResourceVisibilityFilter} from "../../types/resourceFilter";
 
 interface Props {
     panel: WorkspaceRightPanel;
@@ -27,6 +29,13 @@ export function RightSidebarPanels({
                                        onOpenSaveQueryDialog,
                                    }: Props) {
     const {t} = useI18n();
+    const [visibilityFilter, setVisibilityFilter] = useState<ResourceVisibilityFilter>('all');
+
+    const filteredSavedQueries = useMemo(() => {
+        return savedQueries.filter((item) =>
+            matchesVisibilityFilter(item.visibility, visibilityFilter),
+        );
+    }, [savedQueries, visibilityFilter]);
 
     return (
         <Card view="filled" className="right-sidebar-panels__card">
@@ -54,6 +63,19 @@ export function RightSidebarPanels({
                         ]}
                         onUpdate={(value) => onChangePanel(value as WorkspaceRightPanel)}
                     />
+
+                    {panel === 'saved' ? (
+                        <SegmentedRadioGroup
+                            size="m"
+                            value={visibilityFilter}
+                            options={[
+                                {value: 'all', content: t('workspace.allResources')},
+                                {value: 'owned', content: t('workspace.ownedResources')},
+                                {value: 'shared', content: t('workspace.sharedResources')},
+                            ]}
+                            onUpdate={(value) => setVisibilityFilter(value as ResourceVisibilityFilter)}
+                        />
+                    ) : null}
                 </div>
 
                 <div className="right-sidebar-panels__content">
@@ -95,8 +117,8 @@ export function RightSidebarPanels({
                                 {t('workspace.noHistory')}
                             </Text>
                         )
-                    ) : savedQueries.length > 0 ? (
-                        savedQueries.map((item) => {
+                    ) : filteredSavedQueries.length > 0 ? (
+                        filteredSavedQueries.map((item) => {
                             const marker = getResourceMarker(item.visibility);
 
                             return (
@@ -133,7 +155,7 @@ export function RightSidebarPanels({
                                         {item.sql_text.slice(0, 140) || t('workspace.emptyQuery')}
                                     </Text>
                                 </button>
-                            )
+                            );
                         })
                     ) : (
                         <Text variant="body-2" color="secondary">

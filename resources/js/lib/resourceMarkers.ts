@@ -1,3 +1,5 @@
+import {ResourceVisibilityFilter} from "../types/resourceFilter";
+
 export type ResourceVisibility = 'private' | 'shared';
 
 export interface ResourceMarker {
@@ -17,4 +19,19 @@ export function getResourceMarker(visibility: ResourceVisibility): ResourceMarke
         kind: 'owned',
         theme: 'success',
     };
+}
+
+export function matchesVisibilityFilter(
+    visibility: ResourceVisibility,
+    filter: ResourceVisibilityFilter,
+): boolean {
+    if (filter === 'all') {
+        return true;
+    }
+
+    if (filter === 'owned') {
+        return visibility === 'private';
+    }
+
+    return visibility === 'shared';
 }

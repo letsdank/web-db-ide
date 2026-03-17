@@ -103,6 +103,10 @@ const ru = {
         failedToSaveQuery: 'Не удалось сохранить запрос.',
         ownedMarker: 'Моё',
         sharedMarker: 'Общее',
+        allResources: 'Все',
+        ownedResources: 'Мои',
+        sharedResources: 'Общие',
+        resourceVisibilityFilter: 'Видимость',
     },
 
     connections: {
