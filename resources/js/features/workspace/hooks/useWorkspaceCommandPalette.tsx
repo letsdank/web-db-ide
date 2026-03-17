@@ -1,8 +1,8 @@
-import {QueryTabDto} from "../../../types/queryTab";
-import {ConnectionDto} from "../../../types/connection";
-import {SavedQueryDto} from "../../../types/savedQuery";
+import type {QueryTabDto} from "../../../types/queryTab";
+import type {ConnectionDto} from "../../../types/connection";
+import type {SavedQueryDto} from "../../../types/savedQuery";
 import {useMemo} from "react";
-import {CommandPaletteItem} from "../../../types/commandPalette";
+import type {CommandPaletteItem} from "../../../types/commandPalette";
 import {Icon} from "@gravity-ui/uikit";
 import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magnifier} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";

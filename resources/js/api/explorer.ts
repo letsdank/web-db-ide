@@ -1,5 +1,5 @@
 import {apiClient} from "./client";
-import {ExplorerTableDetailsDto, ExplorerTableDto} from "../types/explorer";
+import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../types/explorer";
 
 export async function fetchSchemas(connectionId: number): Promise<string[]> {
     const response = await apiClient.get<{ data: string[] }>(`/connections/${connectionId}/schemas`);

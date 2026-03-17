@@ -3,10 +3,10 @@ import * as queryTabsApi from '../../../api/queryTabs';
 import * as queryHistoryApi from '../../../api/queryHistory';
 import * as savedQueriesApi from '../../../api/savedQueries';
 import {beforeEach, describe, expect, it, vi} from "vitest";
-import {ConnectionDto} from "../../../types/connection";
-import {QueryTabDto} from "../../../types/queryTab";
-import {QueryHistoryDto} from "../../../types/queryHistory";
-import {SavedQueryDto} from "../../../types/savedQuery";
+import type {ConnectionDto} from "../../../types/connection";
+import type {QueryTabDto} from "../../../types/queryTab";
+import type {QueryHistoryDto} from "../../../types/queryHistory";
+import type {SavedQueryDto} from "../../../types/savedQuery";
 import {useWorkspaceBoot} from "./useWorkspaceBoot";
 import {render, waitFor} from "@testing-library/react";
 

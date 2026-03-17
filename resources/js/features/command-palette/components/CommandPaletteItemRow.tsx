@@ -1,4 +1,4 @@
-import {CommandPaletteItem} from "../../../types/commandPalette";
+import type {CommandPaletteItem} from "../../../types/commandPalette";
 import {Label, Text} from "@gravity-ui/uikit";
 
 const KIND_LABELS: Record<CommandPaletteItem['kind'], string> = {

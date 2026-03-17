@@ -1,4 +1,5 @@
-import {ReactNode, useEffect} from "react";
+import type {ReactNode} from "react";
+import { useEffect} from "react";
 import {useAuthStore} from "../../../stores/authStores";
 import {fetchMe} from "../../../api/auth";
 import {Spin, Text} from "@gravity-ui/uikit";

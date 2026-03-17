@@ -1,5 +1,5 @@
 import {apiClient, setApiToken} from "./client";
-import {LoginResponseDto, MeResponseDto} from "../types/auth";
+import type {LoginResponseDto, MeResponseDto} from "../types/auth";
 
 export interface LoginPayload {
     email: string;

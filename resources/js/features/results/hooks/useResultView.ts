@@ -1,4 +1,4 @@
-import {ExecuteQueryResponse} from "../../../types/queryResult";
+import type {ExecuteQueryResponse} from "../../../types/queryResult";
 import {useMemo, useState} from "react";
 
 type SortDirection = 'asc' | 'desc';
@@ -49,7 +49,7 @@ export function useResultView(result: ExecuteQueryResponse | null) {
             .map((column, index) => ({...column, originalIndex: index}))
             .filter((column) => !hiddenColumnNames.includes(column.name));
 
-        let nextRows = [...result.rows];
+        const nextRows = [...result.rows];
 
         if (sortState) {
             const sourceColumnIndex = result.columns.findIndex(

@@ -1,4 +1,4 @@
-import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
+import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import React from "react";
 import {Button, ClipboardButton, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ChevronDown, ChevronRight, Ellipsis, LayoutHeaderCellsLargeFill} from "@gravity-ui/icons";

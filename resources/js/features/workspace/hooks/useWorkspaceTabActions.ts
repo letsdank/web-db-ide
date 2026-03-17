@@ -1,4 +1,4 @@
-import {QueryTabDto} from "../../../types/queryTab";
+import type {QueryTabDto} from "../../../types/queryTab";
 import {useCallback} from "react";
 import {createQueryTab, deleteQueryTab, reorderQueryTabs, updateQueryTab} from "../../../api/queryTabs";
 import {useI18n} from "../../../i18n";

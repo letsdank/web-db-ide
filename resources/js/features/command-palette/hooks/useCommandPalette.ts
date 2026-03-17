@@ -1,4 +1,4 @@
-import {CommandPaletteItem, CommandPaletteItemKind} from "../../../types/commandPalette";
+import type {CommandPaletteItem, CommandPaletteItemKind} from "../../../types/commandPalette";
 import {useEffect, useMemo, useState} from "react";
 
 function detectKindPrefix(query: string): {

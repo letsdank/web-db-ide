@@ -1,5 +1,5 @@
 import {Label, Text, TextInput} from "@gravity-ui/uikit";
-import {CommandPaletteItemKind} from "../../../types/commandPalette";
+import type {CommandPaletteItemKind} from "../../../types/commandPalette";
 
 interface Props {
     query: string;

@@ -1,5 +1,5 @@
-import {QueryTabDto} from "../../../types/queryTab";
-import {ConnectionDto} from "../../../types/connection";
+import type {QueryTabDto} from "../../../types/queryTab";
+import type {ConnectionDto} from "../../../types/connection";
 import {useMemo} from "react";
 
 interface TabExecutionStateLike {

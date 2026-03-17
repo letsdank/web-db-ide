@@ -1,4 +1,4 @@
-import {QueryTabDto} from "../../../types/queryTab";
+import type {QueryTabDto} from "../../../types/queryTab";
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import * as queryTabsApi from '../../../api/queryTabs';
 import {useWorkspaceDraft} from "./useWorkspaceDraft";

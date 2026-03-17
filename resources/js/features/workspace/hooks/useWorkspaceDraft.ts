@@ -1,4 +1,4 @@
-import {QueryTabDto} from "../../../types/queryTab";
+import type {QueryTabDto} from "../../../types/queryTab";
 import {useDebouncedCallback} from "../../../hooks/useDebouncedCallback";
 import {updateQueryTab} from "../../../api/queryTabs";
 import {useCallback} from "react";

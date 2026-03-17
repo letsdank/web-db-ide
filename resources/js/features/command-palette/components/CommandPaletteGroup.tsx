@@ -1,4 +1,4 @@
-import {CommandPaletteItem} from "../../../types/commandPalette";
+import type {CommandPaletteItem} from "../../../types/commandPalette";
 import {Text} from "@gravity-ui/uikit";
 import {CommandPaletteItemRow} from "./CommandPaletteItemRow";
 

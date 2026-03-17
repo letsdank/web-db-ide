@@ -1,10 +1,10 @@
-import {QueryTabDto} from "../../../types/queryTab";
-import {SavedQueryDto} from "../../../types/savedQuery";
+import type {QueryTabDto} from "../../../types/queryTab";
+import type {SavedQueryDto} from "../../../types/savedQuery";
 import {useCallback} from "react";
 import {createSavedQuery, updateSavedQuery} from "../../../api/savedQueries";
-import {QueryHistoryDto} from "../../../types/queryHistory";
+import type {QueryHistoryDto} from "../../../types/queryHistory";
 import {useI18n} from "../../../i18n";
-import {SaveQueryDialogSubmitPayload} from "../../../components/workspace/SaveQueryDialog";
+import type {SaveQueryDialogSubmitPayload} from "../../../components/workspace/SaveQueryDialog";
 
 interface Params {
     activeTab: QueryTabDto | null;

@@ -1,4 +1,4 @@
-import {QueryTabDto} from "../types/queryTab";
+import type {QueryTabDto} from "../types/queryTab";
 import {apiClient} from "./client";
 
 export interface CreateQueryTabPayload {

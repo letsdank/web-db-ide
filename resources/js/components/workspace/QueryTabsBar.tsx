@@ -1,4 +1,4 @@
-import {QueryTabDto} from "../../types/queryTab";
+import type {QueryTabDto} from "../../types/queryTab";
 import {useContextMenu} from "../../hooks/useContextMenu";
 import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
 import {Button, DropdownMenu, Icon, Tab, TabList, TabProvider, Text, TextInput} from "@gravity-ui/uikit";

@@ -1,10 +1,10 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {useWorkspaceLibrary} from "./useWorkspaceLibrary";
 import React from "react";
-import {SavedQueryDto} from "../../../types/savedQuery";
+import type {SavedQueryDto} from "../../../types/savedQuery";
 import * as savedQueriesApi from '../../../api/savedQueries';
 import {render} from "@testing-library/react";
-import {SaveQueryDialogSubmitPayload} from "../../../components/workspace/SaveQueryDialog";
+import type {SaveQueryDialogSubmitPayload} from "../../../components/workspace/SaveQueryDialog";
 
 vi.mock('../../../api/savedQueries', async () => {
     return {

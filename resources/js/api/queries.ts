@@ -1,4 +1,4 @@
-import {ExecuteQueryResponse} from "../types/queryResult";
+import type {ExecuteQueryResponse} from "../types/queryResult";
 import {apiClient} from "./client";
 
 export interface ExecuteQueryPayload {

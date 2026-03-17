@@ -1,5 +1,6 @@
 import {useAuthStore} from "../../../stores/authStores";
-import {FormEvent, useMemo, useState} from "react";
+import type {FormEvent} from "react";
+import { useMemo, useState} from "react";
 import {login} from "../../../api/auth";
 import {Button, Card, Label, Text, TextInput} from "@gravity-ui/uikit";
 

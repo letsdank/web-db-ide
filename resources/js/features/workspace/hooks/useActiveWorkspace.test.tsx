@@ -1,5 +1,5 @@
-import {ConnectionDto} from "../../../types/connection";
-import {QueryTabDto} from "../../../types/queryTab";
+import type {ConnectionDto} from "../../../types/connection";
+import type {QueryTabDto} from "../../../types/queryTab";
 import {describe, expect, it} from "vitest";
 import {useActiveWorkspace} from "./useActiveWorkspace";
 import React from "react";

@@ -1,5 +1,5 @@
-import {ConnectionDto} from "../../../types/connection";
-import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
+import type {ConnectionDto} from "../../../types/connection";
+import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import React, {useMemo} from "react";
 import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerSchemaNode} from "./ExplorerSchemaNode";

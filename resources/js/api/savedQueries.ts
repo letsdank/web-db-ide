@@ -1,4 +1,4 @@
-import {SavedQueryDto} from "../types/savedQuery";
+import type {SavedQueryDto} from "../types/savedQuery";
 import {apiClient} from "./client";
 
 export interface CreateSavedQueryPayload {

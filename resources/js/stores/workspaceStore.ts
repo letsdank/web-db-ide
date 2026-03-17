@@ -1,9 +1,9 @@
-import {ConnectionDto} from "../types/connection";
-import {QueryTabDto} from "../types/queryTab";
-import {ExecuteQueryResponse} from "../types/queryResult";
+import type {ConnectionDto} from "../types/connection";
+import type {QueryTabDto} from "../types/queryTab";
+import type {ExecuteQueryResponse} from "../types/queryResult";
 import {create} from "zustand";
-import {QueryHistoryDto} from "../types/queryHistory";
-import {SavedQueryDto} from "../types/savedQuery";
+import type {QueryHistoryDto} from "../types/queryHistory";
+import type {SavedQueryDto} from "../types/savedQuery";
 
 export type WorkspaceRightPanel = 'history' | 'saved';
 

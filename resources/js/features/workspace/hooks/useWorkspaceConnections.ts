@@ -1,10 +1,10 @@
-import {
+import type {
     ConnectionDto,
     CreateConnectionPayload,
     TestConnectionResultDto,
     UpdateConnectionPayload
 } from "../../../types/connection";
-import {QueryTabDto} from "../../../types/queryTab";
+import type {QueryTabDto} from "../../../types/queryTab";
 import {useCallback} from "react";
 import {updateQueryTab} from "../../../api/queryTabs";
 import {

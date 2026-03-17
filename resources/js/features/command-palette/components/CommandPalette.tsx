@@ -1,4 +1,4 @@
-import {CommandPaletteItem} from "../../../types/commandPalette";
+import type {CommandPaletteItem} from "../../../types/commandPalette";
 import {useEffect} from "react";
 import {Button, Text} from "@gravity-ui/uikit";
 import {useCommandPalette} from "../hooks/useCommandPalette";

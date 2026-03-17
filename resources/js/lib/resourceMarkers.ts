@@ -1,6 +1,6 @@
-import {ResourceVisibilityFilter} from "../types/resourceFilter";
-import {ConnectionDto} from "../types/connection";
-import {SavedQueryDto} from "../types/savedQuery";
+import type {ResourceVisibilityFilter} from "../types/resourceFilter";
+import type {ConnectionDto} from "../types/connection";
+import type {SavedQueryDto} from "../types/savedQuery";
 
 export interface ResourceMarker {
     kind: 'owned' | 'shared';

@@ -1,11 +1,11 @@
-import {ConnectionDto} from "../../../types/connection";
-import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
+import type {ConnectionDto} from "../../../types/connection";
+import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import {Button, Card, Icon, SegmentedRadioGroup, Text, TextInput} from "@gravity-ui/uikit";
 import {ExplorerConnectionCard} from "./ExplorerConnectionCard";
 import React, {useMemo, useState} from "react";
 import {CirclePlus, Magnifier} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
-import {ResourceVisibilityFilter} from "../../../types/resourceFilter";
+import type {ResourceVisibilityFilter} from "../../../types/resourceFilter";
 import {matchesVisibilityFilter} from "../../../lib/resourceMarkers";
 
 interface Props {

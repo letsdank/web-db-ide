@@ -1,4 +1,4 @@
-import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
+import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import React, {useMemo} from "react";
 import {Button, Icon, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerTableNode} from "./ExplorerTableNode";

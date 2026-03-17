@@ -3,7 +3,8 @@ import React, {useCallback, useRef, useState} from "react";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
-import {SqlEditorPane, SqlEditorPaneHandle} from "../components/workspace/SqlEditorPane";
+import type { SqlEditorPaneHandle} from "../components/workspace/SqlEditorPane";
+import {SqlEditorPane} from "../components/workspace/SqlEditorPane";
 import {ResultsPanel} from "../features/results/components/ResultsPanel";
 import {RightSidebarPanels} from "../components/workspace/RightSidebarPanels";
 import {CommandPalette} from "../features/command-palette/components/CommandPalette";
@@ -21,8 +22,9 @@ import {useActiveWorkspace} from "../features/workspace/hooks/useActiveWorkspace
 import {useWorkspaceDraft} from "../features/workspace/hooks/useWorkspaceDraft";
 import {buildCountSql, buildPreviewSql, buildSelectSql} from "../features/explorer/lib/sql";
 import {useI18n} from "../i18n";
-import {SaveQueryDialog, SaveQueryDialogSubmitPayload} from "../components/workspace/SaveQueryDialog";
-import {SavedQueryDto} from "../types/savedQuery";
+import type { SaveQueryDialogSubmitPayload} from "../components/workspace/SaveQueryDialog";
+import {SaveQueryDialog} from "../components/workspace/SaveQueryDialog";
+import type {SavedQueryDto} from "../types/savedQuery";
 import {useExplorerTree} from "../features/explorer/hooks/useExplorerTree";
 
 export function WorkspacePage() {

@@ -1,6 +1,7 @@
 import {forwardRef, useImperativeHandle, useMemo, useRef} from "react";
 import type * as MonacoNamespace from "monaco-editor"
-import {Editor, OnMount} from "@monaco-editor/react";
+import type { OnMount} from "@monaco-editor/react";
+import {Editor} from "@monaco-editor/react";
 import {Card} from "@gravity-ui/uikit";
 
 interface EditorSelectionPayload {

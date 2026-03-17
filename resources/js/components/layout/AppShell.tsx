@@ -1,4 +1,4 @@
-import {PropsWithChildren} from "react";
+import type {PropsWithChildren} from "react";
 import {useAuthStore} from "../../stores/authStores";
 import {logout} from "../../api/auth";
 import {Button, Select, Text} from "@gravity-ui/uikit";

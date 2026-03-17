@@ -1,4 +1,4 @@
-import {QueryTabDto} from "../../../types/queryTab";
+import type {QueryTabDto} from "../../../types/queryTab";
 import {describe, expect, it} from "vitest";
 import {moveTabInsideGroup, withSequentialSortOrder} from "./useWorkspaceTabActions";
 

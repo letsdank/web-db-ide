@@ -1,4 +1,4 @@
-import {ConnectionDto} from "../../types/connection";
+import type {ConnectionDto} from "../../types/connection";
 import {Button, Card, Hotkey, Label, Select, Text} from "@gravity-ui/uikit";
 import {useI18n} from "../../i18n";
 

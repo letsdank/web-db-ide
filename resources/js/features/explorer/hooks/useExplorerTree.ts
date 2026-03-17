@@ -1,5 +1,5 @@
-import {ConnectionDto} from "../../../types/connection";
-import {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
+import type {ConnectionDto} from "../../../types/connection";
+import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {fetchSchemas, fetchTableDetails, fetchTables} from "../../../api/explorer";
 

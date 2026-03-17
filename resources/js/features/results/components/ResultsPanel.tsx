@@ -1,4 +1,4 @@
-import {ExecuteQueryResponse} from "../../../types/queryResult";
+import type {ExecuteQueryResponse} from "../../../types/queryResult";
 import {useResultView} from "../hooks/useResultView";
 import {useContextMenu} from "../../../hooks/useContextMenu";
 import {ResultsEmptyState} from "./ResultsEmptyState";

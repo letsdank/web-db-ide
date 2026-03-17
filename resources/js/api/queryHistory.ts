@@ -1,4 +1,4 @@
-import {QueryHistoryDto} from "../types/queryHistory";
+import type {QueryHistoryDto} from "../types/queryHistory";
 import {apiClient} from "./client";
 
 export async function fetchQueryHistory(): Promise<QueryHistoryDto[]> {

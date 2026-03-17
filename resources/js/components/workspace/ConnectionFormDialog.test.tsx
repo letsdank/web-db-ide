@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import React from "react";
 import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {ConnectionFormDialog} from "./ConnectionFormDialog";
-import {ConnectionDto} from "../../types/connection";
+import type {ConnectionDto} from "../../types/connection";
 import {SaveQueryDialog} from "./SaveQueryDialog";
 
 vi.mock('@gravity-ui/uikit', () => {

@@ -1,4 +1,4 @@
-import {ConnectionDto} from "./connection";
+import type {ConnectionDto} from "./connection";
 
 export interface SavedQueryDto {
     id: number;

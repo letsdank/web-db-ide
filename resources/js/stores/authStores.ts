@@ -1,6 +1,6 @@
 import {create} from "zustand/react";
 import {setApiToken} from "../api/client";
-import {AuthUserDto} from "../types/auth";
+import type {AuthUserDto} from "../types/auth";
 
 type AuthStatus = 'booting' | 'authenticated' | 'guest';
 

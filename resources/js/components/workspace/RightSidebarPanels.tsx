@@ -1,6 +1,6 @@
-import {WorkspaceRightPanel} from "../../stores/workspaceStore";
-import {QueryHistoryDto} from "../../types/queryHistory";
-import {SavedQueryDto} from "../../types/savedQuery";
+import type {WorkspaceRightPanel} from "../../stores/workspaceStore";
+import type {QueryHistoryDto} from "../../types/queryHistory";
+import type {SavedQueryDto} from "../../types/savedQuery";
 import {Button, Card, DropdownMenu, Icon, Label, SegmentedRadioGroup, Text} from "@gravity-ui/uikit";
 import {useI18n} from "../../i18n";
 import {
@@ -10,7 +10,7 @@ import {
     matchesVisibilityFilter
 } from "../../lib/resourceMarkers";
 import {useMemo, useState} from "react";
-import {ResourceVisibilityFilter} from "../../types/resourceFilter";
+import type {ResourceVisibilityFilter} from "../../types/resourceFilter";
 import {Ellipsis} from "@gravity-ui/icons";
 
 interface Props {

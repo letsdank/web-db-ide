@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 import {Button, Checkbox, Dialog, Label, RadioGroup, Select, Text, TextArea, TextInput} from "@gravity-ui/uikit";
-import {
+import type {
     ConnectionDto,
     CreateConnectionPayload,
     TestConnectionResultDto,

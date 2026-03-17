@@ -1,4 +1,4 @@
-import {CommandPaletteItem} from "../../../types/commandPalette";
+import type {CommandPaletteItem} from "../../../types/commandPalette";
 import {useMemo} from "react";
 import {Text} from "@gravity-ui/uikit";
 import {CommandPaletteGroup} from "./CommandPaletteGroup";
