@@ -5,6 +5,7 @@ import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit
 import {ExplorerSchemaNode} from "./ExplorerSchemaNode";
 import {ChevronDown, ChevronRight, Database, Ellipsis} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
+import {getResourceMarker} from "../../../lib/resourceMarkers";
 
 interface Props {
     connection: ConnectionDto;
@@ -67,6 +68,8 @@ export function ExplorerConnectionCard({
                                        }: Props) {
     const {t} = useI18n();
 
+    const marker = getResourceMarker(connection.visibility);
+
     const visibleSchemas = useMemo(() => {
         if (!filter) {
             return schemas;
@@ -109,10 +112,10 @@ export function ExplorerConnectionCard({
                                 <div className="explorer-connection-card__badges">
                                     <Label theme="utility">{connection.driver}</Label>
 
-                                    <Label theme={connection.visibility === 'shared' ? 'info' : 'unknown'}>
-                                        {connection.visibility === 'shared'
-                                            ? t('connections.sharedVisibility')
-                                            : t('connections.privateVisibility')}
+                                    <Label theme={marker.theme}>
+                                        {marker.kind === 'shared'
+                                            ? t('workspace.sharedMarker')
+                                            : t('workspace.ownedMarker')}
                                     </Label>
 
                                     {connection.is_read_only ? (

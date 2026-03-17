@@ -101,6 +101,8 @@ const ru = {
         queryPreview: 'Предпросмотр SQL',
         emptyQuery: 'Пустой запрос',
         failedToSaveQuery: 'Не удалось сохранить запрос.',
+        ownedMarker: 'Моё',
+        sharedMarker: 'Общее',
     },
 
     connections: {

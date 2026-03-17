@@ -101,6 +101,8 @@ const en = {
         queryPreview: 'SQL preview',
         emptyQuery: 'Empty query',
         failedToSaveQuery: 'Failed to save query.',
+        ownedMarker: 'Owned',
+        sharedMarker: 'Shared',
     },
 
     connections: {
