@@ -1,5 +1,5 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
-import {useCallback, useRef, useState} from "react";
+import React, {useCallback, useRef, useState} from "react";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
@@ -23,6 +23,7 @@ import {buildCountSql, buildPreviewSql, buildSelectSql} from "../features/explor
 import {useI18n} from "../i18n";
 import {SaveQueryDialog, SaveQueryDialogSubmitPayload} from "../components/workspace/SaveQueryDialog";
 import {SavedQueryDto} from "../types/savedQuery";
+import {useExplorerTree} from "../features/explorer/hooks/useExplorerTree";
 
 export function WorkspacePage() {
     const {
@@ -313,6 +314,65 @@ export function WorkspacePage() {
         handleSelectConnection,
     ]);
 
+    const {
+        schemasByConnectionId,
+        tablesBySchemaKey,
+        detailsByTableKey,
+        expandedConnectionIds,
+        expandedSchemaKeys,
+        expandedTableKeys,
+        loadingSchemasFor,
+        loadingTablesFor,
+        loadingDetailsFor,
+        toggleConnection,
+        toggleSchema,
+        toggleTable,
+        loadTableDetails,
+    } = useExplorerTree({
+        connections,
+        activeConnectionId,
+        onSelectConnection: handleSelectConnection,
+    });
+
+    const handleOpenTableContextMenu = useCallback(async (
+        event: React.MouseEvent,
+        payload: {
+            connectionId: number;
+            schema: string;
+            table: { table_name: string };
+            details?: { columns?: Array<{ name: string; data_type: string | null; is_nullable: boolean }> };
+        },
+    ) => {
+        event.preventDefault();
+
+        if (!payload.details) {
+            await loadTableDetails(payload.connectionId, payload.schema, payload.table.table_name);
+        }
+    }, [loadTableDetails]);
+
+    const handleOpenTableMetadata = useCallback(async (
+        connectionId: number,
+        schema: string,
+        table: { table_name: string },
+        details?: { columns?: Array<{ name: string; data_type: string | null; is_nullable: boolean }> },
+    ) => {
+        const resolvedDetails = details ?? await loadTableDetails(connectionId, schema, table.table_name);
+
+        const columnLines = resolvedDetails?.columns?.length
+            ? resolvedDetails.columns.map((column) =>
+                `${column.name} ${column.data_type ?? 'unknown'}${column.is_nullable ? '' : ' not null'}`,
+            ).join('\n')
+            : '-- no columns available';
+
+        await handleCreateTab({
+            title: `${table.table_name} Columns`,
+            sql_text: `-- ${schema}.${table.table_name}\n${columnLines}`,
+            db_connection_id: connectionId,
+        });
+    }, [handleCreateTab, loadTableDetails]);
+
+    const hiddenActiveConnectionByFilter = false;
+
     const commandPaletteItems = useWorkspaceCommandPalette({
         activeConnectionId,
         activeTab,
@@ -380,10 +440,10 @@ export function WorkspacePage() {
                 loading={isSavingQuery}
                 error={saveQueryDialogError}
                 mode={editingSavedQuery ? 'edit' : 'create'}
-                initialTitle={editingSavedQuery?.title??activeTab?.title??t('workspace.savedQuery')}
-                initialFolder={editingSavedQuery?.folder??null}
-                initialVisibility={editingSavedQuery?.visibility??'private'}
-                sqlText={editingSavedQuery?.sql_text??activeTab?.sql_text??''}
+                initialTitle={editingSavedQuery?.title ?? activeTab?.title ?? t('workspace.savedQuery')}
+                initialFolder={editingSavedQuery?.folder ?? null}
+                initialVisibility={editingSavedQuery?.visibility ?? 'private'}
+                sqlText={editingSavedQuery?.sql_text ?? activeTab?.sql_text ?? ''}
                 onClose={closeSaveQueryDialog}
                 onSubmit={handleSubmitSaveQuery}
             />
@@ -399,14 +459,54 @@ export function WorkspacePage() {
                     <ExplorerSidebar
                         connections={connections}
                         activeConnectionId={activeConnectionId}
-                        onSelect={handleSelectConnection}
-                        onCreateClick={openCreateConnectionDialog}
-                        onEditClick={openEditConnectionDialog}
-                        onDeleteClick={handleDeleteConnection}
-                        onOpenSql={handleCreateTab}
-                        onOpenTablePreview={handleOpenTablePreview}
-                        onOpenTableCount={handleOpenTableCount}
-                        onCopyTableSelect={handleCopyTableSelect}
+                        loadingSchemasByConnectionId={
+                            loadingSchemasFor !== null
+                                ? {[loadingSchemasFor]: true}
+                                : {}
+                        }
+                        schemasByConnectionId={schemasByConnectionId}
+                        expandedConnectionIds={expandedConnectionIds}
+                        expandedSchemaKeys={expandedSchemaKeys}
+                        expandedTableKeys={expandedTableKeys}
+                        tablesBySchemaKey={tablesBySchemaKey}
+                        detailsByTableKey={detailsByTableKey}
+                        loadingTablesFor={loadingTablesFor}
+                        loadingDetailsFor={loadingDetailsFor}
+                        hiddenActiveConnectionByFilter={hiddenActiveConnectionByFilter}
+                        onCreateConnection={openCreateConnectionDialog}
+                        onToggleConnection={toggleConnection}
+                        onEditConnection={openEditConnectionDialog}
+                        onDeleteConnection={handleDeleteConnection}
+                        onToggleSchema={toggleSchema}
+                        onToggleTable={toggleTable}
+                        onOpenTableContextMenu={handleOpenTableContextMenu}
+                        onOpenSelect={(connectionId, schema, table) =>
+                            handleOpenTablePreview({
+                                connectionId,
+                                schema,
+                                table: table.table_name,
+                            })
+                        }
+                        onOpenCount={(connectionId, schema, table) =>
+                            handleOpenTableCount({
+                                connectionId,
+                                schema,
+                                table: table.table_name,
+                            })
+                        }
+                        onOpenMetadata={handleOpenTableMetadata}
+                        onCopyFullName={async (_connectionId, schema, table) => {
+                            await navigator.clipboard.writeText(
+                                schema ? `${schema}.${table.table_name}` : table.table_name,
+                            );
+                        }}
+                        onCopySelect={(_connectionId, schema, table) =>
+                            handleCopyTableSelect({
+                                connectionId: activeConnectionId ?? 0,
+                                schema,
+                                table: table.table_name,
+                            })
+                        }
                     />
                 }
                 centerTop={
