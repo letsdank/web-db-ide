@@ -19,6 +19,8 @@
     "include": [
         "resources/js/**/*.ts",
         "resources/js/**/*.tsx",
-        "vite.config.ts"
+        "vite.config.ts",
+        "vitest.config.ts",
+        "eslint.config.mjs"
     ]
 }
