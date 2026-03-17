@@ -3,7 +3,7 @@ import {useContextMenu} from "../../hooks/useContextMenu";
 import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
 import {Button, DropdownMenu, Icon, Tab, TabList, TabProvider, Text, TextInput} from "@gravity-ui/uikit";
 import {CirclePlus, Ellipsis} from "@gravity-ui/icons";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useI18n} from "../../i18n";
 
 interface Props {
@@ -58,11 +58,6 @@ export function QueryTabsBar({
             inputRef.current.select();
         }
     }, [editingTabId]);
-
-    const editingTab = useMemo(
-        () => tabs.find((tab) => tab.id === editingTabId) ?? null,
-        [tabs, editingTabId],
-    );
 
     function startRename(tab: QueryTabDto) {
         setEditingTabId(tab.id);

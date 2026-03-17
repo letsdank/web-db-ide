@@ -1,10 +1,11 @@
 import type {QueryTabDto} from "../../../types/queryTab";
 import type {ConnectionDto} from "../../../types/connection";
 import {useMemo} from "react";
+import type {ExecuteQueryResponse} from "../../../types/queryResult";
 
 interface TabExecutionStateLike {
     isExecuting?: boolean;
-    result?: any;
+    result?: ExecuteQueryResponse | null;
 }
 
 interface Params {

@@ -106,12 +106,19 @@ export function useWorkspaceConnections({
 
                 upsertTab(updatedTab);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
 
+            const errorLike = typeof error === 'object' && error !== null
+                ? error as {
+                    response?: { data?: { message?: string } };
+                    message?: string;
+                }
+                : null;
+
             setConnectionDialogError(
-                error?.response?.data?.message ||
-                error?.message ||
+                errorLike?.response?.data?.message ||
+                errorLike?.message ||
                 (editingConnection
                     ? t('workspace.failedToUpdateConnection')
                     : t('workspace.failedToCreateConnection')),

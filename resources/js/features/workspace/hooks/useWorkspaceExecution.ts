@@ -4,7 +4,8 @@ import {executeQuery} from "../../../api/queries";
 import {updateQueryTab} from "../../../api/queryTabs";
 import {fetchQueryHistory} from "../../../api/queryHistory";
 import {useI18n} from "../../../i18n";
-
+import type {ExecuteQueryError, ExecuteQueryResponse} from "../../../types/queryResult";
+import type {QueryHistoryDto} from "../../../types/queryHistory";
 
 const DESTRUCTIVE_SQL_KEYWORDS = [
     'drop',
@@ -54,10 +55,10 @@ interface Params {
     activeConnectionId: number | null;
 
     setTabExecuting: (tabId: number, value: boolean) => void;
-    setTabResult: (tabId: number, result: any) => void;
+    setTabResult: (tabId: number, result: ExecuteQueryResponse) => void;
     upsertTab: (tab: QueryTabDto) => void;
     clearTabDirty: (tabId: number) => void;
-    setQueryHistory: (items: any[]) => void;
+    setQueryHistory: (items: QueryHistoryDto[]) => void;
     setRightPanel: (panel: 'history' | 'saved') => void;
 }
 
@@ -145,10 +146,17 @@ export function useWorkspaceExecution({
             clearTabDirty(activeTab.id);
             setQueryHistory(historyData);
             setRightPanel('history');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
 
-            const responseData = error?.response?.data;
+            const errorLike = typeof error === 'object' && error !== null
+                ? error as {
+                    response?: { data?: Partial<ExecuteQueryError> & { message?: string } };
+                    message?: string;
+                }
+                : null;
+
+            const responseData = errorLike?.response?.data;
 
             if (responseData?.status === 'error') {
                 setTabResult(activeTab.id, responseData);
@@ -156,7 +164,7 @@ export function useWorkspaceExecution({
                 setTabResult(activeTab.id, {
                     execution_id: crypto.randomUUID(),
                     status: 'error',
-                    error: responseData?.message || error?.message || t('workspace.failedToExecuteQuery'),
+                    error: responseData?.message || errorLike?.message || t('workspace.failedToExecuteQuery'),
                 });
             }
         } finally {
@@ -246,10 +254,17 @@ export function useWorkspaceExecution({
             clearTabDirty(activeTab.id);
             setQueryHistory(historyData);
             setRightPanel('history');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
 
-            const responseData = error?.response?.data;
+            const errorLike = typeof error === 'object' && error !== null
+                ? error as {
+                    response?: { data?: Partial<ExecuteQueryError> & { message?: string } };
+                    message?: string;
+                }
+                : null;
+
+            const responseData = errorLike?.response?.data;
 
             if (responseData?.status === 'error') {
                 setTabResult(activeTab.id, responseData);
@@ -257,7 +272,7 @@ export function useWorkspaceExecution({
                 setTabResult(activeTab.id, {
                     execution_id: crypto.randomUUID(),
                     status: 'error',
-                    error: responseData?.message || error?.message || t('workspace.failedToExecuteQuery'),
+                    error: responseData?.message || errorLike?.message || t('workspace.failedToExecuteQuery'),
                 });
             }
         } finally {

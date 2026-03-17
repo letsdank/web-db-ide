@@ -106,7 +106,7 @@ function pickNextActiveTabId(tabs: QueryTabDto[], removedTabId: number, currentA
     return tabs[Math.max(0, removedIndex - 1)]?.id ?? tabs[0].id ?? null;
 }
 
-export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
+export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     isBooting: true,
 
     connections: [],

@@ -3,14 +3,18 @@ import {fetchConnections} from "../../../api/connections";
 import {fetchQueryTabs} from "../../../api/queryTabs";
 import {fetchQueryHistory} from "../../../api/queryHistory";
 import {fetchSavedQueries} from "../../../api/savedQueries";
+import type {ConnectionDto} from "../../../types/connection";
+import type {QueryTabDto} from "../../../types/queryTab";
+import type {QueryHistoryDto} from "../../../types/queryHistory";
+import type {SavedQueryDto} from "../../../types/savedQuery";
 
 interface Params {
     setBooting: (value: boolean) => void;
 
-    setConnections: (connections: any[]) => void;
-    setTabs: (tabs: any[]) => void;
-    setQueryHistory: (items: any[]) => void;
-    setSavedQueries: (items: any[]) => void;
+    setConnections: (connections: ConnectionDto[]) => void;
+    setTabs: (tabs: QueryTabDto[]) => void;
+    setQueryHistory: (items: QueryHistoryDto[]) => void;
+    setSavedQueries: (items: SavedQueryDto[]) => void;
 
     setActiveTabId: (tabId: number | null) => void;
     setActiveConnectionId: (connectionId: number | null) => void;

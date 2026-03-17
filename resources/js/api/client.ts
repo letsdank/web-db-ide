@@ -12,8 +12,21 @@ export const apiClient = axios.create({
         : {},
 });
 
-function extractErrorMessage(error: any): string {
-    const responseData = error?.response?.data;
+function extractErrorMessage(error: unknown): string {
+    const errorLike = typeof error === 'object' && error !== null
+        ? error as {
+            response?: {
+                data?: {
+                    message?: string;
+                    error?: string;
+                    errors?: Record<string, unknown>;
+                };
+            };
+            message?: string;
+        }
+        : null;
+
+    const responseData = errorLike?.response?.data;
 
     if (typeof responseData?.message === "string" && responseData.message.trim()) {
         return responseData.message;
@@ -35,8 +48,8 @@ function extractErrorMessage(error: any): string {
         }
     }
 
-    if (typeof error?.message === "string" && error.message.trim()) {
-        return error.message;
+    if (typeof errorLike?.message === "string" && errorLike.message.trim()) {
+        return errorLike.message;
     }
 
     return "Unexpected server error.";

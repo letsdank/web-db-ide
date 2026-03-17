@@ -35,14 +35,16 @@ export function useWorkspaceDraft({
                                       setActiveConnectionId,
                                   }: Params) {
     const persistTabDraft = useDebouncedCallback(
-        async (tabId: number, payload: Partial<QueryTabDto>) => {
-            try {
-                const updatedTab = await updateQueryTab(tabId, payload);
-                upsertTab(updatedTab);
-                clearTabDirty(tabId);
-            } catch (error) {
-                console.error(error);
-            }
+        (tabId: number, payload: Partial<QueryTabDto>) => {
+            void (async () => {
+                try {
+                    const updatedTab = await updateQueryTab(tabId, payload);
+                    upsertTab(updatedTab);
+                    clearTabDirty(tabId);
+                } catch (error) {
+                    console.error(error);
+                }
+            })();
         },
         750,
     );

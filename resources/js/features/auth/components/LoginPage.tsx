@@ -1,6 +1,6 @@
 import {useAuthStore} from "../../../stores/authStores";
 import type {FormEvent} from "react";
-import { useMemo, useState} from "react";
+import {useMemo, useState} from "react";
 import {login} from "../../../api/auth";
 import {Button, Card, Label, Text, TextInput} from "@gravity-ui/uikit";
 
@@ -33,9 +33,15 @@ export function LoginPage() {
             setToken(response.token);
             setUser(response.user);
             setStatus('authenticated');
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorLike = typeof error === 'object' && error !== null
+                ? error as {
+                    response?: { data?: { message?: string } };
+                }
+                : null;
+
             setError(
-                error?.response?.data?.message ||
+                errorLike?.response?.data?.message ||
                 "Failed to sign in.",
             );
             setStatus('guest');

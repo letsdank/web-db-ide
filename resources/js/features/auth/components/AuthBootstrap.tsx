@@ -34,7 +34,7 @@ export function AuthBootstrap({children}: Props) {
 
                 setUser(user);
                 setStatus('authenticated');
-            } catch (error) {
+            } catch (_error) {
                 if (!isMounted) {
                     return;
                 }

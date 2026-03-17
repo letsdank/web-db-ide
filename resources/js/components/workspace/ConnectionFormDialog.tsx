@@ -219,10 +219,17 @@ export function ConnectionFormDialog({
         try {
             const result = await onTest(buildPayload());
             setTestResult(result);
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorLike = typeof error === 'object' && error !== null
+                ? error as {
+                    response?: { data?: { message?: string } };
+                    message?: string;
+                }
+                : null;
+
             setTestError(
-                error?.response?.data?.message ||
-                error?.message ||
+                errorLike?.response?.data?.message ||
+                errorLike?.message ||
                 'Failed to test connection.',
             );
         } finally {
@@ -335,10 +342,10 @@ export function ConnectionFormDialog({
 
                             <RadioGroup
                                 value={form.visibility}
-                                onUpdate={(value)=>patch('visibility',value as VisibilityMode)}
+                                onUpdate={(value) => patch('visibility', value as VisibilityMode)}
                                 options={[
-                                    {value:'private',content:t('connections.privateVisibility')},
-                                    {value:'shared',content:t('connections.sharedVisibility')},
+                                    {value: 'private', content: t('connections.privateVisibility')},
+                                    {value: 'shared', content: t('connections.sharedVisibility')},
                                 ]}
                             />
                         </div>

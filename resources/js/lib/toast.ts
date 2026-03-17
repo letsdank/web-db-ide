@@ -38,8 +38,6 @@ export function showErrorToast(message: unknown, title = "Request failed") {
 }
 
 export function showSuccessToast(message: string, title = "Success") {
-    const content = normalizeErrorMessage(message);
-
     toaster.add({
         name: `success-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         title,

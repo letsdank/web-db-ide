@@ -124,17 +124,19 @@ export function ResultsPanel({
                                 key: 'copy',
                                 text: 'Copy cell',
                                 onClick: () =>
-                                    copyText(contextCell.cell === null ? 'NULL' : String(contextCell.cell)),
+                                    void copyText(contextCell.cell === null ? 'NULL' : String(contextCell.cell)),
                             },
                             {
                                 key: 'copy-row-tsv',
                                 text: 'Copy row as TSV',
-                                onClick: () => copyText(buildRowTsv(contextCell.row)),
+                                onClick: () =>
+                                    void copyText(buildRowTsv(contextCell.row)),
                             },
                             {
                                 key: 'copy-row-json',
                                 text: 'Copy row as JSON',
-                                onClick: () => copyText(buildRowJson(contextCell.row, visibleColumnNames)),
+                                onClick: () =>
+                                    void copyText(buildRowJson(contextCell.row, visibleColumnNames)),
                             },
                             {
                                 key: 'separator-1',
@@ -142,7 +144,8 @@ export function ResultsPanel({
                             {
                                 key: 'copy-column',
                                 text: 'Copy column name',
-                                onClick: () => copyText(contextCell.columnName),
+                                onClick: () =>
+                                    void copyText(contextCell.columnName),
                             },
                         ]
                         : []
@@ -180,7 +183,8 @@ export function ResultsPanel({
                             {
                                 key: 'copy-column',
                                 text: 'Copy column name',
-                                onClick: () => copyText(contextHeader.columnName),
+                                onClick: () =>
+                                    void copyText(contextHeader.columnName),
                             },
                             {
                                 key: 'separator-2',
