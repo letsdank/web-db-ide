@@ -32,14 +32,14 @@ interface ApplyQueryToTabPayload {
     db_connection_id?: number | null;
 }
 
-function withSequentialSortOrder(nextTabs: QueryTabDto[]): QueryTabDto[] {
+export function withSequentialSortOrder(nextTabs: QueryTabDto[]): QueryTabDto[] {
     return nextTabs.map((tab, index) => ({
         ...tab,
         sort_order: index,
     }));
 }
 
-function moveTabInsideGroup(
+export function moveTabInsideGroup(
     sourceTabs: QueryTabDto[],
     tabId: number,
     direction: "left" | "right",
