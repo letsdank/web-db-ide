@@ -152,7 +152,6 @@ export function ConnectionFormDialog({
             port: Number(form.port),
             database_name: form.database_name.trim(),
             username: form.username.trim(),
-            password: form.password,
             schema_default: form.schema_default?.trim() || null,
             ssl_mode: form.ssl_mode?.trim() || null,
             color: form.color?.trim() || null,

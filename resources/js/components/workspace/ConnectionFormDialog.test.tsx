@@ -177,7 +177,7 @@ describe('ConnectionFormDialog', () => {
         expect(applyButton.hasAttribute('disabled')).toBe(true);
     });
 
-    it('does not send empty passwrd in edit mode', async () => {
+    it('does not send empty password in edit mode', async () => {
         const onSubmit = vi.fn().mockResolvedValue(undefined);
 
         const initialConnection: ConnectionDto = {
@@ -223,7 +223,7 @@ describe('ConnectionFormDialog', () => {
         const payload = onSubmit.mock.calls[0][0];
 
         expect(payload.visibility).toBe('private');
-        expect(payload.password).toBe('');
+        expect('password' in payload).toBe(false);
     });
 
     it('builds ssh password payload in test connection flow', async () => {
