@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\DbConnection;
 use App\Models\SavedQuery;
+use App\Models\SavedQueryShare;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -223,5 +224,112 @@ class SavedQueryControllerTest extends TestCase
 
         $this->assertSame('Foreign query', $savedQuery->title);
         $this->assertSame('private', $savedQuery->visibility);
+    }
+
+    public function test_index_includes_saved_queries_shared_with_authenticated_user(): void
+    {
+        $owner = User::factory()->create();
+        $sharedWith = User::factory()->create();
+
+        $ownQuery = SavedQuery::query()->create([
+            'user_id' => $sharedWith->id,
+            'db_connection_id' => null,
+            'title' => 'Own query',
+            'description' => null,
+            'sql_text' => 'select current_date;',
+            'folder' => 'Personal',
+            'visibility' => 'private',
+        ]);
+
+        $sharedQuery = SavedQuery::query()->create([
+            'user_id' => $owner->id,
+            'db_connection_id' => null,
+            'title' => 'Team query',
+            'description' => 'Shared with team',
+            'sql_text' => 'select * from reports;',
+            'folder' => 'Reports',
+            'visibility' => 'shared',
+        ]);
+
+        SavedQueryShare::query()->create([
+            'saved_query_id' => $sharedQuery->id,
+            'user_id' => $sharedWith->id,
+            'granted_by_user_id' => $owner->id,
+        ]);
+
+        $response = $this
+            ->actingAs($sharedWith, 'sanctum')
+            ->getJson('/api/saved-queries');
+
+        $response
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.id', $ownQuery->id)
+            ->assertJsonPath('data.0.access_scope', 'owned')
+            ->assertJsonPath('data.0.is_owner', true)
+            ->assertJsonPath('data.1.id', $sharedQuery->id)
+            ->assertJsonPath('data.1.access_scope', 'shared_with_me')
+            ->assertJsonPath('data.1.is_owner', false);
+    }
+
+    public function test_user_can_open_saved_query_shared_with_them(): void
+    {
+        $owner = User::factory()->create();
+        $sharedWith = User::factory()->create();
+
+        $savedQuery = SavedQuery::query()->create([
+            'user_id' => $owner->id,
+            'db_connection_id' => null,
+            'title' => 'Shared lookup',
+            'description' => null,
+            'sql_text' => 'select * from users;',
+            'folder' => 'Team',
+            'visibility' => 'shared',
+        ]);
+
+        SavedQueryShare::query()->create([
+            'saved_query_id' => $savedQuery->id,
+            'user_id' => $sharedWith->id,
+            'granted_by_user_id' => $owner->id,
+        ]);
+
+        $this
+            ->actingAs($sharedWith, 'sanctum')
+            ->getJson("/api/saved-queries/$savedQuery->id")
+            ->assertOk()
+            ->assertJsonPath('data.id', $savedQuery->id)
+            ->assertJsonPath('data.access_scope', 'shared_with_me')
+            ->assertJsonPath('data.is_owner', false);
+    }
+
+    public function test_user_cannot_update_saved_query_shared_with_them(): void
+    {
+        $owner = User::factory()->create();
+        $sharedWith = User::factory()->create();
+
+        $savedQuery = SavedQuery::query()->create([
+            'user_id' => $owner->id,
+            'db_connection_id' => null,
+            'title' => 'Team dashboard',
+            'description' => null,
+            'sql_text' => 'select * from dashboards;',
+            'folder' => 'Team',
+            'visibility' => 'shared',
+        ]);
+
+        SavedQueryShare::query()->create([
+            'saved_query_id' => $savedQuery->id,
+            'user_id' => $sharedWith->id,
+            'granted_by_user_id' => $owner->id,
+        ]);
+
+        $this
+            ->actingAs($sharedWith, 'sanctum')
+            ->patchJson("/api/saved-queries/$savedQuery->id", [
+                'title' => 'Hacked title',
+            ])
+            ->assertNotFound();
+
+        $this->assertSame('Team dashboard', $savedQuery->fresh()->title);
     }
 }

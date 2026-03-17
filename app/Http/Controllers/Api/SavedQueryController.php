@@ -14,9 +14,20 @@ class SavedQueryController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $userId = $request->user()->id;
+
         $query = SavedQuery::query()
-            ->where('user_id', $request->user()->id)
-            ->with('connection:id,name,driver,host,port,database_name');
+            ->with([
+                'connection:id,name,driver,host,port,database_name',
+                'shares:user_id,saved_query_id',
+            ])
+            ->where(function (Builder $query) use ($userId) {
+                $query
+                    ->where('user_id', $userId)
+                    ->orWhereHas('shares', function (Builder $shareQuery) use ($userId) {
+                        $shareQuery->where('user_id', $userId);
+                    });
+            });
 
         if ($request->filled('folder')) {
             $query->where('folder', $request->string('folder')->toString());
@@ -40,6 +51,7 @@ class SavedQueryController extends Controller
         }
 
         $savedQueries = $query
+            ->orderByRaw('CASE WHEN user_id = ? THEN 0 ELSE 1 END', [$userId])
             ->orderByRaw('CASE WHEN folder IS NULL THEN 0 ELSE 1 END')
             ->orderBy('folder')
             ->orderBy('title')
@@ -47,7 +59,7 @@ class SavedQueryController extends Controller
             ->get();
 
         return response()->json([
-            'data' => $savedQueries->map(fn(SavedQuery $savedQuery) => $this->mapSavedQuery($savedQuery)),
+            'data' => $savedQueries->map(fn(SavedQuery $savedQuery) => $this->mapSavedQuery($savedQuery, $userId)),
         ]);
     }
 
@@ -67,24 +79,27 @@ class SavedQueryController extends Controller
 
         return response()->json([
             'message' => 'Saved query created successfully.',
-            'data' => $this->mapSavedQuery($savedQuery),
+            'data' => $this->mapSavedQuery($savedQuery, $request->user()->id),
         ], 201);
     }
 
     public function show(Request $request, SavedQuery $savedQuery): JsonResponse
     {
-        $this->authorizeSavedQuery($request, $savedQuery);
+        $this->authorizeSavedQueryRead($request, $savedQuery);
 
-        $savedQuery->load('connection:id,name,driver,host,port,database_name');
+        $savedQuery->load([
+            'connection:id,name,driver,host,port,database_name',
+            'shares:user_id,saved_query_id',
+        ]);
 
         return response()->json([
-            'data' => $this->mapSavedQuery($savedQuery),
+            'data' => $this->mapSavedQuery($savedQuery, $request->user()->id),
         ]);
     }
 
     public function update(UpdateSavedQueryRequest $request, SavedQuery $savedQuery): JsonResponse
     {
-        $this->authorizeSavedQuery($request, $savedQuery);
+        $this->authorizeSavedQueryOwner($request, $savedQuery);
 
         $savedQuery->fill($request->validated());
         $savedQuery->save();
@@ -93,13 +108,13 @@ class SavedQueryController extends Controller
 
         return response()->json([
             'message' => 'Saved query updated successfully.',
-            'data' => $this->mapSavedQuery($savedQuery),
+            'data' => $this->mapSavedQuery($savedQuery, $request->user()->id),
         ]);
     }
 
     public function destroy(Request $request, SavedQuery $savedQuery): JsonResponse
     {
-        $this->authorizeSavedQuery($request, $savedQuery);
+        $this->authorizeSavedQueryOwner($request, $savedQuery);
 
         $savedQuery->delete();
 
@@ -108,12 +123,22 @@ class SavedQueryController extends Controller
         ]);
     }
 
-    protected function authorizeSavedQuery(Request $request, SavedQuery $savedQuery): void
+    protected function authorizeSavedQueryRead(Request $request, SavedQuery $savedQuery): void
+    {
+        $userId = $request->user()->id;
+
+        abort_unless(
+            $savedQuery->isOwnedBy($userId) || $savedQuery->isSharedWithUser($userId),
+            404
+        );
+    }
+
+    protected function authorizeSavedQueryOwner(Request $request, SavedQuery $savedQuery): void
     {
         abort_unless($savedQuery->user_id === $request->user()->id, 404);
     }
 
-    protected function mapSavedQuery(SavedQuery $savedQuery): array
+    protected function mapSavedQuery(SavedQuery $savedQuery, int $userId): array
     {
         return [
             'id' => $savedQuery->id,
@@ -126,6 +151,8 @@ class SavedQueryController extends Controller
             'visibility' => $savedQuery->visibility,
             'created_at' => optional($savedQuery->created_at)?->toISOString(),
             'updated_at' => optional($savedQuery->updated_at)?->toISOString(),
+            'is_owner' => $savedQuery->isOwnedBy($userId),
+            'access_scope' => $savedQuery->getAccessScopeFor($userId),
             'connection' => $savedQuery->relationLoaded('connection') && $savedQuery->connection
                 ? [
                     'id' => $savedQuery->connection->id,

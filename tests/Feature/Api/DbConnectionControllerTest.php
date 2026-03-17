@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Models\DbConnection;
+use App\Models\DbConnectionShare;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -281,5 +282,120 @@ class DbConnectionControllerTest extends TestCase
             ->actingAs($user, 'sanctum')
             ->getJson("/api/connections/$foreignConnection->id")
             ->assertNotFound();
+    }
+
+    public function test_index_includes_connections_shared_with_authenticated_user(): void
+    {
+        $owner = User::factory()->create();
+        $sharedWith = User::factory()->create();
+
+        $ownConnection = DbConnection::query()->create([
+            'user_id' => $sharedWith->id,
+            'name' => 'Own DB',
+            'driver' => 'pgsql',
+            'host' => '127.0.0.1',
+            'port' => 5432,
+            'database_name' => 'own_db',
+            'username' => 'postgres',
+            'password_encrypted' => encrypt('secret'),
+            'visibility' => 'private',
+        ]);
+
+        $sharedConnection = DbConnection::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Team DB',
+            'driver' => 'pgsql',
+            'host' => '10.10.0.5',
+            'port' => 5432,
+            'database_name' => 'team_db',
+            'username' => 'team_user',
+            'password_encrypted' => encrypt('secret'),
+            'visibility' => 'shared',
+        ]);
+
+        DbConnectionShare::query()->create([
+            'db_connection_id' => $sharedConnection->id,
+            'user_id' => $sharedWith->id,
+            'granted_by_user_id' => $owner->id,
+        ]);
+
+        $response = $this
+            ->actingAs($sharedWith, 'sanctum')
+            ->getJson('/api/connections');
+
+        $response
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.id', $ownConnection->id)
+            ->assertJsonPath('data.0.access_scope', 'owned')
+            ->assertJsonPath('data.0.is_owner', true)
+            ->assertJsonPath('data.1.id', $sharedConnection->id)
+            ->assertJsonPath('data.1.access_scope', 'shared_with_me')
+            ->assertJsonPath('data.1.is_owner', false);
+    }
+
+    public function test_user_can_open_connection_shared_with_them(): void
+    {
+        $owner = User::factory()->create();
+        $sharedWith = User::factory()->create();
+
+        $connection = DbConnection::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Shared Analytics',
+            'driver' => 'pgsql',
+            'host' => '10.0.0.8',
+            'port' => 5432,
+            'database_name' => 'analytics',
+            'username' => 'postgres',
+            'password_encrypted' => encrypt('secret'),
+            'visibility' => 'shared',
+        ]);
+
+        DbConnectionShare::query()->create([
+            'db_connection_id' => $connection->id,
+            'user_id' => $sharedWith->id,
+            'granted_by_user_id' => $owner->id,
+        ]);
+
+        $this
+            ->actingAs($sharedWith, 'sanctum')
+            ->getJson("/api/connections/$connection->id")
+            ->assertOk()
+            ->assertJsonPath('data.id', $connection->id)
+            ->assertJsonPath('data.access_scope', 'shared_with_me')
+            ->assertJsonPath('data.is_owner', false);
+    }
+
+    public function test_user_cannot_update_connection_shared_with_them(): void
+    {
+        $owner = User::factory()->create();
+        $sharedWith = User::factory()->create();
+
+        $connection = DbConnection::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Read Only Shared DB',
+            'driver' => 'pgsql',
+            'host' => '10.0.0.9',
+            'port' => 5432,
+            'database_name' => 'readonly_db',
+            'username' => 'postgres',
+            'password_encrypted' => encrypt('secret'),
+            'visibility' => 'shared',
+        ]);
+
+        DbConnectionShare::query()->create([
+            'db_connection_id' => $connection->id,
+            'user_id' => $sharedWith->id,
+            'granted_by_user_id' => $owner->id,
+        ]);
+
+        $this
+            ->actingAs($sharedWith, 'sanctum')
+            ->patchJson("/api/connections/$connection->id", [
+                'name' => 'Mutated name',
+            ])
+            ->assertNotFound();
+
+        $this->assertSame('Read Only Shared DB', $connection->fresh()->name);
     }
 }

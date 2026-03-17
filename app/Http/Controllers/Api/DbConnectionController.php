@@ -8,6 +8,7 @@ use App\Http\Requests\Connection\TestConnectionRequest;
 use App\Http\Requests\Connection\UpdateConnectionRequest;
 use App\Models\DbConnection;
 use App\Services\Database\ConnectionProbe;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -16,10 +17,21 @@ class DbConnectionController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $userId = $request->user()->id;
+
         $connections = DbConnection::query()
-            ->where('user_id', $request->user()->id)
+            ->with(['shares:user_id,db_connection_id'])
+            ->where(function (Builder $query) use ($userId) {
+                $query
+                    ->where('user_id', $userId)
+                    ->orWhereHas('shares', function (Builder $shareQuery) use ($userId) {
+                        $shareQuery->where('user_id', $userId);
+                    });
+            })
+            ->orderByRaw('CASE WHEN user_id = ? THEN 0 ELSE 1 END', [$userId])
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(fn(DbConnection $connection) => $this->mapConnection($connection, $userId));
 
         return response()->json([
             'data' => $connections,
@@ -65,16 +77,18 @@ class DbConnectionController extends Controller
         ]);
 
         return response()->json([
-            'data' => $connection
+            'data' => $this->mapConnection($connection, $request->user()->id),
         ], 201);
     }
 
     public function show(Request $request, DbConnection $connection): JsonResponse
     {
-        abort_unless($connection->user_id === $request->user()->id, 404);
+        $this->authorizeConnectionRead($request, $connection);
+
+        $connection->loadMissing(['shares:user_id,db_connection_id']);
 
         return response()->json([
-            'data' => $connection,
+            'data' => $this->mapConnection($connection, $request->user()->id),
         ]);
     }
 
@@ -116,7 +130,7 @@ class DbConnectionController extends Controller
         $connection->update($data);
 
         return response()->json([
-            'data' => $connection,
+            'data' => $this->mapConnection($connection, $request->user()->id),
         ]);
     }
 
@@ -167,6 +181,52 @@ class DbConnectionController extends Controller
     }
 
     // helpers
+    protected function authorizeConnectionRead(Request $request, DbConnection $connection): void
+    {
+        $userId = $request->user()->id;
+
+        abort_unless(
+            $connection->isOwnedBy($userId) || $connection->isSharedWithUser($userId),
+            404
+        );
+    }
+
+    protected function mapConnection(DbConnection $connection, int $userId): array
+    {
+        return [
+            'id' => $connection->id,
+            'user_id' => $connection->user_id,
+            'name' => $connection->name,
+            'driver' => $connection->driver,
+            'host' => $connection->host,
+            'port' => $connection->port,
+            'database_name' => $connection->database_name,
+            'username' => $connection->username,
+            'ssl_mode' => $connection->ssl_mode,
+            'schema_default' => $connection->schema_default,
+            'color' => $connection->color,
+            'visibility' => $connection->visibility,
+            'is_favorite' => (bool)$connection->is_favorite,
+            'is_read_only' => (bool)$connection->is_read_only,
+            'connect_timeout_seconds' => $connection->connect_timeout_seconds,
+            'query_timeout_seconds' => $connection->query_timeout_seconds,
+            'meta' => $connection->meta,
+            'use_ssh_tunnel' => (bool)$connection->use_ssh_tunnel,
+            'ssh_host' => $connection->ssh_host,
+            'ssh_port' => $connection->ssh_port,
+            'ssh_username' => $connection->ssh_username,
+            'ssh_known_host_fingerprint' => $connection->ssh_known_host_fingerprint,
+            'has_ssh_password' => $connection->has_ssh_password,
+            'has_ssh_private_key' => $connection->has_ssh_private_key,
+            'has_ssh_passphrase' => $connection->has_ssh_passphrase,
+            'last_used_at' => optional($connection->last_used_at)?->toISOString(),
+            'created_at' => optional($connection->created_at)?->toISOString(),
+            'updated_at' => optional($connection->updated_at)?->toISOString(),
+            'is_owner' => $connection->isOwnedBy($userId),
+            'access_scope' => $connection->getAccessScopeFor($userId),
+        ];
+    }
+
     protected function makeProbeConnection(array $data, int $userId, ?DbConnection $base = null): DbConnection
     {
         $connection = $base ? $base->replicate() : new DbConnection();

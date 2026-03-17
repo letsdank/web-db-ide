@@ -37,4 +37,25 @@ class SavedQuery extends Model
     {
         return $this->visibility === 'shared';
     }
+
+    public function isOwnedBy(int $userId): bool
+    {
+        return (int)$this->user_id === $userId;
+    }
+
+    public function isSharedWithUser(int $userId): bool
+    {
+        if ($this->relationLoaded('shares')) {
+            return $this->shares->contains(fn(DbConnectionShare $share) => (int)$share->user_id === $userId);
+        }
+
+        return $this->shares()
+            ->where('user_id', $userId)
+            ->exists();
+    }
+
+    public function getAccessScopeFor(int $userId): string
+    {
+        return $this->isOwnedBy($userId) ? 'owned' : 'shared_with_me';
+    }
 }
