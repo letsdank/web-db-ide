@@ -30,7 +30,8 @@ import type {ExplorerColumnDto, ExplorerTableDetailsDto, ExplorerTableDto} from 
 import type {ConnectionDto, ExportConnectionDumpPayload} from "../types/connection";
 import {exportConnectinDump} from "../api/connections";
 import {showSuccessToast} from "../lib/toast";
-import {ExportDumpDialog, ExportDumpTarget} from "../components/workspace/ExportDumpDialog";
+import type { ExportDumpTarget} from "../components/workspace/ExportDumpDialog";
+import {ExportDumpDialog} from "../components/workspace/ExportDumpDialog";
 
 export function WorkspacePage() {
     const {

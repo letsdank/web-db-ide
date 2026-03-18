@@ -1,7 +1,7 @@
 import type {ConnectionDto, ExportConnectionDumpPayload} from "../../types/connection";
 import {useI18n} from "../../i18n";
 import {useEffect, useMemo, useState} from "react";
-import {Checkbox, Dialog, Select, Text, TextInput} from "@gravity-ui/uikit";
+import {Checkbox, Dialog, Select, Text} from "@gravity-ui/uikit";
 
 export interface ExportDumpTarget {
     connection: ConnectionDto;
