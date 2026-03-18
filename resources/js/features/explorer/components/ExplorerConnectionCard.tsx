@@ -96,48 +96,43 @@ export function ExplorerConnectionCard({
 
     return (
         <div className={connectionClasses}>
-            <div className="explorer-connection-card__header">
+            <div className="explorer-connection-card__row">
                 <button
                     onClick={onToggleConnection}
-                    className="explorer-connection-card__header-toggle"
+                    className="explorer-connection-card__toggle"
                     type="button"
                 >
-                    <div className="explorer-connection-card__header-main">
-                        <div className="explorer-connection-card__header-icon">
-                            <Icon data={Database} size={16}/>
-                        </div>
-
-                        <div className="explorer-connection-card__header-copy">
-                            <div className="explorer-connection-card__header-row">
-                                <Text variant="subheader-2">{connection.name}</Text>
-
-                                <div className="explorer-connection-card__badges">
-                                    <Label theme="utility">{connection.driver}</Label>
-
-                                    <Label theme={marker.theme}>
-                                        {t(markerLabelKey)}
-                                    </Label>
-
-                                    {connection.is_read_only ? (
-                                        <Label theme="warning">{t('connections.readOnly')}</Label>
-                                    ) : null}
-
-                                    {connection.use_ssh_tunnel ? (
-                                        <Label theme="info">{t('connections.ssh')}</Label>
-                                    ) : null}
-                                </div>
-                            </div>
-
-                            <div className="explorer-connection-card__meta">
-                                <Text variant="body-1" color="secondary">
-                                    {connection.database_name} · {connection.host}:{connection.port}
-                                </Text>
-                            </div>
-                        </div>
-                    </div>
-
                     <span className="explorer-connection-card__chevron">
                         <Icon data={isExpanded ? ChevronDown : ChevronRight} size={16}/>
+                    </span>
+
+                    <span className="explorer-connection-card__header-icon">
+                        <Icon data={Database} size={16}/>
+                    </span>
+
+                    <span className="explorer-connection-card__content">
+                        <span className="explorer-connection-card__title-row">
+                            <Text variant="subheader-2">{connection.name}</Text>
+
+                            <span className="explorer-connection-card__badges">
+                                <Label theme="utility">{connection.driver}</Label>
+                                <Label theme={marker.theme}>{t(markerLabelKey)}</Label>
+
+                                {connection.use_ssh_tunnel ? (
+                                    <Label theme="info">{t('connections.ssh')}</Label>
+                                ) : null}
+
+                                {connection.is_read_only ? (
+                                    <Label theme="warning">{t('connections.readOnly')}</Label>
+                                ) : null}
+                            </span>
+                        </span>
+
+                        <span className="explorer-connection-card__subtitle">
+                            <Text variant="body-1" color="secondary">
+                                {connection.database_name} · {connection.host}:{connection.port}
+                            </Text>
+                        </span>
                     </span>
                 </button>
 
@@ -164,7 +159,6 @@ export function ExplorerConnectionCard({
                                         onClick?.(event);
                                     }}
                                     onKeyDown={onKeyDown}
-
                                 >
                                     <Icon data={Ellipsis} size={16}/>
                                 </Button>
@@ -175,7 +169,7 @@ export function ExplorerConnectionCard({
             </div>
 
             {isExpanded ? (
-                <div className="explorer-connection-card__body">
+                <div className="explorer-connection-card__tree">
                     {loadingSchemas ? (
                         <div className="explorer-connection-card__loading">
                             <Loader size="m"/>

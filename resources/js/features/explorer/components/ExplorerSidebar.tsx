@@ -110,8 +110,8 @@ export function ExplorerSidebar({
     return (
         <Card view="filled" className="explorer-sidebar__card">
             <div className="explorer-sidebar__layout">
-                <div className="explorer-sidebar__header">
-                    <div className="explorer-sidebar__header-copy">
+                <div className="explorer-sidebar__hero">
+                    <div className="explorer-sidebar__hero-copy">
                         <Text variant="header-1">{t('explorer.title')}</Text>
                         <Text variant="body-2" color="secondary">
                             {t('explorer.subtitle')}
@@ -124,12 +124,13 @@ export function ExplorerSidebar({
                     </Button>
                 </div>
 
-                <div className="explorer-sidebar__search">
+                <div className="explorer-sidebar__toolbar">
                     <TextInput
                         value={filter}
                         placeholder={t('explorer.searchPlaceholder')}
                         onUpdate={setFilter}
                         startContent={<Icon data={Magnifier} size={16}/>}
+                        size="m"
                     />
 
                     <SegmentedRadioGroup
@@ -145,12 +146,18 @@ export function ExplorerSidebar({
                 </div>
 
                 {hiddenActiveConnectionByFilter ? (
-                    <div className="explorer-sidebar__hidden-hint">
+                    <div className="explorer-sidebar__hint">
                         <Text variant="caption-2" color="warning">
                             {t('explorer.hiddenActiveConnectionHint')}
                         </Text>
                     </div>
                 ) : null}
+
+                <div className="explorer-sidebar__summary">
+                    <Text variant="caption-2" color="secondary">
+                        {visibleConnections.length} / {connections.length}
+                    </Text>
+                </div>
 
                 <div className="explorer-sidebar__content">
                     <div className="explorer-sidebar__list">
@@ -186,7 +193,9 @@ export function ExplorerSidebar({
                         ) : (
                             <div className="explorer-sidebar__empty">
                                 <Text variant="body-2" color="secondary">
-                                    {t('connections.empty')}
+                                    {filter.trim()
+                                        ? t('connections.empty')
+                                        : t('connections.empty')}
                                 </Text>
                             </div>
                         )}

@@ -12,18 +12,28 @@ interface Props {
     isExpanded: boolean;
     isLoadingDetails: boolean;
     onToggle: () => void;
-    onOpenContextMenu: (event: React.MouseEvent) => void;
+    onOpenContextMenu: (
+        event: React.MouseEvent,
+        payload: {
+            connectionId: number;
+            schema: string;
+            table: ExplorerTableDto;
+            details?: ExplorerTableDetailsDto;
+        }
+    ) => void;
     onOpenSelect: () => void;
     onOpenCount: () => void;
-    onOpenMetadata: () => void;
+    onOpenMetadata: (details?: ExplorerTableDetailsDto) => void;
     onCopyFullName: () => void;
     onCopySelect: () => void;
 }
 
 export function ExplorerTableNode({
+                                      connectionId,
+                                      schema,
                                       table,
-                                      details,
                                       isExpanded,
+                                      details,
                                       isLoadingDetails,
                                       onToggle,
                                       onOpenContextMenu,
@@ -37,34 +47,35 @@ export function ExplorerTableNode({
 
     return (
         <div className="explorer-table-node">
-            <div
-                onContextMenu={onOpenContextMenu}
-                className="explorer-table-node__row"
-            >
+            <div className="explorer-table-node__row">
                 <button
-                    onClick={onToggle}
-                    className="explorer-table-node__toggle"
                     type="button"
+                    className="explorer-table-node__toggle"
+                    onClick={onToggle}
+                    onContextMenu={(event) => onOpenContextMenu(event, {
+                        connectionId,
+                        schema,
+                        table,
+                        details,
+                    })}
                 >
-                    <div className="explorer-table-node__title-row">
-                        <Icon data={LayoutHeaderCellsLargeFill} size={16}/>
-                        <Text variant="body-2">
-                            {table.table_name}
-                        </Text>
+                    <span className="explorer-table-node__title-left">
+                        <span className="explorer-table-node__chevron">
+                            <Icon data={isExpanded ? ChevronDown : ChevronRight} size={14}/>
+                        </span>
 
-                        <Label theme="unknown">
-                            {table.table_type}
-                        </Label>
-                    </div>
+                        <span className="explorer-table-node__icon">
+                            <Icon data={LayoutHeaderCellsLargeFill} size={14}/>
+                        </span>
 
-                    <Button
-                        size="s"
-                        view="flat-secondary"
-                        onlyIcon
-                        tabIndex={-1}
-                    >
-                        <Icon data={isExpanded ? ChevronDown : ChevronRight} size={16}/>
-                    </Button>
+                        <span className="explorer-table-node__title-row">
+                            <Text variant="body-2">{table.table_name}</Text>
+
+                            {table.table_type ? (
+                                <Label theme="utility">{table.table_type}</Label>
+                            ) : null}
+                        </span>
+                    </span>
                 </button>
 
                 <div className="explorer-table-node__actions">
@@ -91,15 +102,23 @@ export function ExplorerTableNode({
                             },
                             {
                                 text: t('explorer.openMetadata'),
-                                action: onOpenMetadata,
+                                action: () => onOpenMetadata(details),
                             },
                             {
                                 text: t('explorer.copyFullName'),
                                 action: onCopyFullName,
                             },
                         ]}
-                        renderSwitcher={(props) => (
-                            <Button {...props} size="s" view="flat-secondary" onlyIcon>
+                        renderSwitcher={({onClick, onKeyDown}) => (
+                            <Button
+                                size="s"
+                                view="flat-secondary"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onClick?.(event);
+                                }}
+                                onKeyDown={onKeyDown}
+                            >
                                 <Icon data={Ellipsis} size={16}/>
                             </Button>
                         )}
@@ -121,26 +140,30 @@ export function ExplorerTableNode({
                             <div className="explorer-table-node__columns">
                                 {details.columns.map((column) => (
                                     <div key={column.column_name} className="explorer-table-node__column">
-                                        <Text variant="caption-2">
-                                            {column.column_name}
-                                        </Text>
+                                        <Text variant="caption-2">{column.column_name}</Text>
 
-                                        <Text variant="caption-2" color="secondary">
-                                            {column.data_type}
-                                        </Text>
+                                        <div className="explorer-table-node__column-meta">
+                                            <Text variant="caption-2" color="secondary">
+                                                {column.data_type}
+                                            </Text>
+
+                                            {column.is_nullable === 'NO' ? (
+                                                <Label theme="warning">not null</Label>
+                                            ) : null}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
 
                             <div className="explorer-table-node__meta">
-                                <Text variant="caption-2" color="secondary">
+                                <Label theme="unknown">
                                     {t('explorer.columnsCount', {count: details.columns.length})}
-                                </Text>
+                                </Label>
 
                                 {details.indexes.length > 0 ? (
-                                    <Text variant="caption-2" color="secondary">
+                                    <Label theme="info">
                                         {t('explorer.indexesCount', {count: details.indexes.length})}
-                                    </Text>
+                                    </Label>
                                 ) : null}
                             </div>
                         </>

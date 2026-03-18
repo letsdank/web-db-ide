@@ -1,6 +1,6 @@
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import React, {useMemo} from "react";
-import {Button, Icon, Loader, Text} from "@gravity-ui/uikit";
+import {Button, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerTableNode} from "./ExplorerTableNode";
 import {ChevronDown, ChevronRight, Folder} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
@@ -52,7 +52,7 @@ export function ExplorerSchemaNode({
                                        onCopyFullName,
                                        onCopySelect,
                                    }: Props) {
-    const {t}=useI18n();
+    const {t} = useI18n();
 
     const visibleTables = useMemo(() => {
         if (!filter) {
@@ -60,38 +60,32 @@ export function ExplorerSchemaNode({
         }
 
         return tables.filter((table) =>
-            table.table_name.toLowerCase().includes(filter)
+            table.table_name.toLowerCase().includes(filter),
         );
     }, [filter, tables]);
 
     return (
         <div className="explorer-schema-node">
             <button
-                onClick={onToggleSchema}
-                className="explorer-schema-node__toggle"
                 type="button"
+                className="explorer-schema-node__toggle"
+                onClick={onToggleSchema}
             >
-                <div className="explorer-schema-node__toggle-left">
-                    <Icon data={Folder} size={14}/>
+                <span className="explorer-schema-node__left">
+                    <span className="explorer-schema-node__chevron">
+                        <Icon data={isExpanded ? ChevronDown : ChevronRight} size={14}/>
+                    </span>
+
+                    <span className="explorer-schema-node__icon">
+                        <Icon data={Folder} size={14}/>
+                    </span>
+
                     <Text variant="body-2">{schema}</Text>
-                </div>
+                </span>
 
-                <div className="explorer-schema-node__toggle-right">
-                    {!loadingTables && tables.length > 0 ? (
-                        <Text variant="caption-2" color="secondary">
-                            {visibleTables.length}/{tables.length}
-                        </Text>
-                    ) : null}
-
-                    <Button
-                        size="s"
-                        view="flat-secondary"
-                        onlyIcon
-                        tabIndex={-1}
-                    >
-                        <Icon data={isExpanded ? ChevronDown : ChevronRight} size={16}/>
-                    </Button>
-                </div>
+                <span className="explorer-schema-node__toggle-right">
+                    <Label theme="unknown">{tables.length}</Label>
+                </span>
             </button>
 
             {isExpanded ? (
@@ -106,8 +100,6 @@ export function ExplorerSchemaNode({
                     ) : visibleTables.length > 0 ? (
                         visibleTables.map((table) => {
                             const tableKey = `${connectionId}:${schema}:${table.table_name}`;
-                            const isTableExpanded = expandedTableKeys.includes(tableKey);
-                            const details = detailsByTableKey[tableKey];
 
                             return (
                                 <ExplorerTableNode
@@ -115,21 +107,14 @@ export function ExplorerSchemaNode({
                                     connectionId={connectionId}
                                     schema={schema}
                                     table={table}
-                                    details={details}
-                                    isExpanded={isTableExpanded}
+                                    isExpanded={expandedTableKeys.includes(tableKey)}
+                                    details={detailsByTableKey[tableKey]}
                                     isLoadingDetails={loadingDetailsFor === tableKey}
                                     onToggle={() => onToggleTable(table.table_name)}
-                                    onOpenContextMenu={(event) =>
-                                        onOpenTableContextMenu(event, {
-                                            connectionId,
-                                            schema,
-                                            table,
-                                            details,
-                                        })
-                                    }
+                                    onOpenContextMenu={onOpenTableContextMenu}
                                     onOpenSelect={() => onOpenSelect(table)}
                                     onOpenCount={() => onOpenCount(table)}
-                                    onOpenMetadata={() => onOpenMetadata(table, details)}
+                                    onOpenMetadata={(details) => onOpenMetadata(table, details)}
                                     onCopyFullName={() => onCopyFullName(table)}
                                     onCopySelect={() => onCopySelect(table)}
                                 />
@@ -138,7 +123,7 @@ export function ExplorerSchemaNode({
                     ) : (
                         <div className="explorer-schema-node__empty">
                             <Text variant="caption-2" color="secondary">
-                                {t('explorer.noTablesInSchema')}
+                                {t('explorer.noTables')}
                             </Text>
                         </div>
                     )}
