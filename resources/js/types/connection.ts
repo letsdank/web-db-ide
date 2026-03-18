@@ -86,3 +86,20 @@ export interface UpdateConnectionPayload {
     ssh_passphrase?: string | null;
     ssh_known_host_fingerprint?: string | null;
 }
+
+export type ExportDumpFormat = 'plain' | 'custom';
+export type ExportDumpScope = 'database' | 'schema' | 'table';
+export type ExportDumpSection = 'full' | 'schema' | 'data';
+
+export interface ExportConnectionDumpPayload {
+    format: ExportDumpFormat;
+    scope: ExportDumpScope;
+    schema?: string | null;
+    table?: string | null;
+    section: ExportDumpSection;
+    clean: boolean;
+    if_exists: boolean;
+    no_owner: boolean;
+    no_privileges: boolean;
+    include_blobs: boolean;
+}

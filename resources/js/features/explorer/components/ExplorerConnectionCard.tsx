@@ -40,6 +40,9 @@ interface Props {
     onOpenMetadata: (schema: string, table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
     onCopyFullName: (schema: string, table: ExplorerTableDto) => void;
     onCopySelect: (schema: string, table: ExplorerTableDto) => void;
+    onExportConnectionDump: () => void;
+    onExportSchemaDump: (schema: string) => void;
+    onExportTableDump: (schema: string, table: ExplorerTableDto) => void;
 }
 
 export function ExplorerConnectionCard({
@@ -66,6 +69,9 @@ export function ExplorerConnectionCard({
                                            onOpenMetadata,
                                            onCopyFullName,
                                            onCopySelect,
+                                           onExportConnectionDump,
+                                           onExportSchemaDump,
+                                           onExportTableDump,
                                        }: Props) {
     const {t} = useI18n();
 
@@ -136,10 +142,14 @@ export function ExplorerConnectionCard({
                     </span>
                 </button>
 
-                {canManageConnection ? (
-                    <div className="explorer-connection-card__actions">
-                        <DropdownMenu
-                            items={[
+                <div className="explorer-connection-card__actions">
+                    <DropdownMenu
+                        items={[
+                            {
+                                text: t('explorer.exportDatabaseDump'),
+                                action: onExportConnectionDump,
+                            },
+                            ...(canManageConnection ? [
                                 {
                                     text: t('connections.editConnection'),
                                     action: onEditConnection,
@@ -147,25 +157,25 @@ export function ExplorerConnectionCard({
                                 {
                                     text: t('connections.deleteConnection'),
                                     action: onDeleteConnection,
-                                    theme: 'danger',
+                                    theme: 'danger' as const,
                                 },
-                            ]}
-                            renderSwitcher={({onClick, onKeyDown}) => (
-                                <Button
-                                    size="s"
-                                    view="flat-secondary"
-                                    onClick={(event) => {
-                                        event.stopPropagation();
-                                        onClick?.(event);
-                                    }}
-                                    onKeyDown={onKeyDown}
-                                >
-                                    <Icon data={Ellipsis} size={16}/>
-                                </Button>
-                            )}
-                        />
-                    </div>
-                ) : null}
+                            ] : []),
+                        ]}
+                        renderSwitcher={({onClick, onKeyDown}) => (
+                            <Button
+                                size="s"
+                                view="flat-secondary"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onClick?.(event);
+                                }}
+                                onKeyDown={onKeyDown}
+                            >
+                                <Icon data={Ellipsis} size={16}/>
+                            </Button>
+                        )}
+                    />
+                </div>
             </div>
 
             {isExpanded ? (
@@ -201,6 +211,8 @@ export function ExplorerConnectionCard({
                                     onOpenMetadata={(table, details) => onOpenMetadata(schema, table, details)}
                                     onCopyFullName={(table) => onCopyFullName(schema, table)}
                                     onCopySelect={(table) => onCopySelect(schema, table)}
+                                    onExportSchemaDump={() => onExportSchemaDump(schema)}
+                                    onExportTableDump={(table) => onExportTableDump(schema, table)}
                                 />
                             );
                         })

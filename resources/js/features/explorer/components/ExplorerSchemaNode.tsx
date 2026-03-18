@@ -1,8 +1,8 @@
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import React, {useMemo} from "react";
-import {Icon, Label, Loader, Text} from "@gravity-ui/uikit";
+import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerTableNode} from "./ExplorerTableNode";
-import {ChevronDown, ChevronRight, Folder} from "@gravity-ui/icons";
+import {ChevronDown, ChevronRight, Ellipsis, Folder} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
 
 interface Props {
@@ -31,6 +31,8 @@ interface Props {
     onOpenMetadata: (table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
     onCopyFullName: (table: ExplorerTableDto) => void;
     onCopySelect: (table: ExplorerTableDto) => void;
+    onExportSchemaDump: () => void;
+    onExportTableDump: (table: ExplorerTableDto) => void;
 }
 
 export function ExplorerSchemaNode({
@@ -51,6 +53,8 @@ export function ExplorerSchemaNode({
                                        onOpenMetadata,
                                        onCopyFullName,
                                        onCopySelect,
+                                       onExportSchemaDump,
+                                       onExportTableDump,
                                    }: Props) {
     const {t} = useI18n();
 
@@ -66,11 +70,12 @@ export function ExplorerSchemaNode({
 
     return (
         <div className="explorer-schema-node">
-            <button
-                type="button"
-                className="explorer-schema-node__toggle"
-                onClick={onToggleSchema}
-            >
+            <div className="explorer-schema-node__row">
+                <button
+                    type="button"
+                    className="explorer-schema-node__toggle"
+                    onClick={onToggleSchema}
+                >
                 <span className="explorer-schema-node__left">
                     <span className="explorer-schema-node__chevron">
                         <Icon data={isExpanded ? ChevronDown : ChevronRight} size={14}/>
@@ -83,10 +88,35 @@ export function ExplorerSchemaNode({
                     <Text variant="body-2">{schema}</Text>
                 </span>
 
-                <span className="explorer-schema-node__toggle-right">
+                    <span className="explorer-schema-node__toggle-right">
                     <Label theme="unknown">{tables.length}</Label>
                 </span>
-            </button>
+                </button>
+
+                <div className="explorer-schema-node__actions">
+                    <DropdownMenu
+                        items={[
+                            {
+                                text: t('explorer.exportSchemaDump'),
+                                action: onExportSchemaDump,
+                            },
+                        ]}
+                        renderSwitcher={({onClick, onKeyDown}) => (
+                            <Button
+                                size="s"
+                                view="flat-secondary"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onClick?.(event);
+                                }}
+                                onKeyDown={onKeyDown}
+                            >
+                                <Icon data={Ellipsis} size={16}/>
+                            </Button>
+                        )}
+                    />
+                </div>
+            </div>
 
             {isExpanded ? (
                 <div className="explorer-schema-node__tables">
@@ -117,6 +147,7 @@ export function ExplorerSchemaNode({
                                     onOpenMetadata={(details) => onOpenMetadata(table, details)}
                                     onCopyFullName={() => onCopyFullName(table)}
                                     onCopySelect={() => onCopySelect(table)}
+                                    onExportDump={() => onExportTableDump(table)}
                                 />
                             );
                         })

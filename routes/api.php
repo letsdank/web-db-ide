@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DbConnectionController;
+use App\Http\Controllers\Api\DbConnectionDumpController;
 use App\Http\Controllers\Api\ExplorerController;
 use App\Http\Controllers\Api\QueryController;
 use App\Http\Controllers\Api\QueryExecutionController;
@@ -54,5 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/connections/{connection}/schemas', [ExplorerController::class, 'schemas']);
     Route::get('/connections/{connection}/schemas/{schema}/tables', [ExplorerController::class, 'tables']);
     Route::get('/connections/{connection}/tables/{schema}/{table}', [ExplorerController::class, 'table']);
+
+    // connection dump
+    Route::post('/connections/{connection}/dump', [DbConnectionDumpController::class,'export']);
 });
 

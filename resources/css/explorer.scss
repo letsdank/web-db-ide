@@ -200,6 +200,13 @@
     display: grid;
     gap: 6px;
 
+    &__row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: start;
+    }
+
     &__toggle {
         width: 100%;
         text-align: left;
@@ -233,6 +240,12 @@
         align-items: center;
         justify-content: center;
         color: var(--g-color-text-secondary);
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
     }
 
     &__tables {

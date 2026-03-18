@@ -281,7 +281,6 @@ export function QueryTabsBar({
                                                 {...props}
                                                 size="s"
                                                 view="flat-secondary"
-                                                onlyIcon
                                             >
                                                 <Icon data={Ellipsis} size={16}/>
                                             </Button>

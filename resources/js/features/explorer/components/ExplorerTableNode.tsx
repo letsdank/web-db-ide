@@ -26,6 +26,7 @@ interface Props {
     onOpenMetadata: (details?: ExplorerTableDetailsDto) => void;
     onCopyFullName: () => void;
     onCopySelect: () => void;
+    onExportDump: () => void;
 }
 
 export function ExplorerTableNode({
@@ -42,6 +43,7 @@ export function ExplorerTableNode({
                                       onOpenMetadata,
                                       onCopyFullName,
                                       onCopySelect,
+                                      onExportDump,
                                   }: Props) {
     const {t} = useI18n();
 
@@ -84,6 +86,10 @@ export function ExplorerTableNode({
 
                     <DropdownMenu
                         items={[
+                            {
+                                text: t('explorer.exportTableDump'),
+                                action: onExportDump,
+                            },
                             {
                                 text: t('explorer.openPreview'),
                                 action: onOpenSelect,

@@ -46,6 +46,9 @@ interface Props {
     ) => void;
     onCopyFullName: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
     onCopySelect: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onExportConnectionDump: (connection: ConnectionDto) => void;
+    onExportSchemaDump: (connectionId: number, schema: string) => void;
+    onExportTableDump: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
 }
 
 export function ExplorerSidebar({
@@ -73,6 +76,9 @@ export function ExplorerSidebar({
                                     onOpenMetadata,
                                     onCopyFullName,
                                     onCopySelect,
+                                    onExportConnectionDump,
+                                    onExportSchemaDump,
+                                    onExportTableDump,
                                 }: Props) {
     const {t} = useI18n();
     const [filter, setFilter] = useState('');
@@ -193,14 +199,17 @@ export function ExplorerSidebar({
                                     onOpenMetadata={(schema, table, details) => onOpenMetadata(connection.id, schema, table, details)}
                                     onCopyFullName={(schema, table) => onCopyFullName(connection.id, schema, table)}
                                     onCopySelect={(schema, table) => onCopySelect(connection.id, schema, table)}
+                                    onExportConnectionDump={() => onExportConnectionDump(connection)}
+                                    onExportSchemaDump={(schema) => onExportSchemaDump(connection.id, schema)}
+                                    onExportTableDump={(schema, table) => onExportTableDump(connection.id, schema, table)}
                                 />
                             ))
                         ) : (
                             <div className="explorer-sidebar__empty">
                                 <Text variant="body-2" color="secondary">
                                     {filter.trim()
-                                        ? t('connections.empty')
-                                        : t('connections.empty')}
+                                        ? t('connections.noConnections')
+                                        : t('connections.noFilterMatches')}
                                 </Text>
                             </div>
                         )}

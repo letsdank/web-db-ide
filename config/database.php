@@ -4,6 +4,8 @@ use Illuminate\Support\Str;
 
 return [
 
+    'pg_dump_binary' => env('PG_DUMP_BINARY', 'pg_dump'),
+
     /*
     |--------------------------------------------------------------------------
     | Default Database Connection Name

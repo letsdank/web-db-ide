@@ -27,6 +27,10 @@ import {SaveQueryDialog} from "../components/workspace/SaveQueryDialog";
 import type {SavedQueryDto} from "../types/savedQuery";
 import {useExplorerTree} from "../features/explorer/hooks/useExplorerTree";
 import type {ExplorerColumnDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../types/explorer";
+import type {ConnectionDto, ExportConnectionDumpPayload} from "../types/connection";
+import {exportConnectinDump} from "../api/connections";
+import {showSuccessToast} from "../lib/toast";
+import {ExportDumpDialog, ExportDumpTarget} from "../components/workspace/ExportDumpDialog";
 
 export function WorkspacePage() {
     const {
@@ -87,6 +91,9 @@ export function WorkspacePage() {
     const [isSavingQuery, setIsSavingQuery] = useState(false);
     const [saveQueryDialogError, setSaveQueryDialogError] = useState<string | null>(null);
     const [editingSavedQuery, setEditingSavedQuery] = useState<SavedQueryDto | null>(null);
+    const [exportDumpTarget, setExportDumpTarget] = useState<ExportDumpTarget | null>(null);
+    const [isExportingDump, setIsExportingDump] = useState(false);
+    const [exportDumpError, setExportDumpError] = useState<string | null>(null);
 
     const editorRef = useRef<SqlEditorPaneHandle | null>(null);
     const {t} = useI18n();
@@ -383,6 +390,85 @@ export function WorkspacePage() {
         });
     }, [handleCreateTab, loadTableDetails]);
 
+    const openConnectionDumpDialog = useCallback((connection: ConnectionDto) => {
+        setExportDumpError(null);
+        setExportDumpTarget({
+            connection,
+            scope: 'database',
+            schema: null,
+            table: null,
+        });
+    }, []);
+
+    const openSchemaDumpDialog = useCallback((connectionId: number, schema: string) => {
+        const connection = connections.find((item) => item.id === connectionId);
+
+        if (!connection) {
+            return;
+        }
+
+        setExportDumpTarget(null);
+        setExportDumpTarget({
+            connection,
+            scope: 'schema',
+            schema,
+            table: null,
+        });
+    }, [connections]);
+
+    const openTableDumpDialog = useCallback((connectionId: number, schema: string, table: ExplorerTableDto) => {
+        const connection = connections.find((item) => item.id === connectionId);
+
+        if (!connection) {
+            return;
+        }
+
+        setExportDumpTarget(null);
+        setExportDumpTarget({
+            connection,
+            scope: 'table',
+            schema,
+            table: table.table_name,
+        });
+    }, [connections]);
+
+    const closeExportDumpDialog = useCallback(() => {
+        if (isExportingDump) {
+            return;
+        }
+
+        setExportDumpTarget(null);
+        setExportDumpError(null);
+    }, [isExportingDump]);
+
+    const handleExportDump = useCallback(async (payload: ExportConnectionDumpPayload) => {
+        if (!exportDumpTarget) {
+            return;
+        }
+
+        try {
+            setIsExportingDump(true);
+            setExportDumpError(null);
+
+            await exportConnectinDump(exportDumpTarget.connection.id, payload);
+
+            showSuccessToast(
+                t('workspace.dumpExportSuccess'),
+                t('workspace.exportDump'),
+            );
+
+            setExportDumpTarget(null);
+        } catch (error: unknown) {
+            const message = error instanceof Error
+                ? error.message
+                : t('workspace.dumpExportFailed');
+
+            setExportDumpError(message);
+        } finally {
+            setIsExportingDump(false);
+        }
+    }, [exportDumpTarget, t]);
+
     const hiddenActiveConnectionByFilter = false;
 
     const commandPaletteItems = useWorkspaceCommandPalette({
@@ -460,6 +546,15 @@ export function WorkspacePage() {
                 onSubmit={handleSubmitSaveQuery}
             />
 
+            <ExportDumpDialog
+                open={Boolean(exportDumpTarget)}
+                loading={isExportingDump}
+                error={exportDumpError}
+                target={exportDumpTarget}
+                onClose={closeExportDumpDialog}
+                onSubmit={handleExportDump}
+            />
+
             <CommandPalette
                 open={isCommandPaletteOpen}
                 items={commandPaletteItems}
@@ -519,6 +614,9 @@ export function WorkspacePage() {
                                 table: table.table_name,
                             })
                         }
+                        onExportConnectionDump={openConnectionDumpDialog}
+                        onExportSchemaDump={openSchemaDumpDialog}
+                        onExportTableDump={openTableDumpDialog}
                     />
                 }
                 centerTop={
