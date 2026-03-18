@@ -63,16 +63,31 @@ function MySqlGlyph({size = 16, className}: { size?: number; className?: string 
     );
 }
 
-export function DriverIcon({driver, size = 16, className}: Props) {
+export function getDriverAccentClassName(driver: string): string {
     switch (driver) {
         case 'pgsql':
-            return <PostgresGlyph size={size} className={className}/>;
+            return 'driver-accent driver-accent--pgsql';
+        case 'mysql':
+            return 'driver-accent driver-accent--mysql';
+        default:
+            return 'driver-accent driver-accent--default';
+    }
+}
+
+export function DriverIcon({driver, size = 16, className}: Props) {
+    const accentClassName = [getDriverAccentClassName(driver),className]
+        .filter(Boolean)
+        .join(' ');
+
+    switch (driver) {
+        case 'pgsql':
+            return <PostgresGlyph size={size} className={accentClassName}/>;
 
         case 'mysql':
-            return <MySqlGlyph size={size} className={className}/>;
+            return <MySqlGlyph size={size} className={accentClassName}/>;
 
         default:
-            return <Icon data={Database} size={size} className={className}/>;
+            return <Icon data={Database} size={size} className={accentClassName}/>;
     }
 }
 

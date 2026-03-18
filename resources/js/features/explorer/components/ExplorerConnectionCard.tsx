@@ -116,7 +116,6 @@ export function ExplorerConnectionCard({
                             <Text variant="subheader-2">{connection.name}</Text>
 
                             <span className="explorer-connection-card__badges">
-                                <Label theme="utility">{connection.driver}</Label>
                                 <Label theme={marker.theme}>{t(markerLabelKey)}</Label>
 
                                 {connection.use_ssh_tunnel ? (
