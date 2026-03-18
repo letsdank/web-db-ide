@@ -18,19 +18,33 @@
     }
 
     &__hero {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        padding-bottom: 4px;
+        display: grid;
+        gap: 8px;
+        padding-bottom: 8px;
         border-bottom: 1px solid var(--g-color-line-generic);
     }
 
-    &__hero-copy {
+    &__hero-top {
         display: flex;
-        flex-direction: column;
-        gap: 4px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    &__hero-copy {
         min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__hero-subtitle {
+        min-width: 0;
+    }
+
+    &__hero-subtitle .g-text {
+        display: block;
+        line-height: 1.35;
     }
 
     &__toolbar {
@@ -148,7 +162,7 @@
     &__badges {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
         flex-wrap: wrap;
     }
 

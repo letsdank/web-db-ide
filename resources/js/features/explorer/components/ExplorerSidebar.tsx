@@ -111,17 +111,22 @@ export function ExplorerSidebar({
         <Card view="filled" className="explorer-sidebar__card">
             <div className="explorer-sidebar__layout">
                 <div className="explorer-sidebar__hero">
-                    <div className="explorer-sidebar__hero-copy">
-                        <Text variant="header-1">{t('explorer.title')}</Text>
+                    <div className="explorer-sidebar__hero-top">
+                        <div className="explorer-sidebar__hero-copy">
+                            <Text variant="header-1">{t('explorer.title')}</Text>
+                        </div>
+
+                        <Button view="action" size="m" onClick={onCreateConnection}>
+                            <Icon data={CirclePlus} size={16}/>
+                            {t('explorer.new')}
+                        </Button>
+                    </div>
+
+                    <div className="explorer-sidebar__hero-subtitle">
                         <Text variant="body-2" color="secondary">
                             {t('explorer.subtitle')}
                         </Text>
                     </div>
-
-                    <Button view="action" size="m" onClick={onCreateConnection}>
-                        <Icon data={CirclePlus} size={16}/>
-                        {t('explorer.newConnection')}
-                    </Button>
                 </div>
 
                 <div className="explorer-sidebar__toolbar">
