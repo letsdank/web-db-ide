@@ -70,10 +70,6 @@ export function ExplorerTableNode({
 
                         <span className="explorer-table-node__title-row">
                             <Text variant="body-2">{table.table_name}</Text>
-
-                            {table.table_type ? (
-                                <Label theme="utility">{table.table_type}</Label>
-                            ) : null}
                         </span>
                     </span>
                 </button>

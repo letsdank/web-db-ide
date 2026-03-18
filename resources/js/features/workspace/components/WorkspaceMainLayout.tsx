@@ -27,28 +27,33 @@ export function WorkspaceMainLayout({
                 {left}
 
                 <div className="workspace-page__center">
-                    <div className="workspace-page__palette-trigger">
-                        {centerTop}
+                    <div className="workspace-page__tabs-row">
+                        <div className="workspace-page__tabs">
+                            {tabs}
+                        </div>
+
+                        <div className="workspace-page__palette-trigger">
+                            {centerTop}
+                        </div>
                     </div>
 
-                    {tabs}
                     {toolbar}
 
-                    <div className="workspace-page__panel">
+                    <div className="workspace-page__editor-panel">
                         <div className="workspace-page__panel-main">
                             <div className="workspace-page__panel-content">
                                 {editor}
                             </div>
 
                             {editorFooter ? (
-                                <div>
+                                <div className="workspace-page__editor-footer">
                                     {editorFooter}
                                 </div>
                             ) : null}
                         </div>
                     </div>
 
-                    <div className="workspace-page__panel">
+                    <div className="workspace-page__results-panel">
                         {results}
                     </div>
                 </div>

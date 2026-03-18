@@ -1,7 +1,9 @@
 .results-panel {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    height:100%;
+    min-height: 0;
 
     &__header {
         display: flex;
@@ -17,17 +19,20 @@
     &__title-group {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
+        min-width: 0;
+        flex-wrap: wrap;
     }
 
     &__meta {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+        min-width: 0;
     }
 
     &__empty {
-        margin-top: 8px;
+        margin-top: 4px;
     }
 
     &__error-box {
@@ -42,7 +47,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
 
     &__meta {
@@ -63,6 +68,7 @@
 
 .results-grid {
     min-height: 0;
+    flex: 1 1 auto;
     overflow: auto;
     border: 1px solid var(--g-color-line-generic);
     border-radius: 10px;
@@ -75,7 +81,7 @@
 
     &__header-cell {
         text-align: left;
-        padding: 10px 12px;
+        padding: 9px 12px;
         border-bottom: 1px solid var(--g-color-line-generic);
         position: sticky;
         top: 0;
@@ -98,7 +104,7 @@
     }
 
     &__cell {
-        padding: 10px 12px;
+        padding: 9px 12px;
         border-bottom: 1px solid var(--g-color-line-generic);
         vertical-align: top;
         white-space: pre-wrap;

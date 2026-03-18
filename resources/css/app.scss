@@ -30,21 +30,35 @@ body {
         height: 100%;
         min-height: 0;
         display: grid;
-        grid-template-columns: 280px minmax(0, 1fr) 320px;
+        grid-template-columns: 360px minmax(0, 1fr) 300px;
         gap: 16px;
     }
 
     &__center {
         display: grid;
-        grid-template-rows: 48px 72px minmax(0, 1fr) 320px;
-        gap: 16px;
+        grid-template-rows: 44px 64px minmax(360px, 1fr) minmax(180px, 0.52fr);
+        gap: 12px;
         min-height: 0;
+    }
+
+    &__tabs-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    &__tabs {
+        min-width: 0;
+        overflow: hidden;
     }
 
     &__palette-trigger {
         display: flex;
         justify-content: flex-end;
         align-items: center;
+        flex-shrink: 0;
     }
 
     &__palette-button {
@@ -54,9 +68,11 @@ body {
         border-radius: 10px;
         padding: 8px 12px;
         cursor: pointer;
+        white-space: nowrap;
     }
 
-    &__panel {
+    &__editor-panel,
+    &__results-panel {
         min-height: 0;
         height: 100%;
     }
@@ -67,6 +83,15 @@ body {
         gap: 8px;
         min-height: 0;
         height: 100%;
+    }
+
+    &__panel-content {
+        min-height: 0;
+        flex: 1 1 auto;
+    }
+
+    &__editor-footer {
+        flex: 0 0 auto;
     }
 
     &__boot {
@@ -121,21 +146,23 @@ body {
 .query-tabs-bar {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     min-width: 0;
-    padding: 0 4px;
+    height: 100%;
+    padding: 0 2px;
 
     &__scroller {
         flex: 1;
         min-width: 0;
         overflow-x: auto;
+        overflow-y: hidden;
     }
 
     &__item {
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        margin-right: 6px;
+        margin-right: 4px;
     }
 
     &__label {
@@ -155,19 +182,19 @@ body {
 
 .editor-toolbar {
     &__card {
-        padding: 12px;
+        padding: 10px 12px;
     }
 
     &__content {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         flex-wrap: wrap;
     }
 
     &__connection {
-        min-width: 320px;
-        flex: 0 1 420px;
+        min-width: 280px;
+        flex: 0 1 380px;
     }
 
     &__hotkeys {
@@ -204,7 +231,7 @@ body {
 .sql-editor-pane {
     &__card {
         height: 100%;
-        padding: 12px;
+        padding: 10px;
         overflow: hidden;
         box-sizing: border-box;
     }

@@ -1,5 +1,5 @@
 import type {ConnectionDto} from "../../types/connection";
-import {Button, Card, Hotkey, Label, Select, Text} from "@gravity-ui/uikit";
+import {Button, Card, Hotkey, Select, Text} from "@gravity-ui/uikit";
 import {useI18n} from "../../i18n";
 import {DriverIcon} from "../common/DriverIcon";
 
@@ -75,22 +75,7 @@ export function EditorToolbar({
                     />
                 </div>
 
-                {hasSelection ? (
-                    <Label theme="info">{t('workspace.selectionAvailable')}</Label>
-                ) : (
-                    <Label theme="utility">{t('workspace.noSelection')}</Label>
-                )}
-
                 <div className="editor-toolbar__hotkeys">
-                    <Text variant="body-2" color="secondary">
-                        {t('workspace.newTab')}
-                    </Text>
-                    <Hotkey value="shift+mod+t" view="dark"/>
-
-                    <Text variant="body-2" color="secondary">
-                        {t('workspace.runAll')}
-                    </Text>
-                    <Hotkey value="mod+enter" view="dark"/>
 
                     {hasSelection ? (
                         <>
@@ -99,12 +84,14 @@ export function EditorToolbar({
                             </Text>
                             <Hotkey value="shift+mod+enter" view="dark"/>
                         </>
-                    ) : null}
-
-                    <Text variant="body-2" color="secondary">
-                        {t('workspace.palette')}
-                    </Text>
-                    <Hotkey value="mod+k" view="dark"/>
+                    ) : (
+                        <>
+                            <Text variant="body-2" color="secondary">
+                                {t('workspace.runAll')}
+                            </Text>
+                            <Hotkey value="mod+enter" view="dark"/>
+                        </>
+                    )}
                 </div>
             </div>
         </Card>

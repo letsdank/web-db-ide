@@ -64,7 +64,7 @@
         flex: 1 1 auto;
         min-height: 0;
         overflow: auto;
-        padding-right: 4px;
+        padding-right: 2px;
     }
 
     &__list {
@@ -300,6 +300,11 @@
         color: var(--g-color-text-secondary);
     }
 
+    &__title-left {
+        display: flex;
+        gap: 4px;
+    }
+
     &__title-row {
         display: flex;
         gap: 8px;
@@ -328,6 +333,7 @@
         border-left: 1px solid var(--g-color-line-generic);
         display: grid;
         gap: 8px;
+        min-width: 0;
     }
 
     &__loading {

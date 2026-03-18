@@ -58,7 +58,7 @@ export function RightSidebarPanels({
                             disabled={!canSaveCurrentQuery}
                             onClick={onOpenSaveQueryDialog}
                         >
-                            {t('workspace.saveQuery')}
+                            {t('common.save')}
                         </Button>
                     </div>
 
