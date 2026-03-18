@@ -1,6 +1,7 @@
 import type {ConnectionDto} from "../../types/connection";
 import {Button, Card, Hotkey, Label, Select, Text} from "@gravity-ui/uikit";
 import {useI18n} from "../../i18n";
+import {DriverIcon} from "../common/DriverIcon";
 
 interface Props {
     connections: ConnectionDto[];
@@ -22,7 +23,7 @@ export function EditorToolbar({
                                   onRunSelection,
                               }: Props) {
     const selectValue = activeConnectionId ? [String(activeConnectionId)] : [];
-    const {t}=useI18n();
+    const {t} = useI18n();
 
     return (
         <Card view="filled" className="editor-toolbar__card">
@@ -60,7 +61,16 @@ export function EditorToolbar({
                         }}
                         options={connections.map((connection) => ({
                             value: String(connection.id),
-                            content: `${connection.name} · (${connection.driver})`,
+                            content: (
+                                <span className="editor-toolbar__connection-option">
+                                    <span className="editor-toolbar__connection-option-icon">
+                                        <DriverIcon driver={connection.driver} size={16}/>
+                                    </span>
+                                    <span className="editor-toolbar__connection-option-text">
+                                        {connection.name} · ({connection.driver})
+                                    </span>
+                                </span>
+                            ),
                         }))}
                     />
                 </div>

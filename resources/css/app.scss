@@ -177,6 +177,28 @@ body {
         margin-left: auto;
         flex-wrap: wrap;
     }
+
+    &__connection-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    &__connection-option-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--g-color-text-primary);
+        flex-shrink: 0;
+    }
+
+    &__connection-option-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 
 .sql-editor-pane {

@@ -7,6 +7,7 @@ import {Icon} from "@gravity-ui/uikit";
 import {CirclePlus, ClockArrowRotateLeft, Database, FileText, LayoutCells, Magnifier} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
 import {getResourceMarker, getResourceMarkerLabelKey} from "../../../lib/resourceMarkers";
+import {DriverIcon} from "../../../components/common/DriverIcon";
 
 interface Params {
     activeConnectionId: number | null;
@@ -159,7 +160,7 @@ export function useWorkspaceCommandPalette({
                 title: t('workspace.currentConnection'),
                 subtitle: `${t(activeMarkerLabelKey)} · ${activeConnection.name} · ${activeConnection.database_name}`,
                 kind: 'action',
-                icon: <Icon data={Database} size={18}/>,
+                icon: <DriverIcon driver={activeConnection.driver} size={18}/>,
                 keywords: [
                     'current connection active database',
                     activeMarker.kind,
@@ -194,7 +195,7 @@ export function useWorkspaceCommandPalette({
                 title: connection.name,
                 subtitle: `${t(markerLabelKey)} · ${connection.database_name} · ${connection.host}:${connection.port}`,
                 kind: 'connection' as const,
-                icon: <Icon data={Database} size={18}/>,
+                icon: <DriverIcon driver={connection.driver} size={18}/>,
                 keywords: [
                     connection.driver,
                     connection.database_name,

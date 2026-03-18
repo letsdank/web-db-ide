@@ -3,9 +3,10 @@ import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/exp
 import React, {useMemo} from "react";
 import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerSchemaNode} from "./ExplorerSchemaNode";
-import {ChevronDown, ChevronRight, Database, Ellipsis} from "@gravity-ui/icons";
+import {ChevronDown, ChevronRight, Ellipsis} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
 import {getResourceMarker, getResourceMarkerLabelKey, isOwnedResource} from "../../../lib/resourceMarkers";
+import {DriverIcon} from "../../../components/common/DriverIcon";
 
 interface Props {
     connection: ConnectionDto;
@@ -107,7 +108,7 @@ export function ExplorerConnectionCard({
                     </span>
 
                     <span className="explorer-connection-card__header-icon">
-                        <Icon data={Database} size={16}/>
+                        <DriverIcon driver={connection.driver} size={16}/>
                     </span>
 
                     <span className="explorer-connection-card__content">
