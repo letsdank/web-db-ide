@@ -1,6 +1,6 @@
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import React, {useMemo} from "react";
-import {Button, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
+import {Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerTableNode} from "./ExplorerTableNode";
 import {ChevronDown, ChevronRight, Folder} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
