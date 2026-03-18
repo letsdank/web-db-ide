@@ -131,6 +131,9 @@ const en = {
         dumpTargetDatabase: 'Database',
         dumpTargetSchema: 'Schema',
         dumpTargetTable: 'Table',
+        dumpConnectionNotFound: 'Connection for export was not found.',
+        tableSchemaExportSuccess: 'DDL for table {table} was exported successfully.',
+        tableDataExportSuccess: 'Data for table {table} was exported successfully.',
     },
 
     connections: {
@@ -206,6 +209,8 @@ const en = {
         exportDatabaseDump: 'Export database dump',
         exportSchemaDump: 'Export schema dump',
         exportTableDump: 'Export table dump',
+        quickExportTableSchema: 'Quick export DDL (.sql)',
+        quickExportTableData: 'Quick export data (.sql)',
     },
 } as const;
 

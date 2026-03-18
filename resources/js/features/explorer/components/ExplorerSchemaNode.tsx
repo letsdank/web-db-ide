@@ -15,6 +15,7 @@ interface Props {
     expandedTableKeys: string[];
     detailsByTableKey: Record<string, ExplorerTableDetailsDto>;
     loadingDetailsFor: string | null;
+    canExportDump: boolean;
     onToggleSchema: () => void;
     onToggleTable: (tableName: string) => void;
     onOpenTableContextMenu: (
@@ -33,6 +34,8 @@ interface Props {
     onCopySelect: (table: ExplorerTableDto) => void;
     onExportSchemaDump: () => void;
     onExportTableDump: (table: ExplorerTableDto) => void;
+    onQuickExportTableSchema: (table: ExplorerTableDto) => void;
+    onQuickExportTableData: (table: ExplorerTableDto) => void;
 }
 
 export function ExplorerSchemaNode({
@@ -45,6 +48,7 @@ export function ExplorerSchemaNode({
                                        expandedTableKeys,
                                        detailsByTableKey,
                                        loadingDetailsFor,
+                                       canExportDump,
                                        onToggleSchema,
                                        onToggleTable,
                                        onOpenTableContextMenu,
@@ -55,6 +59,8 @@ export function ExplorerSchemaNode({
                                        onCopySelect,
                                        onExportSchemaDump,
                                        onExportTableDump,
+                                       onQuickExportTableSchema,
+                                       onQuickExportTableData,
                                    }: Props) {
     const {t} = useI18n();
 
@@ -76,21 +82,21 @@ export function ExplorerSchemaNode({
                     className="explorer-schema-node__toggle"
                     onClick={onToggleSchema}
                 >
-                <span className="explorer-schema-node__left">
-                    <span className="explorer-schema-node__chevron">
-                        <Icon data={isExpanded ? ChevronDown : ChevronRight} size={14}/>
-                    </span>
+                    <span className="explorer-schema-node__left">
+                        <span className="explorer-schema-node__chevron">
+                            <Icon data={isExpanded ? ChevronDown : ChevronRight} size={14}/>
+                        </span>
 
-                    <span className="explorer-schema-node__icon">
-                        <Icon data={Folder} size={14}/>
-                    </span>
+                        <span className="explorer-schema-node__icon">
+                            <Icon data={Folder} size={14}/>
+                        </span>
 
-                    <Text variant="body-2">{schema}</Text>
-                </span>
+                        <Text variant="body-2">{schema}</Text>
+                    </span>
 
                     <span className="explorer-schema-node__toggle-right">
-                    <Label theme="unknown">{tables.length}</Label>
-                </span>
+                        <Label theme="unknown">{tables.length}</Label>
+                    </span>
                 </button>
 
                 <div className="explorer-schema-node__actions">
@@ -99,6 +105,7 @@ export function ExplorerSchemaNode({
                             {
                                 text: t('explorer.exportSchemaDump'),
                                 action: onExportSchemaDump,
+                                disabled: !canExportDump,
                             },
                         ]}
                         renderSwitcher={({onClick, onKeyDown}) => (
@@ -140,6 +147,7 @@ export function ExplorerSchemaNode({
                                     isExpanded={expandedTableKeys.includes(tableKey)}
                                     details={detailsByTableKey[tableKey]}
                                     isLoadingDetails={loadingDetailsFor === tableKey}
+                                    canExportDump={canExportDump}
                                     onToggle={() => onToggleTable(table.table_name)}
                                     onOpenContextMenu={onOpenTableContextMenu}
                                     onOpenSelect={() => onOpenSelect(table)}
@@ -148,6 +156,8 @@ export function ExplorerSchemaNode({
                                     onCopyFullName={() => onCopyFullName(table)}
                                     onCopySelect={() => onCopySelect(table)}
                                     onExportDump={() => onExportTableDump(table)}
+                                    onQuickExportSchema={() => onQuickExportTableSchema(table)}
+                                    onQuickExportData={() => onQuickExportTableData(table)}
                                 />
                             );
                         })

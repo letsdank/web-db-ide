@@ -28,9 +28,9 @@ import type {SavedQueryDto} from "../types/savedQuery";
 import {useExplorerTree} from "../features/explorer/hooks/useExplorerTree";
 import type {ExplorerColumnDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../types/explorer";
 import type {ConnectionDto, ExportConnectionDumpPayload} from "../types/connection";
-import {exportConnectinDump} from "../api/connections";
-import {showSuccessToast} from "../lib/toast";
-import type { ExportDumpTarget} from "../components/workspace/ExportDumpDialog";
+import {exportConnectionDump} from "../api/connections";
+import {showErrorToast, showSuccessToast} from "../lib/toast";
+import type {ExportDumpTarget} from "../components/workspace/ExportDumpDialog";
 import {ExportDumpDialog} from "../components/workspace/ExportDumpDialog";
 
 export function WorkspacePage() {
@@ -451,7 +451,7 @@ export function WorkspacePage() {
             setIsExportingDump(true);
             setExportDumpError(null);
 
-            await exportConnectinDump(exportDumpTarget.connection.id, payload);
+            await exportConnectionDump(exportDumpTarget.connection.id, payload);
 
             showSuccessToast(
                 t('workspace.dumpExportSuccess'),
@@ -469,6 +469,93 @@ export function WorkspacePage() {
             setIsExportingDump(false);
         }
     }, [exportDumpTarget, t]);
+
+    const runQuickTableDumpExport = useCallback(async (
+        payload: {
+            connectionId: number;
+            schema: string;
+            table: string;
+        },
+        options: {
+            section: 'schema' | 'data';
+            successMessage: string;
+        },
+    ) => {
+        const connection = connections.find((item) => item.id === payload.connectionId);
+
+        if (!connection) {
+            showErrorToast(t('workspace.dumpConnectionNotFound'), t('workspace.exportDump'));
+            return;
+        }
+
+        const request: ExportConnectionDumpPayload = {
+            format: 'plain',
+            scope: 'table',
+            schema: payload.schema,
+            table: payload.table,
+            section: options.section,
+            clean: false,
+            if_exists: false,
+            no_owner: true,
+            no_privileges: true,
+            include_blobs: false,
+        };
+
+        try {
+            await exportConnectionDump(connection.id, request);
+
+            showSuccessToast(
+                options.successMessage,
+                t('workspace.exportDump'),
+            );
+        } catch (error: unknown) {
+            const message = error instanceof Error
+                ? error.message
+                : t('workspace.dumpExportFailed');
+
+            showErrorToast(message, t('workspace.exportDump'));
+        }
+    }, [connections, t]);
+
+    const handleQuickExportTableSchema = useCallback(async (
+        connectionId: number,
+        schema: string,
+        table: ExplorerTableDto,
+    ) => {
+        await runQuickTableDumpExport(
+            {
+                connectionId,
+                schema,
+                table: table.table_name,
+            },
+            {
+                section: 'schema',
+                successMessage: t('workspace.tableSchemaExportSuccess', {
+                    table: `${schema}.${table.table_name}`,
+                }),
+            },
+        );
+    }, [runQuickTableDumpExport, t]);
+
+    const handleQuickExportTableData = useCallback(async (
+        connectionId: number,
+        schema: string,
+        table: ExplorerTableDto
+    ) => {
+        await runQuickTableDumpExport(
+            {
+                connectionId,
+                schema,
+                table: table.table_name,
+            },
+            {
+                section: 'data',
+                successMessage: t('workspace.tableDataExportSuccess', {
+                    table: `${schema}.${table.table_name}`,
+                }),
+            },
+        );
+    }, [runQuickTableDumpExport, t]);
 
     const hiddenActiveConnectionByFilter = false;
 
@@ -618,6 +705,8 @@ export function WorkspacePage() {
                         onExportConnectionDump={openConnectionDumpDialog}
                         onExportSchemaDump={openSchemaDumpDialog}
                         onExportTableDump={openTableDumpDialog}
+                        onQuickExportTableSchema={handleQuickExportTableSchema}
+                        onQuickExportTableData={handleQuickExportTableData}
                     />
                 }
                 centerTop={

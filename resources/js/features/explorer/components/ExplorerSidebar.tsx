@@ -49,6 +49,8 @@ interface Props {
     onExportConnectionDump: (connection: ConnectionDto) => void;
     onExportSchemaDump: (connectionId: number, schema: string) => void;
     onExportTableDump: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onQuickExportTableSchema: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onQuickExportTableData: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
 }
 
 export function ExplorerSidebar({
@@ -79,6 +81,8 @@ export function ExplorerSidebar({
                                     onExportConnectionDump,
                                     onExportSchemaDump,
                                     onExportTableDump,
+                                    onQuickExportTableSchema,
+                                    onQuickExportTableData,
                                 }: Props) {
     const {t} = useI18n();
     const [filter, setFilter] = useState('');
@@ -202,6 +206,8 @@ export function ExplorerSidebar({
                                     onExportConnectionDump={() => onExportConnectionDump(connection)}
                                     onExportSchemaDump={(schema) => onExportSchemaDump(connection.id, schema)}
                                     onExportTableDump={(schema, table) => onExportTableDump(connection.id, schema, table)}
+                                    onQuickExportTableSchema={(schema, table) => onQuickExportTableSchema(connection.id, schema, table)}
+                                    onQuickExportTableData={(schema, table) => onQuickExportTableData(connection.id, schema, table)}
                                 />
                             ))
                         ) : (

@@ -11,6 +11,7 @@ interface Props {
     details?: ExplorerTableDetailsDto;
     isExpanded: boolean;
     isLoadingDetails: boolean;
+    canExportDump: boolean;
     onToggle: () => void;
     onOpenContextMenu: (
         event: React.MouseEvent,
@@ -27,6 +28,8 @@ interface Props {
     onCopyFullName: () => void;
     onCopySelect: () => void;
     onExportDump: () => void;
+    onQuickExportSchema: () => void;
+    onQuickExportData: () => void;
 }
 
 export function ExplorerTableNode({
@@ -36,6 +39,7 @@ export function ExplorerTableNode({
                                       isExpanded,
                                       details,
                                       isLoadingDetails,
+                                      canExportDump,
                                       onToggle,
                                       onOpenContextMenu,
                                       onOpenSelect,
@@ -44,6 +48,8 @@ export function ExplorerTableNode({
                                       onCopyFullName,
                                       onCopySelect,
                                       onExportDump,
+                                      onQuickExportSchema,
+                                      onQuickExportData,
                                   }: Props) {
     const {t} = useI18n();
 
@@ -89,6 +95,16 @@ export function ExplorerTableNode({
                             {
                                 text: t('explorer.exportTableDump'),
                                 action: onExportDump,
+                            },
+                            {
+                                text: t('explorer.quickExportTableSchema'),
+                                action: onQuickExportSchema,
+                                disabled: !canExportDump,
+                            },
+                            {
+                                text: t('explorer.quickExportTableData'),
+                                action: onQuickExportData,
+                                disabled: !canExportDump,
                             },
                             {
                                 text: t('explorer.openPreview'),

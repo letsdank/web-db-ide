@@ -83,7 +83,7 @@ async function normalizeBlobAxiosError(error: unknown): Promise<never> {
     throw error;
 }
 
-export async function exportConnectinDump(
+export async function exportConnectionDump(
     id: number,
     payload: ExportConnectionDumpPayload,
 ): Promise<void> {

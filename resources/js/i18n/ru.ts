@@ -131,6 +131,9 @@ const ru = {
         dumpTargetDatabase: 'База данных',
         dumpTargetSchema: 'Схема',
         dumpTargetTable: 'Таблица',
+        dumpConnectionNotFound: 'Подключение для экспорта не найдено.',
+        tableSchemaExportSuccess: 'DDL для таблицы {table} успешно экспортирован.',
+        tableDataExportSuccess: 'Данные таблицы {table} успешно экспортированы.',
     },
 
     connections: {
@@ -203,9 +206,11 @@ const ru = {
         loadingColumns: 'Загрузка колонок...',
         columnsCount: '{count} колонок',
         indexesCount: '{count} индексов',
-        exportDatabaseDump:'Экспортировать дамп базы',
-        exportSchemaDump:'Экспортировать дамп схемы',
-        exportTableDump:'Экспортировать дамп таблицы',
+        exportDatabaseDump: 'Экспортировать дамп базы',
+        exportSchemaDump: 'Экспортировать дамп схемы',
+        exportTableDump: 'Экспортировать дамп таблицы',
+        quickExportTableSchema: 'Быстрый экспорт DDL (.sql)',
+        quickExportTableData: 'Быстрый экспорт данных (.sql)',
     },
 } as const;
 

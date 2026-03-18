@@ -43,6 +43,8 @@ interface Props {
     onExportConnectionDump: () => void;
     onExportSchemaDump: (schema: string) => void;
     onExportTableDump: (schema: string, table: ExplorerTableDto) => void;
+    onQuickExportTableSchema: (schema: string, table: ExplorerTableDto) => void;
+    onQuickExportTableData: (schema: string, table: ExplorerTableDto) => void;
 }
 
 export function ExplorerConnectionCard({
@@ -72,12 +74,15 @@ export function ExplorerConnectionCard({
                                            onExportConnectionDump,
                                            onExportSchemaDump,
                                            onExportTableDump,
+                                           onQuickExportTableSchema,
+                                           onQuickExportTableData,
                                        }: Props) {
     const {t} = useI18n();
 
     const marker = getResourceMarker(connection);
     const markerLabelKey = getResourceMarkerLabelKey(connection);
     const canManageConnection = isOwnedResource(connection);
+    const canExportDump = connection.driver === 'pgsql';
 
     const visibleSchemas = useMemo(() => {
         if (!filter) {
@@ -203,6 +208,7 @@ export function ExplorerConnectionCard({
                                     expandedTableKeys={expandedTableKeys}
                                     detailsByTableKey={detailsByTableKey}
                                     loadingDetailsFor={loadingDetailsFor}
+                                    canExportDump={canExportDump}
                                     onToggleSchema={() => onToggleSchema(schema)}
                                     onToggleTable={(tableName) => onToggleTable(schema, tableName)}
                                     onOpenTableContextMenu={onOpenTableContextMenu}
@@ -213,6 +219,8 @@ export function ExplorerConnectionCard({
                                     onCopySelect={(table) => onCopySelect(schema, table)}
                                     onExportSchemaDump={() => onExportSchemaDump(schema)}
                                     onExportTableDump={(table) => onExportTableDump(schema, table)}
+                                    onQuickExportTableSchema={(table) => onQuickExportTableSchema(schema, table)}
+                                    onQuickExportTableData={(table) => onQuickExportTableData(schema, table)}
                                 />
                             );
                         })
