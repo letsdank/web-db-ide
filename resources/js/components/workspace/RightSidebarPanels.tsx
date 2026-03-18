@@ -140,18 +140,46 @@ export function RightSidebarPanels({
                                         onClick={() => onOpenSavedQuery(item)}
                                         className="right-sidebar-panels__item right-sidebar-panels__item--with-actions"
                                     >
-                                        <div className="right-sidebar-panels__item-meta">
-                                            <Text variant="subheader-2">{item.title}</Text>
+                                        <div className="right-sidebar-panels__item-split">
+                                            <div className="right-sidebar-panels__item-tags">
+                                                <Text variant="subheader-2">{item.title}</Text>
 
-                                            <div className="right-sidebar-panels__item-meta">
-                                                <Label theme={marker.theme}>
-                                                    {t(markerLabelKey)}
-                                                </Label>
+                                                <div className="right-sidebar-panels__item-meta">
+                                                    <Label theme={marker.theme}>
+                                                        {t(markerLabelKey)}
+                                                    </Label>
 
-                                                {item.folder ? (
-                                                    <Label theme="unknown">{item.folder}</Label>
-                                                ) : null}
+                                                    {item.folder ? (
+                                                        <Label theme="unknown">{item.folder}</Label>
+                                                    ) : null}
+                                                </div>
                                             </div>
+
+                                            {canManageSavedQuery ? (
+                                                <div className="right-sidebar-panels__item-actions">
+                                                    <DropdownMenu
+                                                        items={[
+                                                            {
+                                                                text: t('workspace.editSavedQuery'),
+                                                                action: () => onEditSavedQuery(item),
+                                                            },
+                                                        ]}
+                                                        renderSwitcher={({onClick, onKeyDown}) => (
+                                                            <Button
+                                                                size="s"
+                                                                view="flat-secondary"
+                                                                onClick={(event) => {
+                                                                    event.stopPropagation();
+                                                                    onClick?.(event);
+                                                                }}
+                                                                onKeyDown={onKeyDown}
+                                                            >
+                                                                <Icon data={Ellipsis} size={16}/>
+                                                            </Button>
+                                                        )}
+                                                    />
+                                                </div>
+                                            ) : null}
                                         </div>
 
                                         {item.connection ? (
@@ -166,32 +194,6 @@ export function RightSidebarPanels({
                                             {item.sql_text.slice(0, 140) || t('workspace.emptyQuery')}
                                         </Text>
                                     </button>
-
-                                    {canManageSavedQuery ? (
-                                        <div className="right-sidebar-panels__item-actions">
-                                            <DropdownMenu
-                                                items={[
-                                                    {
-                                                        text: t('workspace.editSavedQuery'),
-                                                        action: () => onEditSavedQuery(item),
-                                                    },
-                                                ]}
-                                                renderSwitcher={({onClick, onKeyDown}) => (
-                                                    <Button
-                                                        size="s"
-                                                        view="flat-secondary"
-                                                        onClick={(event) => {
-                                                            event.stopPropagation();
-                                                            onClick?.(event);
-                                                        }}
-                                                        onKeyDown={onKeyDown}
-                                                    >
-                                                        <Icon data={Ellipsis} size={16}/>
-                                                    </Button>
-                                                )}
-                                            />
-                                        </div>
-                                    ) : null}
                                 </div>
                             );
                         })

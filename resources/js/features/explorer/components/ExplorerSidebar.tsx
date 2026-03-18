@@ -132,7 +132,7 @@ export function ExplorerSidebar({
                 <div className="explorer-sidebar__toolbar">
                     <TextInput
                         value={filter}
-                        placeholder={t('explorer.searchPlaceholder')}
+                        placeholder={t('explorer.filterConnections')}
                         onUpdate={setFilter}
                         startContent={<Icon data={Magnifier} size={16}/>}
                         size="m"

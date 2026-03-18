@@ -162,7 +162,11 @@ body {
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        margin-right: 4px;
+        padding: 0 8px;
+
+        &:not(:last-of-type) {
+            border-right: 1px solid var(--g-color-line-generic-solid);
+        }
     }
 
     &__label {
@@ -303,7 +307,6 @@ body {
     &__item-actions {
         display: flex;
         align-items: flex-start;
-        padding-top: 4px;
     }
 
     &__item-meta {
@@ -311,6 +314,19 @@ body {
         align-items: center;
         gap: 8px;
         margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+
+    &__item-split {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    &__item-tags {
+        display: flex;
+        gap: 8px;
         flex-wrap: wrap;
     }
 
