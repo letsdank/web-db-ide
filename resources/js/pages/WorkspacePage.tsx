@@ -20,18 +20,23 @@ import {useWorkspaceBoot} from "../features/workspace/hooks/useWorkspaceBoot";
 import {useWorkspaceLibrary} from "../features/workspace/hooks/useWorkspaceLibrary";
 import {useActiveWorkspace} from "../features/workspace/hooks/useActiveWorkspace";
 import {useWorkspaceDraft} from "../features/workspace/hooks/useWorkspaceDraft";
-import {buildCountSql, buildPreviewSql, buildSelectSql} from "../features/explorer/lib/sql";
 import {useI18n} from "../i18n";
 import type {SaveQueryDialogSubmitPayload} from "../components/workspace/SaveQueryDialog";
 import {SaveQueryDialog} from "../components/workspace/SaveQueryDialog";
 import type {SavedQueryDto} from "../types/savedQuery";
 import {useExplorerTree} from "../features/explorer/hooks/useExplorerTree";
-import type {ExplorerColumnDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../types/explorer";
+import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../types/explorer";
 import type {ConnectionDto, DatabaseDriver, ExportConnectionDumpPayload} from "../types/connection";
 import {exportConnectionDump} from "../api/connections";
 import {showErrorToast, showSuccessToast} from "../lib/toast";
 import type {ExportDumpTarget} from "../components/workspace/ExportDumpDialog";
 import {ExportDumpDialog} from "../components/workspace/ExportDumpDialog";
+import {
+    buildExplorerCountTabInput,
+    buildExplorerMetadataTabInput,
+    buildExplorerPreviewTabInput,
+    buildExplorerSelectSql
+} from "../features/explorer/lib/tableActions";
 
 export function WorkspacePage() {
     const {
@@ -288,13 +293,12 @@ export function WorkspacePage() {
         schema: string | null;
         table: string;
     }) => {
-        const driver = resolveConnectionDriver(payload.connectionId);
-
-        await handleCreateTab({
-            title: `${payload.table} Preview`,
-            sql_text: buildPreviewSql(driver, payload.schema, payload.table, 100),
-            db_connection_id: payload.connectionId,
-        });
+        await handleCreateTab(buildExplorerPreviewTabInput({
+            connectionId: payload.connectionId,
+            driver: resolveConnectionDriver(payload.connectionId),
+            schema: payload.schema,
+            table: payload.table,
+        }, 100));
     }, [handleCreateTab, resolveConnectionDriver]);
 
     const handleOpenTableCount = useCallback(async (payload: {
@@ -302,13 +306,12 @@ export function WorkspacePage() {
         schema: string | null;
         table: string;
     }) => {
-        const driver = resolveConnectionDriver(payload.connectionId);
-
-        await handleCreateTab({
-            title: `${payload.table} Count`,
-            sql_text: buildCountSql(driver, payload.schema, payload.table),
-            db_connection_id: payload.connectionId,
-        });
+        await handleCreateTab(buildExplorerCountTabInput({
+            connectionId: payload.connectionId,
+            driver: resolveConnectionDriver(payload.connectionId),
+            schema: payload.schema,
+            table: payload.table,
+        }));
     }, [handleCreateTab, resolveConnectionDriver]);
 
     const handleCopyTableSelect = useCallback(async (payload: {
@@ -316,8 +319,12 @@ export function WorkspacePage() {
         schema: string | null;
         table: string;
     }) => {
-        const driver = resolveConnectionDriver(payload.connectionId);
-        const sql = buildSelectSql(driver, payload.schema, payload.table);
+        const sql = buildExplorerSelectSql({
+            connectionId: payload.connectionId,
+            driver: resolveConnectionDriver(payload.connectionId),
+            schema: payload.schema,
+            table: payload.table,
+        });
 
         if (activeTab) {
             if (activeConnectionId !== payload.connectionId) {
@@ -388,18 +395,13 @@ export function WorkspacePage() {
     ) => {
         const resolvedDetails = details ?? await loadTableDetails(connectionId, schema, table.table_name);
 
-        const columnLines = resolvedDetails?.columns?.length
-            ? resolvedDetails.columns.map((column: ExplorerColumnDto) =>
-                `${column.column_name} ${column.data_type ?? 'unknown'}${column.is_nullable ? '' : ' not null'}`,
-            ).join('\n')
-            : '-- no columns available';
-
-        await handleCreateTab({
-            title: `${table.table_name} Columns`,
-            sql_text: `-- ${schema}.${table.table_name}\n${columnLines}`,
-            db_connection_id: connectionId,
-        });
-    }, [handleCreateTab, loadTableDetails]);
+        await handleCreateTab(buildExplorerMetadataTabInput({
+            connectionId,
+            driver: resolveConnectionDriver(connectionId),
+            schema,
+            table: table.table_name,
+        }, resolvedDetails?.columns ?? []));
+    }, [handleCreateTab, loadTableDetails, resolveConnectionDriver]);
 
     const openConnectionDumpDialog = useCallback((connection: ConnectionDto) => {
         setExportDumpError(null);
