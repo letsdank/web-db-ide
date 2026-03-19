@@ -1,8 +1,10 @@
+export type DatabaseDriver = 'pgsql' | 'mysql';
+
 export interface ConnectionDto {
     id: number;
     user_id: number;
     name: string;
-    driver: 'pgsql' | 'mysql';
+    driver: DatabaseDriver;
     host: string;
     port: number;
     database_name: string;
@@ -43,7 +45,7 @@ export interface TestConnectionResultDto {
 
 export interface CreateConnectionPayload {
     name: string;
-    driver: string;
+    driver: DatabaseDriver;
     host: string;
     port: number;
     database_name: string;
@@ -66,7 +68,7 @@ export interface CreateConnectionPayload {
 
 export interface UpdateConnectionPayload {
     name?: string;
-    driver?: string;
+    driver?: DatabaseDriver;
     host?: string;
     port?: number;
     database_name?: string;

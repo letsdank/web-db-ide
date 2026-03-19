@@ -2,6 +2,7 @@ import type {ConnectionDto, ExportConnectionDumpPayload} from "../../types/conne
 import {useI18n} from "../../i18n";
 import {useEffect, useMemo, useState} from "react";
 import {Checkbox, Dialog, Select, Text} from "@gravity-ui/uikit";
+import {supportsDumpExport} from "../../lib/databaseDrivers";
 
 export interface ExportDumpTarget {
     connection: ConnectionDto;
@@ -60,7 +61,7 @@ export function ExportDumpDialog({
         setForm(makeInitialForm());
     }, [open, target]);
 
-    const isSupported = target?.connection.driver === 'pgsql';
+    const isSupported = supportsDumpExport(target?.connection.driver);
 
     const targetLabel = useMemo(() => {
         if (!target) {

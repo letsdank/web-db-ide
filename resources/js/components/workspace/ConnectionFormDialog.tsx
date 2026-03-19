@@ -3,10 +3,12 @@ import {Button, Checkbox, Dialog, Label, RadioGroup, Select, Text, TextArea, Tex
 import type {
     ConnectionDto,
     CreateConnectionPayload,
+    DatabaseDriver,
     TestConnectionResultDto,
     UpdateConnectionPayload
 } from "../../types/connection";
 import {useI18n} from "../../i18n";
+import {getDatabaseDriverDefinition, getDatabaseDriverOptions} from "../../lib/databaseDrivers";
 
 type SshAuthMode = 'password' | 'private_key';
 type VisibilityMode = 'private' | 'shared';
@@ -23,7 +25,7 @@ interface Props {
 
 interface FormState {
     name: string;
-    driver: string;
+    driver: DatabaseDriver;
     host: string;
     port: string;
     database_name: string;
@@ -106,6 +108,7 @@ export function ConnectionFormDialog({
     const isEditMode = Boolean(initialConnection);
     const dialogTitleId = 'db-connection-dialog-title';
     const {t} = useI18n();
+    const driverDefinition = getDatabaseDriverDefinition(form.driver);
 
     const canSubmit = useMemo(() => {
         if (!form.name.trim()) return false;
@@ -144,10 +147,28 @@ export function ConnectionFormDialog({
         }));
     }
 
+    function handleDriverChange(nextRawDriver: string) {
+        const nextDriver = (nextRawDriver || 'pgsql') as DatabaseDriver;
+        const currentDriver = getDatabaseDriverDefinition(form.driver);
+        const nextDriverDefinition = getDatabaseDriverDefinition(nextDriver);
+
+        setForm((prev) => ({
+            ...prev,
+            driver: nextDriver,
+            port: !prev.port || prev.port === String(currentDriver.defaultPort)
+                ? String(nextDriverDefinition.defaultPort)
+                : prev.port,
+            schema_default: nextDriverDefinition.supportsSchemaDefault
+                ? (prev.schema_default || nextDriverDefinition.defaultSchema || '')
+                : '',
+            ssl_mode: nextDriver === 'pgsql' ? prev.ssl_mode : '',
+        }));
+    }
+
     function buildPayload(): CreateConnectionPayload | UpdateConnectionPayload {
         const payload: CreateConnectionPayload | UpdateConnectionPayload = {
             name: form.name.trim(),
-            driver: form.driver.trim(),
+            driver: form.driver,
             host: form.host.trim(),
             port: Number(form.port),
             database_name: form.database_name.trim(),
@@ -270,10 +291,8 @@ export function ConnectionFormDialog({
                                 <Select
                                     width="max"
                                     value={[form.driver]}
-                                    onUpdate={(value) => patch('driver', value[0] ?? 'pgsql')}
-                                    options={[
-                                        {value: 'pgsql', content: 'PostgreSQL'},
-                                    ]}
+                                    onUpdate={(value) => handleDriverChange(value[0] ?? 'pgsql')}
+                                    options={getDatabaseDriverOptions()}
                                 />
 
                                 <TextInput
@@ -307,11 +326,13 @@ export function ConnectionFormDialog({
                                     onUpdate={(value) => patch('password', value)}
                                 />
 
-                                <TextInput
-                                    value={form.schema_default}
-                                    placeholder={t('connections.placeholders.defaultSchema')}
-                                    onUpdate={(value) => patch('schema_default', value)}
-                                />
+                                {driverDefinition.supportsSchemaDefault ? (
+                                    <TextInput
+                                        value={form.schema_default}
+                                        placeholder={t('connections.placeholders.defaultSchema')}
+                                        onUpdate={(value) => patch('schema_default', value)}
+                                    />
+                                ) : null}
 
                                 <Select
                                     width="max"

@@ -398,4 +398,53 @@ class DbConnectionControllerTest extends TestCase
 
         $this->assertSame('Read Only Shared DB', $connection->fresh()->name);
     }
+
+    public function test_store_rejects_unsupported_driver(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user, 'sanctum')
+            ->postJson('/api/connections', [
+                'name' => 'Broken DB',
+                'driver' => 'sqlite',
+                'host' => '127.0.0.1',
+                'port' => 1234,
+                'database_name' => 'broken',
+                'username' => 'user',
+                'password' => 'secret',
+                'use_ssh_tunnel' => false,
+            ]);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['driver']);
+    }
+
+    public function test_store_accepts_mysql_driver(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user, 'sanctum')
+            ->postJson('/api/connections', [
+                'name' => 'MySQL DB',
+                'driver' => 'mysql',
+                'host' => '127.0.0.1',
+                'port' => 3306,
+                'database_name' => 'app_db',
+                'username' => 'root',
+                'password' => 'secret',
+                'use_ssh_tunnel' => false,
+            ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('data.driver', 'mysql');
+
+        $connection = DbConnection::query()->firstOrFail();
+
+        $this->assertSame('mysql', $connection->driver);
+        $this->assertSame(3306, $connection->port);
+    }
 }

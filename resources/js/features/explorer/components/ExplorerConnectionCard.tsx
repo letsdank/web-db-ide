@@ -7,6 +7,7 @@ import {ChevronDown, ChevronRight, Ellipsis} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
 import {getResourceMarker, getResourceMarkerLabelKey, isOwnedResource} from "../../../lib/resourceMarkers";
 import {DriverIcon} from "../../../components/common/DriverIcon";
+import {supportsDumpExport} from "../../../lib/databaseDrivers";
 
 interface Props {
     connection: ConnectionDto;
@@ -82,7 +83,7 @@ export function ExplorerConnectionCard({
     const marker = getResourceMarker(connection);
     const markerLabelKey = getResourceMarkerLabelKey(connection);
     const canManageConnection = isOwnedResource(connection);
-    const canExportDump = connection.driver === 'pgsql';
+    const canExportDump = supportsDumpExport(connection.driver);
 
     const visibleSchemas = useMemo(() => {
         if (!filter) {

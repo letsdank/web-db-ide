@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Connection;
 
+use App\Enums\DatabaseDriver;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class TestConnectionRequest extends FormRequest
 {
@@ -15,7 +17,7 @@ class TestConnectionRequest extends FormRequest
     {
         return [
             'name' => ['nullable', 'string', 'max:255'],
-            'driver' => ['required', 'string'],
+            'driver' => ['required', Rule::in(DatabaseDriver::values())],
             'host' => ['required', 'string'],
             'port' => ['required', 'integer', 'min:1', 'max:65535'],
             'database_name' => ['required', 'string'],

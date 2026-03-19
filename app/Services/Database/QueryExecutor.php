@@ -2,6 +2,7 @@
 
 namespace App\Services\Database;
 
+use App\Enums\DatabaseDriver;
 use App\Models\DbConnection;
 use PDO;
 
@@ -16,24 +17,14 @@ class QueryExecutor
     public function execute(DbConnection $connection, string $sql, int $maxRows = 500): array
     {
         $resolved = $this->endpointResolver->resolve($connection);
+        $driver = DatabaseDriver::from($connection->driver);
 
         try {
-            $pdo = $this->createPdo($connection, $resolved->host, $resolved->port);
+            $pdo = $this->createPdo($connection, $driver, $resolved->host, $resolved->port);
 
             $start = microtime(true);
 
-            if ($connection->schema_default) {
-                $pdo->exec('SET search_path TO ' . $this->quoteIdentifier($connection->schema_default));
-            }
-
-            if ($connection->query_timeout_seconds) {
-                $timeoutMs = max(1000, ((int)$connection->query_timeout_seconds) * 1000);
-                $pdo->exec("SET statement_timeout TO $timeoutMs");
-            }
-
-            if ($connection->is_read_only) {
-                $pdo->exec('SET default_transaction_read_only = on');
-            }
+            $this->applySessionSettings($pdo, $driver, $connection);
 
             $statement = $pdo->prepare($sql);
             $statement->execute();
@@ -77,14 +68,27 @@ class QueryExecutor
         }
     }
 
-    protected function createPdo(DbConnection $connection, string $host, int $port): PDO
+    protected function createPdo(
+        DbConnection   $connection,
+        DatabaseDriver $driver,
+        string         $host,
+        int            $port
+    ): PDO
     {
-        $dsn = sprintf(
-            "pgsql:host=%s;port=%s;dbname=%s",
-            $host,
-            $port,
-            $connection->database_name,
-        );
+        $dsn = match ($driver) {
+            DatabaseDriver::Postgres => sprintf(
+                "pgsql:host=%s;port=%s;dbname=%s",
+                $host,
+                $port,
+                $connection->database_name,
+            ),
+            DatabaseDriver::MySql => sprintf(
+                'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+                $host,
+                $port,
+                $connection->database_name,
+            ),
+        };
 
         return new PDO(
             $dsn,
@@ -95,6 +99,26 @@ class QueryExecutor
                 PDO::ATTR_TIMEOUT => $connection->connect_timeout_seconds ?? 10,
             ]
         );
+    }
+
+    protected function applySessionSettings(PDO $pdo, DatabaseDriver $driver, DbConnection $connection): void
+    {
+        if ($driver !== DatabaseDriver::Postgres) {
+            return;
+        }
+
+        if ($connection->schema_default) {
+            $pdo->exec('SET search_path TO ' . $this->quoteIdentifier($connection->schema_default));
+        }
+
+        if ($connection->query_timeout_seconds) {
+            $timeoutMs = max(1000, ((int)$connection->query_timeout_seconds) * 1000);
+            $pdo->exec("SET statement_timeout TO $timeoutMs");
+        }
+
+        if ($connection->is_read_only) {
+            $pdo->exec('SET default_transaction_read_only = on');
+        }
     }
 
     protected function quoteIdentifier(string $identifier): string

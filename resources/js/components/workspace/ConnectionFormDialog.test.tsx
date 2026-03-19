@@ -365,4 +365,28 @@ describe('ConnectionFormDialog', () => {
         expect(screen.getByText('Edit saved query')).not.toBeNull();
         expect(screen.getByText('Update query')).not.toBeNull();
     });
+
+    it('switches defaults when mysql driver is selected', async () => {
+        render(
+            <ConnectionFormDialog
+                open
+                onClose={() => undefined}
+                onSubmit={vi.fn()}
+                onTest={vi.fn()}
+            />,
+        );
+
+        const selects = screen.getAllByLabelText('select');
+        const driverSelect = selects[0];
+
+        fireEvent.change(driverSelect,{
+            target:{value:'mysql'},
+        });
+
+        await waitFor(()=>{
+            expect(screen.getByPlaceholderText('Port')).toHaveValue('3306');
+        });
+
+        expect(screen.queryByPlaceholderText('Default schema (optional)')).not.toBeInTheDocument();
+    });
 });

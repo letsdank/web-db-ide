@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Connection;
 
+use App\Enums\DatabaseDriver;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateConnectionRequest extends FormRequest
 {
@@ -15,7 +17,7 @@ class UpdateConnectionRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'string', 'max:255'],
-            'host' => ['sometimes', 'string'],
+            'host' => ['sometimes', Rule::in(DatabaseDriver::values())],
             'port' => ['sometimes', 'integer'],
             'database_name' => ['sometimes', 'string'],
             'username' => ['sometimes', 'string'],
@@ -27,7 +29,6 @@ class UpdateConnectionRequest extends FormRequest
             'visibility' => ['nullable', 'in:private,shared'],
             'is_read_only' => ['boolean'],
 
-            // SSH
             'use_ssh_tunnel' => ['nullable', 'boolean'],
             'ssh_host' => ['nullable', 'string', 'max:255'],
             'ssh_port' => ['nullable', 'integer', 'min:1', 'max:65535'],

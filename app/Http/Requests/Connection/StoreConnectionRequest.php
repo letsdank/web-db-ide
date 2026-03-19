@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Connection;
 
+use App\Enums\DatabaseDriver;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreConnectionRequest extends FormRequest
 {
@@ -15,7 +17,7 @@ class StoreConnectionRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'driver' => ['required', 'string'],
+            'driver' => ['required', Rule::in(DatabaseDriver::values())],
             'host' => ['required', 'string'],
             'port' => ['required', 'integer'],
             'database_name' => ['required', 'string'],
@@ -28,7 +30,6 @@ class StoreConnectionRequest extends FormRequest
             'visibility' => ['nullable', 'in:private,shared'],
             'is_read_only' => ['boolean'],
 
-            // SSH
             'use_ssh_tunnel' => ['nullable', 'boolean'],
             'ssh_host' => ['nullable', 'string', 'max:255'],
             'ssh_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
