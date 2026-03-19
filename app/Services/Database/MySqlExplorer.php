@@ -6,7 +6,7 @@ use App\Models\DbConnection;
 use App\Services\Database\Contracts\DatabaseExplorer;
 use PDO;
 
-class PostgresExplorer implements DatabaseExplorer
+class MySqlExplorer implements DatabaseExplorer
 {
     public function __construct(
         protected ConnectionEndpointResolver $endpointResolver,
@@ -19,10 +19,10 @@ class PostgresExplorer implements DatabaseExplorer
         $resolved = $this->endpointResolver->resolve($connection);
 
         $dsn = sprintf(
-            "pgsql:host=%s;port=%s;dbname=%s",
+            'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
             $resolved->host,
             $resolved->port,
-            $connection->database_name
+            $connection->database_name,
         );
 
         $pdo = new PDO(
@@ -42,12 +42,16 @@ class PostgresExplorer implements DatabaseExplorer
         [$pdo, $resolved] = $this->pdo($connection);
 
         try {
-            $stmt = $pdo->query("
+            $stmt = $pdo->prepare("
                 SELECT schema_name
                 FROM information_schema.schemata
-                WHERE schema_name NOT IN ('pg_catalog', 'information_schema')
+                WHERE schema_name = :database_name
                 ORDER BY schema_name
             ");
+
+            $stmt->execute([
+                'database_name' => $connection->database_name,
+            ]);
 
             return $stmt->fetchAll(PDO::FETCH_COLUMN);
         } finally {
@@ -114,12 +118,18 @@ class PostgresExplorer implements DatabaseExplorer
         try {
             $stmt = $pdo->prepare("
                 SELECT
-                    indexname,
-                    indexdef
-                FROM pg_indexes
-                WHERE schemaname = :schema
-                  AND tablename = :table
-                ORDER BY indexname
+                    index_name AS indexname,
+                    CONCAT(
+                        CASE WHEN MIN(non_unique) = 0 THEN 'UNIQUE ' ELSE '' END,
+                        'INDEX (',
+                        GROUP_CONCAT(column_name ORDER BY seq_in_index SEPARATOR ', '),
+                        ')'
+                    ) AS indexdef
+                FROM information_schema.statistics
+                WHERE table_schema = :schema
+                  AND table_name = :table
+                GROUP BY index_name
+                ORDER BY index_name
             ");
 
             $stmt->execute([

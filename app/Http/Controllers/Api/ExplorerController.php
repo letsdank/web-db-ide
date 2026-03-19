@@ -4,17 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\DbConnection;
-use App\Services\Database\PostgresExplorer;
+use App\Services\Database\DatabaseExplorerFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ExplorerController extends Controller
 {
-    public function schemas(Request $request, DbConnection $connection, PostgresExplorer $explorer): JsonResponse
+    public function schemas(
+        Request                 $request,
+        DbConnection            $connection,
+        DatabaseExplorerFactory $explorerFactory,
+    ): JsonResponse
     {
-        abort_unless($connection->user_id === $request->user()->id, 404);
+        $this->authorizeConnectionRead($request, $connection);
 
-        $schemas = $explorer->schemas($connection);
+        $schemas = $explorerFactory->for($connection)->schemas($connection);
 
         return response()->json([
             'data' => $schemas,
@@ -22,15 +26,15 @@ class ExplorerController extends Controller
     }
 
     public function tables(
-        Request          $request,
-        DbConnection     $connection,
-        string           $schema,
-        PostgresExplorer $explorer
+        Request                 $request,
+        DbConnection            $connection,
+        string                  $schema,
+        DatabaseExplorerFactory $explorerFactory,
     ): JsonResponse
     {
-        abort_unless($connection->user_id === $request->user()->id, 404);
+        $this->authorizeConnectionRead($request, $connection);
 
-        $tables = $explorer->tables($connection, $schema);
+        $tables = $explorerFactory->for($connection)->tables($connection, $schema);
 
         return response()->json([
             'data' => $tables,
@@ -38,23 +42,32 @@ class ExplorerController extends Controller
     }
 
     public function table(
-        Request          $request,
-        DbConnection     $connection,
-        string           $schema,
-        string           $table,
-        PostgresExplorer $explorer
+        Request                 $request,
+        DbConnection            $connection,
+        string                  $schema,
+        string                  $table,
+        DatabaseExplorerFactory $explorerFactory,
     ): JsonResponse
     {
-        abort_unless($connection->user_id === $request->user()->id,404);
+        $this->authorizeConnectionRead($request, $connection);
 
-        $columns=$explorer->columns($connection,$schema,$table);
-        $indexes=$explorer->indexes($connection,$schema,$table);
+        $explorer = $explorerFactory->for($connection);
 
         return response()->json([
-            'schema'=>$schema,
-            'table'=>$table,
-            'columns'=>$columns,
-            'indexes'=>$indexes,
+            'schema' => $schema,
+            'table' => $table,
+            'columns' => $explorer->columns($connection, $schema, $table),
+            'indexes' => $explorer->indexes($connection, $schema, $table),
         ]);
+    }
+
+    protected function authorizeConnectionRead(Request $request, DbConnection $connection): void
+    {
+        $userId = $request->user()->id;
+
+        abort_unless(
+            $connection->isOwnedBy($userId) || $connection->isSharedWithUser($userId),
+            404
+        );
     }
 }
