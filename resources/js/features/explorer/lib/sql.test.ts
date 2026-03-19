@@ -62,7 +62,7 @@ describe('explorer sql helpers', () => {
 
     it('builds mysql select sql', () => {
         expect(buildSelectSql('mysql', 'app', 'users')).toBe(
-            'select *\nfrom `app`.`users`'
+            'select *\nfrom `app`.`users`;'
         );
     });
 });
