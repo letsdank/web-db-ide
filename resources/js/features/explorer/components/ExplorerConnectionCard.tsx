@@ -8,6 +8,12 @@ import {useI18n} from "../../../i18n";
 import {getResourceMarker, getResourceMarkerLabelKey, isOwnedResource} from "../../../lib/resourceMarkers";
 import {DriverIcon} from "../../../components/common/DriverIcon";
 import {supportsDumpExport} from "../../../lib/databaseDrivers";
+import {
+    getExplorerEmptyFilteredGroupLabelKey,
+    getExplorerEmptyGroupLabelKey,
+    getExplorerGroupCollectionLabelKey,
+    getExplorerLoadingGroupLabelKey
+} from "../lib/driverPresentation";
 
 interface Props {
     connection: ConnectionDto;
@@ -107,6 +113,12 @@ export function ExplorerConnectionCard({
         isExpanded ? "explorer-connection-card--expanded" : "",
     ].filter(Boolean).join(" ");
 
+    const collectionLabel = t(getExplorerGroupCollectionLabelKey(connection.driver));
+    const loadingLabel = t(getExplorerLoadingGroupLabelKey(connection.driver));
+    const emptyLabel = filter
+        ? t(getExplorerEmptyFilteredGroupLabelKey(connection.driver))
+        : t(getExplorerEmptyGroupLabelKey(connection.driver));
+
     return (
         <div className={connectionClasses}>
             <div className="explorer-connection-card__row">
@@ -129,6 +141,9 @@ export function ExplorerConnectionCard({
 
                             <span className="explorer-connection-card__badges">
                                 <Label theme={marker.theme}>{t(markerLabelKey)}</Label>
+                                <Label theme="info">
+                                    {connection.driver === 'mysql' ? 'MySQL / MariaDB' : 'PostgreSQL'}
+                                </Label>
 
                                 {connection.use_ssh_tunnel ? (
                                     <Label theme="info">{t('connections.ssh')}</Label>
@@ -186,11 +201,17 @@ export function ExplorerConnectionCard({
 
             {isExpanded ? (
                 <div className="explorer-connection-card__tree">
+                    <div className="explorer-connection-card__section-caption">
+                        <Text variant="caption-2" color="secondary">
+                            {collectionLabel}
+                        </Text>
+                    </div>
+
                     {loadingSchemas ? (
                         <div className="explorer-connection-card__loading">
                             <Loader size="m"/>
                             <Text variant="body-2" color="secondary">
-                                {t('connections.loadingSchemas')}
+                                {loadingLabel}
                             </Text>
                         </div>
                     ) : visibleSchemas.length > 0 ? (
@@ -200,6 +221,7 @@ export function ExplorerConnectionCard({
                             return (
                                 <ExplorerSchemaNode
                                     key={schemaKey}
+                                    driver={connection.driver}
                                     connectionId={connection.id}
                                     schema={schema}
                                     filter={filter}
@@ -228,9 +250,7 @@ export function ExplorerConnectionCard({
                     ) : (
                         <div className="explorer-connection-card__empty">
                             <Text variant="body-2" color="secondary">
-                                {filter
-                                    ? t('connections.noSchemasOrTableMatchFilter')
-                                    : t('connections.noSchemasAvailable')}
+                                {emptyLabel}
                             </Text>
                         </div>
                     )}

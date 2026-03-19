@@ -4,8 +4,11 @@ import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit
 import {ExplorerTableNode} from "./ExplorerTableNode";
 import {ChevronDown, ChevronRight, Ellipsis, Folder} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
+import type {DatabaseDriver} from "../../../types/connection";
+import {getExplorerGroupLabelKey} from "../lib/driverPresentation";
 
 interface Props {
+    driver: DatabaseDriver;
     connectionId: number;
     schema: string;
     filter: string;
@@ -39,6 +42,7 @@ interface Props {
 }
 
 export function ExplorerSchemaNode({
+                                       driver,
                                        connectionId,
                                        schema,
                                        filter,
@@ -92,6 +96,7 @@ export function ExplorerSchemaNode({
                         </span>
 
                         <Text variant="body-2">{schema}</Text>
+                        <Label theme="info">{t(getExplorerGroupLabelKey(driver))}</Label>
                     </span>
 
                     <span className="explorer-schema-node__toggle-right">

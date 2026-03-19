@@ -194,6 +194,10 @@
         gap: 8px;
         padding: 6px 4px;
     }
+
+    &__section-caption {
+        padding: 2px 0 6px;
+    }
 }
 
 .explorer-schema-node {
@@ -262,6 +266,10 @@
         align-items: center;
         gap: 8px;
         padding: 4px 4px 4px 8px;
+    }
+
+    &__left {
+        flex-wrap: wrap;
     }
 }
 
