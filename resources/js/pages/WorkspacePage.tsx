@@ -27,7 +27,7 @@ import {SaveQueryDialog} from "../components/workspace/SaveQueryDialog";
 import type {SavedQueryDto} from "../types/savedQuery";
 import {useExplorerTree} from "../features/explorer/hooks/useExplorerTree";
 import type {ExplorerColumnDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../types/explorer";
-import type {ConnectionDto, ExportConnectionDumpPayload} from "../types/connection";
+import type {ConnectionDto, DatabaseDriver, ExportConnectionDumpPayload} from "../types/connection";
 import {exportConnectionDump} from "../api/connections";
 import {showErrorToast, showSuccessToast} from "../lib/toast";
 import type {ExportDumpTarget} from "../components/workspace/ExportDumpDialog";
@@ -102,6 +102,10 @@ export function WorkspacePage() {
     const focusEditor = useCallback(() => {
         editorRef.current?.focus();
     }, []);
+
+    const resolveConnectionDriver = useCallback((connectionId: number): DatabaseDriver => {
+        return connections.find((connection) => connection.id === connectionId)?.driver ?? 'pgsql';
+    }, [connections]);
 
     const {
         activeTab,
@@ -284,31 +288,36 @@ export function WorkspacePage() {
         schema: string | null;
         table: string;
     }) => {
+        const driver = resolveConnectionDriver(payload.connectionId);
+
         await handleCreateTab({
             title: `${payload.table} Preview`,
-            sql_text: buildPreviewSql(payload.schema, payload.table, 100),
+            sql_text: buildPreviewSql(driver, payload.schema, payload.table, 100),
             db_connection_id: payload.connectionId,
         });
-    }, [handleCreateTab]);
+    }, [handleCreateTab, resolveConnectionDriver]);
 
     const handleOpenTableCount = useCallback(async (payload: {
         connectionId: number;
         schema: string | null;
         table: string;
     }) => {
+        const driver = resolveConnectionDriver(payload.connectionId);
+
         await handleCreateTab({
             title: `${payload.table} Count`,
-            sql_text: buildCountSql(payload.schema, payload.table),
+            sql_text: buildCountSql(driver, payload.schema, payload.table),
             db_connection_id: payload.connectionId,
         });
-    }, [handleCreateTab]);
+    }, [handleCreateTab, resolveConnectionDriver]);
 
     const handleCopyTableSelect = useCallback(async (payload: {
         connectionId: number;
         schema: string | null;
         table: string;
     }) => {
-        const sql = buildSelectSql(payload.schema, payload.table);
+        const driver = resolveConnectionDriver(payload.connectionId);
+        const sql = buildSelectSql(driver, payload.schema, payload.table);
 
         if (activeTab) {
             if (activeConnectionId !== payload.connectionId) {
@@ -330,6 +339,7 @@ export function WorkspacePage() {
         handleChangeSql,
         handleCreateTab,
         handleSelectConnection,
+        resolveConnectionDriver,
     ]);
 
     const {
