@@ -1,0 +1,41 @@
+export const EXPLORER_I18N_KEYS = {
+    title: 'explorer.title',
+    subtitle: 'explorer.subtitle',
+    new: 'explorer.new',
+    filterConnections: 'explorer.filterConnections',
+    noConnections: 'explorer.noConnections',
+    noFilterMatches: 'explorer.noFilterMatches',
+    hiddenActiveConnectionHint: 'explorer.hiddenActiveConnectionHint',
+
+    openPreview: 'explorer.openPreview',
+    countRows: 'explorer.countRows',
+    openMetadata: 'explorer.openMetadata',
+    copySelectToEditor: 'explorer.copySelectToEditor',
+    copyFullName: 'explorer.copyFullName',
+    copyTableName: 'explorer.copyTableName',
+    copied: 'explorer.copied',
+
+    loadingTables: 'explorer.loadingTables',
+    loadingColumns: 'explorer.loadingColumns',
+    noTables: 'explorer.noTables',
+
+    columnsCount: 'explorer.columnsCount',
+    indexesCount: 'explorer.indexesCount',
+
+    schemaLabel: 'explorer.schemaLabel',
+    schemasLabel: 'explorer.schemasLabel',
+    databaseLabel: 'explorer.databaseLabel',
+    databasesLabel: 'explorer.databasesLabel',
+    loadingSchemas: 'explorer.loadingSchemas',
+    loadingDatabases: 'explorer.loadingDatabases',
+    noSchemasAvailable: 'explorer.noSchemasAvailable',
+    noDatabasesAvailable: 'explorer.noDatabasesAvailable',
+    noSchemasOrTablesMatchFilter: 'explorer.noSchemasOrTablesMatchFilter',
+    noDatabasesOrTablesMatchFilter: 'explorer.noDatabasesOrTablesMatchFilter',
+
+    exportDatabaseDump: 'explorer.exportDatabaseDump',
+    exportSchemaDump: 'explorer.exportSchemaDump',
+    exportTableDump: 'explorer.exportTableDump',
+    quickExportTableSchema: 'explorer.quickExportTableSchema',
+    quickExportTableData: 'explorer.quickExportTableData',
+} as const;

@@ -5,15 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DbConnection;
 use App\Services\Database\DatabaseExplorerFactory;
+use App\Services\Database\ExplorerResponseNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ExplorerController extends Controller
 {
     public function schemas(
-        Request                 $request,
-        DbConnection            $connection,
-        DatabaseExplorerFactory $explorerFactory,
+        Request                    $request,
+        DbConnection               $connection,
+        DatabaseExplorerFactory    $explorerFactory,
+        ExplorerResponseNormalizer $normalizer,
     ): JsonResponse
     {
         $this->authorizeConnectionRead($request, $connection);
@@ -21,15 +23,16 @@ class ExplorerController extends Controller
         $schemas = $explorerFactory->for($connection)->schemas($connection);
 
         return response()->json([
-            'data' => $schemas,
+            'data' => $normalizer->normalizeSchemas($schemas),
         ]);
     }
 
     public function tables(
-        Request                 $request,
-        DbConnection            $connection,
-        string                  $schema,
-        DatabaseExplorerFactory $explorerFactory,
+        Request                    $request,
+        DbConnection               $connection,
+        string                     $schema,
+        DatabaseExplorerFactory    $explorerFactory,
+        ExplorerResponseNormalizer $normalizer,
     ): JsonResponse
     {
         $this->authorizeConnectionRead($request, $connection);
@@ -37,28 +40,31 @@ class ExplorerController extends Controller
         $tables = $explorerFactory->for($connection)->tables($connection, $schema);
 
         return response()->json([
-            'data' => $tables,
+            'data' => $normalizer->normalizeTables($tables),
         ]);
     }
 
     public function table(
-        Request                 $request,
-        DbConnection            $connection,
-        string                  $schema,
-        string                  $table,
-        DatabaseExplorerFactory $explorerFactory,
+        Request                    $request,
+        DbConnection               $connection,
+        string                     $schema,
+        string                     $table,
+        DatabaseExplorerFactory    $explorerFactory,
+        ExplorerResponseNormalizer $normalizer,
     ): JsonResponse
     {
         $this->authorizeConnectionRead($request, $connection);
 
         $explorer = $explorerFactory->for($connection);
 
-        return response()->json([
-            'schema' => $schema,
-            'table' => $table,
-            'columns' => $explorer->columns($connection, $schema, $table),
-            'indexes' => $explorer->indexes($connection, $schema, $table),
-        ]);
+        return response()->json(
+            $normalizer->normalizeTableDetails(
+                $schema,
+                $table,
+                $explorer->columns($connection, $schema, $table),
+                $explorer->indexes($connection, $schema, $table),
+            )
+        );
     }
 
     protected function authorizeConnectionRead(Request $request, DbConnection $connection): void
