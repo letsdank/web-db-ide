@@ -115,6 +115,37 @@ export function useExplorerTree({
         );
     }, [activeConnectionId]);
 
+    // Restore data for nodes that were expanded before page reload
+    useEffect(() => {
+        for (const schemaKey of expandedSchemaKeys) {
+            const parts = schemaKey.split(':');
+            if (parts.length !== 2) continue;
+
+            const connectionId = Number(parts[0]);
+            const schema = parts[1];
+
+            if (!tablesBySchemaKey[schemaKey]) {
+                void loadTables(connectionId, schema);
+            }
+        }
+    }, [expandedSchemaKeys]); // intentionally run only on mount
+
+    // Restore column details for expanded table nodes
+    useEffect(() => {
+        for (const tableKey of expandedTableKeys) {
+            const parts = tableKey.split(':');
+            if (parts.length !== 3) continue;
+
+            const connectionId = Number(parts[0]);
+            const schema = parts[1];
+            const table = parts[2];
+
+            if (!detailsByTableKey[tableKey]) {
+                void loadTableDetails(connectionId, schema, table);
+            }
+        }
+    }, [expandedTableKeys]); // intentionally run only on mount
+
     // prefetch all table details for the active connection (needed for Monaco completions)
     useEffect(() => {
         if (!activeConnectionId) return;
