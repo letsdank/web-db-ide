@@ -81,10 +81,17 @@ export function ExplorerSchemaNode({
     return (
         <div className="explorer-schema-node">
             <div className="explorer-schema-node__row">
-                <button
-                    type="button"
+                <div
+                    role="button"
+                    tabIndex={0}
                     className="explorer-schema-node__toggle"
                     onClick={onToggleSchema}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onToggleSchema();
+                        }
+                    }}
                 >
                     <span className="explorer-schema-node__left">
                         <span className="explorer-schema-node__chevron">
@@ -102,7 +109,7 @@ export function ExplorerSchemaNode({
                     <span className="explorer-schema-node__toggle-right">
                         <Label theme="unknown">{tables.length}</Label>
                     </span>
-                </button>
+                </div>
 
                 <div className="explorer-schema-node__actions">
                     <DropdownMenu
