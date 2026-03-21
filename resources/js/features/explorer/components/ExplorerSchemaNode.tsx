@@ -169,7 +169,7 @@ export function ExplorerSchemaNode({
                     ) : (
                         <div className="explorer-schema-node__empty">
                             <Text variant="caption-2" color="secondary">
-                                {t('explorer.noTables')}
+                                {t('explorer.noTablesInSchema')}
                             </Text>
                         </div>
                     )}

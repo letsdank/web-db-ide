@@ -122,12 +122,17 @@ export function ExplorerConnectionCard({
     return (
         <div className={connectionClasses}>
             <div className="explorer-connection-card__row">
-                <Button
-                    view="flat"
+                <div
+                    role="button"
+                    tabIndex={0}
                     onClick={onToggleConnection}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onToggleConnection();
+                        }
+                    }}
                     className="explorer-connection-card__toggle"
-                    pin="round-round"
-                    width="max"
                 >
                     <span className="explorer-connection-card__chevron">
                         <Icon data={isExpanded ? ChevronDown : ChevronRight} size={16}/>
@@ -161,7 +166,7 @@ export function ExplorerConnectionCard({
                             </Text>
                         </span>
                     </span>
-                </Button>
+                </div>
 
                 <div className="explorer-connection-card__actions">
                     <DropdownMenu
