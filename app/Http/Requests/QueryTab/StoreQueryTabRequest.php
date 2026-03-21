@@ -24,6 +24,8 @@ class StoreQueryTabRequest extends FormRequest
             ],
             'result_limit' => ['nullable', 'integer', 'in:100,500,1000'],
             'title' => ['nullable', 'string', 'max:255'],
+            'tab_type' => ['sometimes', 'string', 'in:sql,erd'],
+            'meta' => ['sometimes', 'nullable', 'array'],
             'sql_text' => ['nullable', 'string'],
             'selected_text' => ['nullable', 'string'],
             'cursor_position' => ['nullable', 'array'],

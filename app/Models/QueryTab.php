@@ -15,6 +15,8 @@ class QueryTab extends Model
         'db_connection_id',
         'result_limit',
         'title',
+        'tab_type',
+        'meta',
         'sql_text',
         'selected_text',
         'cursor_position',
@@ -26,6 +28,7 @@ class QueryTab extends Model
 
     protected $casts = [
         'result_limit' => 'integer',
+        'meta' => 'array',
         'cursor_position' => 'array',
         'selection_range' => 'array',
         'is_pinned' => 'boolean',

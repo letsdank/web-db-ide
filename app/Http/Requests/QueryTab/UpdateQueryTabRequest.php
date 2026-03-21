@@ -24,6 +24,8 @@ class UpdateQueryTabRequest extends FormRequest
             ],
             'result_limit' => ['nullable', 'integer', 'in:100,500,1000'],
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'tab_type' => ['sometimes', 'string', 'in:sql,erd'],
+            'meta' => ['sometimes', 'nullable', 'array'],
             'sql_text' => ['sometimes', 'nullable', 'string'],
             'selected_text' => ['sometimes', 'nullable', 'string'],
             'cursor_position' => ['sometimes', 'nullable', 'array'],
