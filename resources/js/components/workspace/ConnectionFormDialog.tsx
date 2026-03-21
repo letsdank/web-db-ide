@@ -10,7 +10,6 @@ import type {
 import {useI18n} from "../../i18n";
 import {getDatabaseDriverDefinition, getDatabaseDriverOptions} from "../../lib/databaseDrivers";
 import {CONNECTIONS_I18N_KEYS} from "../../features/connections/lib/i18nKeys";
-import {WORKSPACE_I18N_KEYS} from "../../features/workspace/lib/i18nKeys";
 
 type SshAuthMode = 'password' | 'private_key';
 type VisibilityMode = 'private' | 'shared';

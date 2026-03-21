@@ -4,6 +4,8 @@ import {apiClient} from "./client";
 export interface CreateQueryTabPayload {
     db_connection_id?: number | null;
     title?: string;
+    tab_type?: 'sql' | 'erd';
+    meta?: Record<string, unknown> | null;
     sql_text?: string;
     selected_text?: string | null;
     cursor_position?: Record<string, unknown> | null;

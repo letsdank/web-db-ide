@@ -1,5 +1,5 @@
 import {Button, DropdownMenu, Icon, Label, Text} from "@gravity-ui/uikit";
-import {ArrowDown, ChevronDown} from "@gravity-ui/icons";
+import {ChevronDown} from "@gravity-ui/icons";
 
 interface Props {
     rowCount: number;

@@ -1,6 +1,7 @@
 import type {DatabaseDriver} from "../../../types/connection";
 import {buildCountSql, buildPreviewSql, buildSelectSql} from "./sql";
 import type {ExplorerColumnDto} from "../../../types/explorer";
+import type {ErdTabMeta} from "../../../types/queryTab";
 
 export interface ExplorerTableActionPayload {
     connectionId: number;
@@ -13,6 +14,14 @@ export interface ExplorerCreateTabInput {
     title: string;
     sql_text: string;
     db_connection_id: number;
+}
+
+export interface ErdCreateTabInput {
+    title: string;
+    sql_text: string;
+    db_connection_id: number;
+    tab_type: 'erd';
+    meta: ErdTabMeta;
 }
 
 function buildQualifiedLabel(schema: string | null | undefined, table: string): string {
@@ -76,5 +85,21 @@ export function buildExplorerMetadataTabInput(
         title: `${payload.table} Columns`,
         sql_text: buildExplorerMetadataSqlText(payload.schema, payload.table, columns),
         db_connection_id: payload.connectionId,
+    };
+}
+
+export function buildErdTabInput(payload: {
+    connectionId: number;
+    schema: string;
+}): ErdCreateTabInput {
+    return {
+        title: `${payload.schema} ERD`,
+        sql_text: '',
+        db_connection_id: payload.connectionId,
+        tab_type: 'erd',
+        meta: {
+            connectionId: payload.connectionId,
+            schema: payload.schema,
+        },
     };
 }
