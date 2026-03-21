@@ -54,9 +54,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // explorer
     Route::get('/connections/{connection}/schemas', [ExplorerController::class, 'schemas']);
     Route::get('/connections/{connection}/schemas/{schema}/tables', [ExplorerController::class, 'tables']);
+    Route::get('/connections/{connection}/schemas/{schema}/foreign-keys', [ExplorerController::class, 'foreignKeys']);
     Route::get('/connections/{connection}/tables/{schema}/{table}', [ExplorerController::class, 'table']);
 
     // connection dump
-    Route::post('/connections/{connection}/dump', [DbConnectionDumpController::class,'export']);
+    Route::post('/connections/{connection}/dump', [DbConnectionDumpController::class, 'export']);
 });
 

@@ -67,6 +67,19 @@ class ExplorerController extends Controller
         );
     }
 
+    public function foreignKeys(
+        Request                 $request,
+        DbConnection            $connection,
+        string                  $schema,
+        DatabaseExplorerFactory $explorerFactory): JsonResponse
+    {
+        $this->authorizeConnectionRead($request, $connection);
+
+        $foreignKeys = $explorerFactory->for($connection)->foreignKeys($connection, $schema);
+
+        return response()->json(['data' => $foreignKeys]);
+    }
+
     protected function authorizeConnectionRead(Request $request, DbConnection $connection): void
     {
         $userId = $request->user()->id;

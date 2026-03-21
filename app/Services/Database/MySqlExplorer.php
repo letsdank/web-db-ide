@@ -142,4 +142,35 @@ class MySqlExplorer implements DatabaseExplorer
             $this->endpointResolver->cleanup($resolved);
         }
     }
+
+    public function foreignKeys(DbConnection $connection, string $schema): array
+    {
+        [$pdo, $resolved] = $this->pdo($connection);
+
+        try {
+            $stmt = $pdo->prepare("
+                SELECT
+                    kcu.table_name AS from_table,
+                    kcu.column_name AS from_column,
+                    kcu.referenced_table_name AS to_table,
+                    kcu.referenced_column_name AS to_column,
+                    kcu.constraint_name
+                FROM information_schema.key_column_usage AS kcu
+                JOIN information_schema.table_constraints AS tc
+                    ON tc.constraint_name = kcu.contraint_name
+                    AND tc.table_schema = kcu.table_schema
+                    AND tc.table_name = kcu.table_name
+                WHERE tc.constraint_type = 'FOREIGN KEY'
+                  AND kcu.table_schema = :schema
+                  AND kcu.referenced_table_name IS NOT NULL
+                ORDER BY kcu.table_name, kcu.column_name
+            ");
+
+            $stmt->execute(['schema' => $schema]);
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } finally {
+            $this->endpointResolver->cleanup($resolved);
+        }
+    }
 }

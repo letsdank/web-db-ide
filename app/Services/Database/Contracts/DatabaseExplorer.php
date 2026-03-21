@@ -13,4 +13,6 @@ interface DatabaseExplorer
     public function columns(DbConnection $connection, string $schema, string $table): array;
 
     public function indexes(DbConnection $connection, string $schema, string $table): array;
+
+    public function foreignKeys(DbConnection $connection, string $schema): array;
 }

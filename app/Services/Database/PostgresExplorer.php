@@ -132,4 +132,36 @@ class PostgresExplorer implements DatabaseExplorer
             $this->endpointResolver->cleanup($resolved);
         }
     }
+
+    public function foreignKeys(DbConnection $connection, string $schema): array
+    {
+        [$pdo, $resolved] = $this->pdo($connection);
+
+        try {
+            $stmt = $pdo->prepare("
+                SELECT
+                    tc.table_name AS from_table,
+                    kcu.column_name AS from_column,
+                    ccu.table_name AS to_table,
+                    ccu.column_name AS to_column,
+                    tc.constraint_name
+                FROM information_schema.table_constraints AS tc
+                JOIN information_schema.key_column_usage AS kcu
+                    ON tc.constraint_name = kcu.constraint_name
+                    AND tc.table_schema = kcu.table_schema
+                JOIN information_schema.constraint_column_usage AS ccu
+                    ON ccu.constraint_name = tc.constraint_name
+                    AND ccu.table_schema = tc.table_schema
+                WHERE tc.constraint_type = 'FOREIGN KEY'
+                  AND tc.table_schema = :schema
+                ORDER BY tc.table_name, kcu.column_name
+            ");
+
+            $stmt->execute(['schema' => $schema]);
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } finally {
+            $this->endpointResolver->cleanup($resolved);
+        }
+    }
 }
