@@ -8,6 +8,28 @@ interface SchemaCompletionItem {
     columns: { name: string; type: string }[];
 }
 
+function extractAliases(sql: string): Map<string, string> {
+    const aliases = new Map<string, string>();
+
+    // Matches: FROM/JOIN table [AS] alias
+    const pattern = /\b(?:from|join)\s+["'`]?(\w+)["'`]?\s+(?:as\s+)?["'`]?(\w+)["'`]?/gi;
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.exec(sql)) !== null) {
+        const table = match[1].toLowerCase();
+        const alias = match[2].toLowerCase();
+
+        // Skip SQL keywords that look like aliases
+        if (/^(where|on|set|left|right|inner|outer|cross|full|group|order|limit|having)$/.test(alias)) {
+            continue;
+        }
+
+        aliases.set(alias, table);
+    }
+
+    return aliases;
+}
+
 function buildCompletions(
     monaco: typeof MonacoNamespace,
     model: MonacoNamespace.editor.ITextModel,
@@ -33,8 +55,22 @@ function buildCompletions(
     const dotMatch = linePrefix.match(/(\w+)\.\w*$/);
     if (dotMatch) {
         const prefix = dotMatch[1].toLowerCase();
+
+        // Get full query text up to cursor for alias resolution
+        const fullText=model.getValueInRange({
+            startLineNumber:1,
+            startColumn:1,
+            endLineNumber:position.lineNumber,
+            endColumn:position.column,
+        });
+
+        const aliases=extractAliases(fullText);
+
+        // Resolve alias to table name, fall back to prefix as-is
+        const resolvedTable = aliases.get(prefix) ?? prefix;
+
         const matched = schemaItems.filter(
-            (i) => i.table.toLowerCase() === prefix || i.schema.toLowerCase() === prefix,
+            (i) => i.table.toLowerCase() === resolvedTable || i.schema.toLowerCase() === resolvedTable,
         );
         const source = matched.length > 0 ? matched : schemaItems;
 
@@ -149,7 +185,7 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
         disposeRef.current = monaco.languages.registerCompletionItemProvider('sql', {
             triggerCharacters: ['.'],
             provideCompletionItems(model, position) {
-                if(!activeConnectionIdRef.current) return {suggestions: []};
+                if (!activeConnectionIdRef.current) return {suggestions: []};
                 return {
                     suggestions: buildCompletions(monaco, model, position, schemaItemsRef.current),
                 };
