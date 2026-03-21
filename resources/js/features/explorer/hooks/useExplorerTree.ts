@@ -1,6 +1,6 @@
 import type {ConnectionDto} from "../../../types/connection";
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {fetchSchemas, fetchTableDetails, fetchTables} from "../../../api/explorer";
 
 const EXPLORER_TREE_STORAGE_KEY = 'web-db-ide-explorer-tree';
@@ -77,6 +77,10 @@ export function useExplorerTree({
     const [tablesBySchemaKey, setTablesBySchemaKey] = useState<Record<string, ExplorerTableDto[]>>({});
     const [detailsByTableKey, setDetailsByTableKey] = useState<Record<string, ExplorerTableDetailsDto>>({});
 
+    const [loadingSchemasFor, setLoadingSchemasFor] = useState<number | null>(null);
+    const [loadingTablesFor, setLoadingTablesFor] = useState<string | null>(null);
+    const [loadingDetailsFor, setLoadingDetailsFor] = useState<string | null>(null);
+
     const persistedTreeState = useMemo(() => loadPersistedTreeState(), []);
 
     const [expandedConnectionIds, setExpandedConnectionIds] = useState<number[]>(
@@ -89,108 +93,25 @@ export function useExplorerTree({
         persistedTreeState.expandedTableKeys,
     );
 
+    // Persist expanded state to localStorage
     useEffect(() => {
         if (typeof window === 'undefined') {
             return;
         }
 
-        const payload: PersistedExplorerTreeState = {
+        window.localStorage.setItem(EXPLORER_TREE_STORAGE_KEY, JSON.stringify({
             expandedConnectionIds,
             expandedSchemaKeys,
             expandedTableKeys,
-        };
-
-        window.localStorage.setItem(EXPLORER_TREE_STORAGE_KEY, JSON.stringify(payload));
+        }));
     }, [expandedConnectionIds, expandedSchemaKeys, expandedTableKeys]);
-
-    useEffect(() => {
-        if (!activeConnectionId) {
-            return;
-        }
-
-        setExpandedConnectionIds((prev) =>
-            prev.includes(activeConnectionId)
-                ? prev
-                : [...prev, activeConnectionId],
-        );
-    }, [activeConnectionId]);
-
-    // Restore data for nodes that were expanded before page reload
-    useEffect(() => {
-        for (const schemaKey of expandedSchemaKeys) {
-            const parts = schemaKey.split(':');
-            if (parts.length !== 2) continue;
-
-            const connectionId = Number(parts[0]);
-            const schema = parts[1];
-
-            if (!tablesBySchemaKey[schemaKey]) {
-                void loadTables(connectionId, schema);
-            }
-        }
-    }, [expandedSchemaKeys]); // intentionally run only on mount
-
-    // Restore column details for expanded table nodes
-    useEffect(() => {
-        for (const tableKey of expandedTableKeys) {
-            const parts = tableKey.split(':');
-            if (parts.length !== 3) continue;
-
-            const connectionId = Number(parts[0]);
-            const schema = parts[1];
-            const table = parts[2];
-
-            if (!detailsByTableKey[tableKey]) {
-                void loadTableDetails(connectionId, schema, table);
-            }
-        }
-    }, [expandedTableKeys]); // intentionally run only on mount
-
-    // prefetch all table details for the active connection (needed for Monaco completions)
-    useEffect(() => {
-        if (!activeConnectionId) return;
-
-        const schemas = schemasByConnectionId[activeConnectionId];
-        if (!schemas) return;
-
-        for (const schema of schemas) {
-            const schemaKey = `${activeConnectionId}:${schema}`;
-            const tables = tablesBySchemaKey[schemaKey];
-            if (!tables) continue;
-
-            for (const table of tables) {
-                const tableKey = `${activeConnectionId}:${schema}:${table.table_name}`;
-                if (!detailsByTableKey[tableKey]) {
-                    void loadTableDetails(activeConnectionId, schema, table.table_name);
-                }
-            }
-        }
-    }, [activeConnectionId, schemasByConnectionId, tablesBySchemaKey, detailsByTableKey, loadTableDetails]);
-
-    const [loadingSchemasFor, setLoadingSchemasFor] = useState<number | null>(null);
-    const [loadingTablesFor, setLoadingTablesFor] = useState<string | null>(null);
-    const [loadingDetailsFor, setLoadingDetailsFor] = useState<string | null>(null);
 
     const activeConnection = useMemo(
         () => connections.find((connection) => connection.id === activeConnectionId) ?? null,
         [connections, activeConnectionId],
     );
 
-    useEffect(() => {
-        if (!activeConnectionId) {
-            return;
-        }
-
-        setExpandedConnectionIds((prev) =>
-            prev.includes(activeConnectionId) ? prev : [...prev, activeConnectionId],
-        );
-
-        if (schemasByConnectionId[activeConnectionId]) {
-            return;
-        }
-
-        void loadSchemas(activeConnectionId);
-    }, [activeConnectionId, schemasByConnectionId]);
+    // --- data loaders ---
 
     async function loadSchemas(connectionId: number) {
         setLoadingSchemasFor(connectionId);
@@ -211,12 +132,10 @@ export function useExplorerTree({
 
     const loadTables = useCallback(async (connectionId: number, schema: string) => {
         const key = `${connectionId}:${schema}`;
-
         setLoadingTablesFor(key);
 
         try {
             const tables = await fetchTables(connectionId, schema);
-
             setTablesBySchemaKey((prev) => ({
                 ...prev,
                 [key]: tables,
@@ -230,17 +149,13 @@ export function useExplorerTree({
 
     async function loadTableDetails(connectionId: number, schema: string, table: string) {
         const key = `${connectionId}:${schema}:${table}`;
-
         setLoadingDetailsFor(key);
-
         try {
             const details = await fetchTableDetails(connectionId, schema, table);
-
             setDetailsByTableKey((prev) => ({
                 ...prev,
                 [key]: details,
             }));
-
             return details;
         } catch (error) {
             console.error(error);
@@ -249,6 +164,57 @@ export function useExplorerTree({
             setLoadingDetailsFor((current) => (current === key ? null : current));
         }
     }
+
+    // --- effects ---
+
+    // Load schemas when active connection changes
+    useEffect(() => {
+        if (!activeConnectionId) {
+            return;
+        }
+
+        setExpandedConnectionIds((prev) =>
+            prev.includes(activeConnectionId)
+                ? prev
+                : [...prev, activeConnectionId],
+        );
+
+        setSchemasByConnectionId((prev) => {
+            if (!prev[activeConnectionId]) {
+                void loadSchemas(activeConnectionId);
+            }
+            return prev;
+        });
+    }, [activeConnectionId]);
+
+    // Restore table lists for schema nodes that were expanded before page reload.
+    // Runs once on mount - deps are stable initial values from useState.
+    const restoredSchemasRef = useRef(false);
+    useEffect(() => {
+        if (restoredSchemasRef.current) return;
+        restoredSchemasRef.current = true;
+
+        for (const schemaKey of persistedTreeState.expandedSchemaKeys) {
+            const parts = schemaKey.split(':');
+            if (parts.length !== 2) continue;
+            void loadTables(Number(parts[0]), parts[1]);
+        }
+    }, [loadTables, persistedTreeState.expandedSchemaKeys]);
+
+    // Restore column details for table nodes that were expanded before page reload.
+    const restoredTablesRef = useRef(false);
+    useEffect(() => {
+        if (restoredTablesRef.current) return;
+        restoredTablesRef.current = true;
+
+        for (const tableKey of persistedTreeState.expandedTableKeys) {
+            const parts = tableKey.split(':');
+            if (parts.length !== 3) continue;
+            void loadTableDetails(Number(parts[0]), parts[1], parts[2]);
+        }
+    }, [loadTableDetails, persistedTreeState.expandedTableKeys]);
+
+    // --- tree interactions ---
 
     const toggleConnection = useCallback((connectionId: number) => {
         setExpandedConnectionIds((prev) =>
@@ -265,22 +231,22 @@ export function useExplorerTree({
 
         setExpandedSchemaKeys((prev) => {
             const isExpanded = prev.includes(schemaKey);
-
             if (isExpanded) {
                 return prev.filter((key) => key !== schemaKey);
             }
-
             return [...prev, schemaKey];
         });
 
-        if (!tablesBySchemaKey[schemaKey]) {
-            void loadTables(connectionId, schema);
-        }
-    }, [loadTables, tablesBySchemaKey]);
+        setTablesBySchemaKey((prev) => {
+            if (!prev[schemaKey]) {
+                void loadTables(connectionId, schema);
+            }
+            return prev;
+        });
+    }, [loadTables]);
 
     const toggleTable = useCallback((connectionId: number, schema: string, tableName: string) => {
         const tableKey = `${connectionId}:${schema}:${tableName}`;
-
         setExpandedTableKeys((prev) =>
             prev.includes(tableKey)
                 ? prev.filter((key) => key !== tableKey)
@@ -290,19 +256,15 @@ export function useExplorerTree({
 
     return {
         activeConnection,
-
         schemasByConnectionId,
         tablesBySchemaKey,
         detailsByTableKey,
-
         expandedConnectionIds,
         expandedSchemaKeys,
         expandedTableKeys,
-
         loadingSchemasFor,
         loadingTablesFor,
         loadingDetailsFor,
-
         toggleConnection,
         toggleSchema,
         toggleTable,
