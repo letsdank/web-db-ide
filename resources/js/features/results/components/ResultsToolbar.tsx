@@ -1,4 +1,5 @@
-import {Button, DropdownMenu, Label, Text} from "@gravity-ui/uikit";
+import {Button, DropdownMenu, Icon, Label, Text} from "@gravity-ui/uikit";
+import {ArrowDown, ChevronDown} from "@gravity-ui/icons";
 
 interface Props {
     rowCount: number;
@@ -13,6 +14,8 @@ interface Props {
     onCopyAll: () => void;
     onResetView: () => void;
     onExportCsv: () => void;
+    onExportJson: () => void;
+    onExportTsv: () => void;
     onChangeResultLimit: (limit: 100 | 500 | 1000) => void;
 }
 
@@ -29,6 +32,8 @@ export function ResultsToolbar({
                                    onCopyAll,
                                    onResetView,
                                    onExportCsv,
+                                   onExportJson,
+                                   onExportTsv,
                                    onChangeResultLimit,
                                }: Props) {
     return (
@@ -77,18 +82,18 @@ export function ResultsToolbar({
                     items={[
                         {
                             text: '100 rows',
-                            action:()=>onChangeResultLimit(100),
+                            action: () => onChangeResultLimit(100),
                         },
                         {
-                            text:'500 rows',
-                            action:()=>onChangeResultLimit(500),
+                            text: '500 rows',
+                            action: () => onChangeResultLimit(500),
                         },
                         {
                             text: '1000 rows',
-                            action:()=>onChangeResultLimit(1000),
+                            action: () => onChangeResultLimit(1000),
                         },
                     ]}
-                    renderSwitcher={(props)=>(
+                    renderSwitcher={(props) => (
                         <Button {...props} view="flat-secondary">
                             Limit: {resultLimit}
                         </Button>
@@ -103,9 +108,19 @@ export function ResultsToolbar({
                     Reset view
                 </Button>
 
-                <Button view="flat-secondary" onClick={onExportCsv}>
-                    Export CSV
-                </Button>
+                <DropdownMenu
+                    items={[
+                        {text: 'CSV', action: onExportCsv},
+                        {text: 'JSON', action: onExportJson},
+                        {text: 'TSV', action: onExportTsv},
+                    ]}
+                    renderSwitcher={(props) => (
+                        <Button {...props} view="flat-secondary">
+                            Export
+                            <Icon data={ChevronDown} size={14}/>
+                        </Button>
+                    )}
+                />
             </div>
         </div>
     );

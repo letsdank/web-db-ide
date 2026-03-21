@@ -105,6 +105,36 @@ export function ResultsPanel({
         );
     }
 
+    function handleExportJson() {
+        const fileBaseName = (activeTabTitle || 'query-results')
+            .toLowerCase()
+            .replace(/[^a-z0-9-_]+/gi, '-')
+            .replace(/^-+|-+$/g, '');
+
+        const rows = visibleRows.map((row) =>
+            Object.fromEntries(visibleColumns.map((col, i) => [col.name, row[i] ?? null])),
+        );
+
+        downloadFile(
+            `${fileBaseName || 'query-results'}.json`,
+            JSON.stringify(rows, null, 2),
+            'application/json',
+        );
+    }
+
+    function handleExportTsv() {
+        const fileBaseName = (activeTabTitle || 'query-results')
+            .toLowerCase()
+            .replace(/[^a-z0-9-_]+/gi, '-')
+            .replace(/^-+|-+$/g, '');
+
+        downloadFile(
+            `${fileBaseName || 'query-results'}.tsv`,
+            buildTsv(visibleColumns, visibleRows),
+            'text/tab-separated-values',
+        );
+    }
+
     return (
         <Card
             view="filled"
@@ -224,6 +254,8 @@ export function ResultsPanel({
                 }}
                 onResetView={resetView}
                 onExportCsv={handleExportCsv}
+                onExportJson={handleExportJson}
+                onExportTsv={handleExportTsv}
                 onChangeResultLimit={onChangeResultLimit}
             />
 
