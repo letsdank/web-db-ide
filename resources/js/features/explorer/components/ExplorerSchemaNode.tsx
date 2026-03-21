@@ -35,6 +35,7 @@ interface Props {
     onOpenMetadata: (table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
     onCopyFullName: (table: ExplorerTableDto) => void;
     onCopySelect: (table: ExplorerTableDto) => void;
+    onOpenErd: () => void;
     onExportSchemaDump: () => void;
     onExportTableDump: (table: ExplorerTableDto) => void;
     onQuickExportTableSchema: (table: ExplorerTableDto) => void;
@@ -61,6 +62,7 @@ export function ExplorerSchemaNode({
                                        onOpenMetadata,
                                        onCopyFullName,
                                        onCopySelect,
+                                       onOpenErd,
                                        onExportSchemaDump,
                                        onExportTableDump,
                                        onQuickExportTableSchema,
@@ -114,6 +116,10 @@ export function ExplorerSchemaNode({
                 <div className="explorer-schema-node__actions">
                     <DropdownMenu
                         items={[
+                            {
+                                text: 'ERD',
+                                action: onOpenErd,
+                            },
                             {
                                 text: t('explorer.exportSchemaDump'),
                                 action: onExportSchemaDump,

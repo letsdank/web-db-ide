@@ -47,6 +47,7 @@ interface Props {
     ) => void;
     onCopyFullName: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
     onCopySelect: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onOpenSchemaErd: (connectionId: number, schema: string) => void;
     onExportConnectionDump: (connection: ConnectionDto) => void;
     onExportSchemaDump: (connectionId: number, schema: string) => void;
     onExportTableDump: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
@@ -79,6 +80,7 @@ export function ExplorerSidebar({
                                     onOpenMetadata,
                                     onCopyFullName,
                                     onCopySelect,
+                                    onOpenSchemaErd,
                                     onExportConnectionDump,
                                     onExportSchemaDump,
                                     onExportTableDump,
@@ -204,6 +206,7 @@ export function ExplorerSidebar({
                                     onOpenMetadata={(schema, table, details) => onOpenMetadata(connection.id, schema, table, details)}
                                     onCopyFullName={(schema, table) => onCopyFullName(connection.id, schema, table)}
                                     onCopySelect={(schema, table) => onCopySelect(connection.id, schema, table)}
+                                    onOpenSchemaErd={(schema) => onOpenSchemaErd(connection.id, schema)}
                                     onExportConnectionDump={() => onExportConnectionDump(connection)}
                                     onExportSchemaDump={(schema) => onExportSchemaDump(connection.id, schema)}
                                     onExportTableDump={(schema, table) => onExportTableDump(connection.id, schema, table)}

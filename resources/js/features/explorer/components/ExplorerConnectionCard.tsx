@@ -47,6 +47,7 @@ interface Props {
     onOpenMetadata: (schema: string, table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
     onCopyFullName: (schema: string, table: ExplorerTableDto) => void;
     onCopySelect: (schema: string, table: ExplorerTableDto) => void;
+    onOpenSchemaErd: (schema: string) => void;
     onExportConnectionDump: () => void;
     onExportSchemaDump: (schema: string) => void;
     onExportTableDump: (schema: string, table: ExplorerTableDto) => void;
@@ -78,6 +79,7 @@ export function ExplorerConnectionCard({
                                            onOpenMetadata,
                                            onCopyFullName,
                                            onCopySelect,
+                                           onOpenSchemaErd,
                                            onExportConnectionDump,
                                            onExportSchemaDump,
                                            onExportTableDump,
@@ -245,6 +247,7 @@ export function ExplorerConnectionCard({
                                     onOpenMetadata={(table, details) => onOpenMetadata(schema, table, details)}
                                     onCopyFullName={(table) => onCopyFullName(schema, table)}
                                     onCopySelect={(table) => onCopySelect(schema, table)}
+                                    onOpenErd={() => onOpenSchemaErd(schema)}
                                     onExportSchemaDump={() => onExportSchemaDump(schema)}
                                     onExportTableDump={(table) => onExportTableDump(schema, table)}
                                     onQuickExportTableSchema={(table) => onQuickExportTableSchema(schema, table)}

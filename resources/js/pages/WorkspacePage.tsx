@@ -32,12 +32,14 @@ import {showErrorToast, showSuccessToast} from "../lib/toast";
 import type {ExportDumpTarget} from "../components/workspace/ExportDumpDialog";
 import {ExportDumpDialog} from "../components/workspace/ExportDumpDialog";
 import {
+    buildErdTabInput,
     buildExplorerCountTabInput,
     buildExplorerMetadataTabInput,
     buildExplorerPreviewTabInput,
     buildExplorerSelectSql
 } from "../features/explorer/lib/tableActions";
 import {useSqlCompletionProvider} from "../features/editor/hooks/useSqlCompletionProvider";
+import {ErdTabMeta} from "../types/queryTab";
 
 export function WorkspacePage() {
     const {
@@ -413,6 +415,23 @@ export function WorkspacePage() {
         }, resolvedDetails?.columns ?? []));
     }, [handleCreateTab, loadTableDetails, resolveConnectionDriver]);
 
+    const handleOpenSchemaErd = useCallback(async (connectionId: number, schema: string) => {
+        // Switch to existing ERD for this schema instead of opening a new one
+        const existing = tabs.find(
+            (t) =>
+                t.tab_type === 'erd' &&
+                (t.meta as ErdTabMeta | null)?.connectionId === connectionId &&
+                (t.meta as ErdTabMeta | null)?.schema === schema,
+        );
+
+        if (existing) {
+            void handleSelectTab(existing.id);
+            return;
+        }
+
+        await handleCreateTab(buildErdTabInput({connectionId, schema}));
+    }, [tabs, handleSelectTab, handleCreateTab]);
+
     const openConnectionDumpDialog = useCallback((connection: ConnectionDto) => {
         setExportDumpError(null);
         setExportDumpTarget({
@@ -723,6 +742,9 @@ export function WorkspacePage() {
                                 schema,
                                 table: table.table_name,
                             })
+                        }
+                        onOpenSchemaErd={(connectionId, schema) =>
+                            handleOpenSchemaErd(connectionId, schema)
                         }
                         onExportConnectionDump={openConnectionDumpDialog}
                         onExportSchemaDump={openSchemaDumpDialog}
