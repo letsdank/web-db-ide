@@ -115,6 +115,27 @@ export function useExplorerTree({
         );
     }, [activeConnectionId]);
 
+    // prefetch all table details for the active connection (needed for Monaco completions)
+    useEffect(() => {
+        if (!activeConnectionId) return;
+
+        const schemas = schemasByConnectionId[activeConnectionId];
+        if (!schemas) return;
+
+        for (const schema of schemas) {
+            const schemaKey = `${activeConnectionId}:${schema}`;
+            const tables = tablesBySchemaKey[schemaKey];
+            if (!tables) continue;
+
+            for (const table of tables) {
+                const tableKey = `${activeConnectionId}:${schema}:${table.table_name}`;
+                if (!detailsByTableKey[tableKey]) {
+                    void loadTableDetails(activeConnectionId, schema, table.table_name);
+                }
+            }
+        }
+    }, [activeConnectionId, schemasByConnectionId, tablesBySchemaKey, detailsByTableKey, loadTableDetails]);
+
     const [loadingSchemasFor, setLoadingSchemasFor] = useState<number | null>(null);
     const [loadingTablesFor, setLoadingTablesFor] = useState<string | null>(null);
     const [loadingDetailsFor, setLoadingDetailsFor] = useState<string | null>(null);
