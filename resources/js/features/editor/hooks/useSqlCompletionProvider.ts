@@ -29,6 +29,7 @@ function buildCompletions(
         endColumn: position.column,
     });
 
+    // After "table." or "alias." - suggest columns
     const dotMatch = linePrefix.match(/(\w+)\.\w*$/);
     if (dotMatch) {
         const prefix = dotMatch[1].toLowerCase();
@@ -114,10 +115,13 @@ interface Params {
 export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConnectionId}: Params) {
     const disposeRef = useRef<MonacoNamespace.IDisposable | null>(null);
 
-    // Recompute only when the active connection's loaded tables actually change.
-    // Storing as a ref inside the provider closure avoids re-registering on every
-    // detailsByTableKey update - the provider reads the latest ref value on each invocation.
+    // Both refs are read inside the provider closure on every completion request,
+    // so switching connections or loading new tables is reflected immediately
+    // without re-registering the provider.
     const schemaItemsRef = useRef<SchemaCompletionItem[]>([]);
+    const activeConnectionIdRef = useRef<number | null>(null);
+
+    activeConnectionIdRef.current = activeConnectionId;
 
     schemaItemsRef.current = useMemo(() => {
         if (!activeConnectionId) return [];
@@ -134,17 +138,18 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
             }));
     }, [detailsByTableKey, activeConnectionId]);
 
-    // Register provider once per monaco+connection pair - reads schemaItemsRef live,
-    // so new tables become available without re-registration.
+    // Register provider once per monaco instance - both schema and active connection
+    // are read via refs so no re-registration needed on connection switch.
     useEffect(() => {
         disposeRef.current?.dispose();
         disposeRef.current = null;
 
-        if (!monaco || !activeConnectionId) return;
+        if (!monaco) return;
 
         disposeRef.current = monaco.languages.registerCompletionItemProvider('sql', {
-            triggerCharacters: ['.', ' '],
+            triggerCharacters: ['.'],
             provideCompletionItems(model, position) {
+                if(!activeConnectionIdRef.current) return {suggestions: []};
                 return {
                     suggestions: buildCompletions(monaco, model, position, schemaItemsRef.current),
                 };
@@ -155,5 +160,5 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
             disposeRef.current?.dispose();
             disposeRef.current = null;
         }
-    }, [monaco, activeConnectionId]); // re-register only when connection changes
+    }, [monaco]); // register exactly once when monaco mounts
 }
