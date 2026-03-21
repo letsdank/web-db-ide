@@ -183,6 +183,10 @@ const ru = {
             passphrase: 'Парольная фраза',
             passphraseKeep: 'Парольная фраза (оставьте пустым, чтобы не менять)',
         },
+        driver: {
+            pgsql:'PostgreSQL',
+            mysql:'MySQL / MariaDB',
+        },
     },
 
     explorer: {

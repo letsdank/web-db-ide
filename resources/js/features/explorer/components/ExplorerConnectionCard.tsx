@@ -122,10 +122,12 @@ export function ExplorerConnectionCard({
     return (
         <div className={connectionClasses}>
             <div className="explorer-connection-card__row">
-                <button
+                <Button
+                    view="flat"
                     onClick={onToggleConnection}
                     className="explorer-connection-card__toggle"
-                    type="button"
+                    pin="round-round"
+                    width="max"
                 >
                     <span className="explorer-connection-card__chevron">
                         <Icon data={isExpanded ? ChevronDown : ChevronRight} size={16}/>
@@ -141,9 +143,7 @@ export function ExplorerConnectionCard({
 
                             <span className="explorer-connection-card__badges">
                                 <Label theme={marker.theme}>{t(markerLabelKey)}</Label>
-                                <Label theme="info">
-                                    {connection.driver === 'mysql' ? 'MySQL / MariaDB' : 'PostgreSQL'}
-                                </Label>
+                                <Label theme="info">{t(`connections.driver.${connection.driver}`)}</Label>
 
                                 {connection.use_ssh_tunnel ? (
                                     <Label theme="info">{t('connections.ssh')}</Label>
@@ -161,7 +161,7 @@ export function ExplorerConnectionCard({
                             </Text>
                         </span>
                     </span>
-                </button>
+                </Button>
 
                 <div className="explorer-connection-card__actions">
                     <DropdownMenu

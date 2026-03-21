@@ -183,6 +183,10 @@ const en = {
             passphrase: 'Passphrase',
             passphraseKeep: 'Passphrase (leave empty to keep current)',
         },
+        driver: {
+            pgsql: 'PostgreSQL',
+            mysql: 'MySQL / MariaDB',
+        },
     },
 
     explorer: {
