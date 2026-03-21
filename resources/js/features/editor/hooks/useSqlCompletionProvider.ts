@@ -1,6 +1,6 @@
 import type * as MonacoNamespace from 'monaco-editor';
 import type {ExplorerTableDetailsDto} from "../../../types/explorer";
-import {useEffect, useRef} from "react";
+import {useEffect, useMemo, useRef} from "react";
 
 interface SchemaCompletionItem {
     schema: string;
@@ -12,7 +12,7 @@ function buildCompletions(
     monaco: typeof MonacoNamespace,
     model: MonacoNamespace.editor.ITextModel,
     position: MonacoNamespace.Position,
-    items: SchemaCompletionItem[],
+    schemaItems: SchemaCompletionItem[],
 ): MonacoNamespace.languages.CompletionItem[] {
     const word = model.getWordUntilPosition(position);
     const range: MonacoNamespace.IRange = {
@@ -32,10 +32,10 @@ function buildCompletions(
     const dotMatch = linePrefix.match(/(\w+)\.\w*$/);
     if (dotMatch) {
         const prefix = dotMatch[1].toLowerCase();
-        const matched = items.filter(
+        const matched = schemaItems.filter(
             (i) => i.table.toLowerCase() === prefix || i.schema.toLowerCase() === prefix,
         );
-        const source = matched.length > 0 ? matched : items;
+        const source = matched.length > 0 ? matched : schemaItems;
 
         return source.flatMap((i) =>
             i.columns.map((col) => ({
@@ -63,7 +63,7 @@ function buildCompletions(
 
     const result: MonacoNamespace.languages.CompletionItem[] = [];
 
-    for (const item of items) {
+    for (const item of schemaItems) {
         const sort = isTableCtx ? '0' : '2';
         result.push({
             label: `${item.schema}.${item.table}`,
@@ -85,7 +85,7 @@ function buildCompletions(
 
     if (isSelectCtx) {
         const seen = new Set<string>();
-        for (const item of items) {
+        for (const item of schemaItems) {
             for (const col of item.columns) {
                 if (!seen.has(col.name)) {
                     seen.add(col.name);
@@ -114,13 +114,15 @@ interface Params {
 export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConnectionId}: Params) {
     const disposeRef = useRef<MonacoNamespace.IDisposable | null>(null);
 
-    useEffect(() => {
-        disposeRef.current?.dispose();
-        disposeRef.current = null;
+    // Recompute only when the active connection's loaded tables actually change.
+    // Storing as a ref inside the provider closure avoids re-registering on every
+    // detailsByTableKey update - the provider reads the latest ref value on each invocation.
+    const schemaItemsRef = useRef<SchemaCompletionItem[]>([]);
 
-        if (!monaco || !activeConnectionId) return;
+    schemaItemsRef.current = useMemo(() => {
+        if (!activeConnectionId) return [];
 
-        const schemaItems: SchemaCompletionItem[] = Object.entries(detailsByTableKey)
+        return Object.entries(detailsByTableKey)
             .filter(([key]) => Number(key.split(':')[0]) === activeConnectionId)
             .map(([, details]) => ({
                 schema: details.schema,
@@ -130,11 +132,22 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
                     type: col.data_type,
                 })),
             }));
+    }, [detailsByTableKey, activeConnectionId]);
+
+    // Register provider once per monaco+connection pair - reads schemaItemsRef live,
+    // so new tables become available without re-registration.
+    useEffect(() => {
+        disposeRef.current?.dispose();
+        disposeRef.current = null;
+
+        if (!monaco || !activeConnectionId) return;
 
         disposeRef.current = monaco.languages.registerCompletionItemProvider('sql', {
             triggerCharacters: ['.', ' '],
             provideCompletionItems(model, position) {
-                return {suggestions: buildCompletions(monaco, model, position, schemaItems)};
+                return {
+                    suggestions: buildCompletions(monaco, model, position, schemaItemsRef.current),
+                };
             },
         });
 
@@ -142,5 +155,5 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
             disposeRef.current?.dispose();
             disposeRef.current = null;
         }
-    }, [monaco, detailsByTableKey, activeConnectionId]);
+    }, [monaco, activeConnectionId]); // re-register only when connection changes
 }
