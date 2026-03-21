@@ -3,7 +3,7 @@ import React, {useCallback, useRef, useState} from "react";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
-import type {SqlEditorPaneHandle} from "../components/workspace/SqlEditorPane";
+import type {MonacoInstance, SqlEditorPaneHandle} from "../components/workspace/SqlEditorPane";
 import {SqlEditorPane} from "../components/workspace/SqlEditorPane";
 import {ResultsPanel} from "../features/results/components/ResultsPanel";
 import {RightSidebarPanels} from "../components/workspace/RightSidebarPanels";
@@ -37,6 +37,7 @@ import {
     buildExplorerPreviewTabInput,
     buildExplorerSelectSql
 } from "../features/explorer/lib/tableActions";
+import {useSqlCompletionProvider} from "../features/editor/hooks/useSqlCompletionProvider";
 
 export function WorkspacePage() {
     const {
@@ -102,6 +103,9 @@ export function WorkspacePage() {
     const [exportDumpError, setExportDumpError] = useState<string | null>(null);
 
     const editorRef = useRef<SqlEditorPaneHandle | null>(null);
+    const [monacoInstance, setMonacoInstance] = useState<MonacoInstance | null>(null);
+    const handleMonacoMount = useCallback((monaco: MonacoInstance) => setMonacoInstance(monaco), []);
+
     const {t} = useI18n();
 
     const focusEditor = useCallback(() => {
@@ -369,6 +373,12 @@ export function WorkspacePage() {
         onSelectConnection: (connectionId) => {
             void handleSelectConnection(connectionId);
         },
+    });
+
+    useSqlCompletionProvider({
+        monaco: monacoInstance,
+        detailsByTableKey,
+        activeConnectionId,
     });
 
     const handleOpenTableContextMenu = useCallback(async (
@@ -764,6 +774,7 @@ export function WorkspacePage() {
                         onSelectionChange={handleEditorSelectionChange}
                         onRun={() => handleRun('auto')}
                         onRunSelection={handleRunSelection}
+                        onMonacoMount={handleMonacoMount}
                     />
                 }
                 editorFooter={

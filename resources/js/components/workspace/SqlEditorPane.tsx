@@ -1,8 +1,10 @@
 import {forwardRef, useImperativeHandle, useMemo, useRef} from "react";
 import type * as MonacoNamespace from "monaco-editor"
-import type { OnMount} from "@monaco-editor/react";
+import type {OnMount} from "@monaco-editor/react";
 import {Editor} from "@monaco-editor/react";
 import {Card} from "@gravity-ui/uikit";
+
+export type MonacoInstance = typeof MonacoNamespace;
 
 interface EditorSelectionPayload {
     selectedText: string | null;
@@ -28,6 +30,7 @@ interface Props {
     onSelectionChange: (payload: EditorSelectionPayload) => void;
     onRun: () => void;
     onRunSelection: () => void;
+    onMonacoMount?: (monaco: MonacoInstance) => void;
 }
 
 export const SqlEditorPane = forwardRef<SqlEditorPaneHandle, Props>(function SqlEditorPane({
@@ -36,6 +39,7 @@ export const SqlEditorPane = forwardRef<SqlEditorPaneHandle, Props>(function Sql
                                                                                                onSelectionChange,
                                                                                                onRun,
                                                                                                onRunSelection,
+                                                                                               onMonacoMount,
                                                                                            }, ref) {
     const options = useMemo<MonacoNamespace.editor.IStandaloneEditorConstructionOptions>(() => ({
         minimap: {enabled: false},
@@ -72,6 +76,7 @@ export const SqlEditorPane = forwardRef<SqlEditorPaneHandle, Props>(function Sql
 
     const handleMount: OnMount = (editor, monaco) => {
         editorRef.current = editor;
+        onMonacoMount?.(monaco);
 
         monaco.editor.defineTheme('web-db-ide-sql', {
             base: 'vs-dark',
