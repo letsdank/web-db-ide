@@ -15,6 +15,8 @@ import {
     getExplorerLoadingGroupLabelKey
 } from "../lib/driverPresentation";
 
+const EMPTY_TABLES: ExplorerTableDto[] = [];
+
 interface Props {
     connection: ConnectionDto;
     isActive: boolean;
@@ -127,6 +129,17 @@ export const ExplorerConnectionCard = React.memo(function ExplorerConnectionCard
             return schemaMatches || tableMatches;
         });
     }, [connection.id, filter, schemas, tablesBySchemaKey])
+
+    const connectionDetailsByTableKey = useMemo(() => {
+        const prefix = `${id}:`;
+        const result: Record<string, ExplorerTableDetailsDto> = {};
+        for (const key of Object.keys(detailsByTableKey)) {
+            if (key.startsWith(prefix)) {
+                result[key] = detailsByTableKey[key];
+            }
+        }
+        return result;
+    }, [detailsByTableKey, id]);
 
     const connectionClasses = [
         "explorer-connection-card",
@@ -252,10 +265,10 @@ export const ExplorerConnectionCard = React.memo(function ExplorerConnectionCard
                                     schema={schema}
                                     filter={filter}
                                     isExpanded={expandedSchemaKeys.includes(schemaKey)}
-                                    tables={tablesBySchemaKey[schemaKey] ?? []}
+                                    tables={tablesBySchemaKey[schemaKey] ?? EMPTY_TABLES}
                                     loadingTables={loadingTablesFor === schemaKey}
                                     expandedTableKeys={expandedTableKeys}
-                                    detailsByTableKey={detailsByTableKey}
+                                    detailsByTableKey={connectionDetailsByTableKey}
                                     loadingDetailsFor={loadingDetailsFor}
                                     canExportDump={canExportDump}
                                     onToggleSchema={handleToggleSchema}

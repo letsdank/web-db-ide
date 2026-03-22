@@ -9,6 +9,8 @@ import type {ResourceVisibilityFilter} from "../../../types/resourceFilter";
 import {matchesVisibilityFilter} from "../../../lib/resourceMarkers";
 import {EXPLORER_I18N_KEYS} from "../lib/i18nKeys";
 
+const EMPTY_SCHEMAS: string[] = [];
+
 interface Props {
     connections: ConnectionDto[];
     activeConnectionId: number | null;
@@ -55,38 +57,38 @@ interface Props {
     onQuickExportTableData: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
 }
 
-export function ExplorerSidebar({
-                                    connections,
-                                    activeConnectionId,
-                                    loadingSchemasByConnectionId,
-                                    schemasByConnectionId,
-                                    expandedConnectionIds,
-                                    expandedSchemaKeys,
-                                    expandedTableKeys,
-                                    tablesBySchemaKey,
-                                    detailsByTableKey,
-                                    loadingTablesFor,
-                                    loadingDetailsFor,
-                                    hiddenActiveConnectionByFilter,
-                                    onCreateConnection,
-                                    onToggleConnection,
-                                    onEditConnection,
-                                    onDeleteConnection,
-                                    onToggleSchema,
-                                    onToggleTable,
-                                    onOpenTableContextMenu,
-                                    onOpenSelect,
-                                    onOpenCount,
-                                    onOpenMetadata,
-                                    onCopyFullName,
-                                    onCopySelect,
-                                    onOpenSchemaErd,
-                                    onExportConnectionDump,
-                                    onExportSchemaDump,
-                                    onExportTableDump,
-                                    onQuickExportTableSchema,
-                                    onQuickExportTableData,
-                                }: Props) {
+export const ExplorerSidebar = React.memo(function ExplorerSidebar({
+                                                                       connections,
+                                                                       activeConnectionId,
+                                                                       loadingSchemasByConnectionId,
+                                                                       schemasByConnectionId,
+                                                                       expandedConnectionIds,
+                                                                       expandedSchemaKeys,
+                                                                       expandedTableKeys,
+                                                                       tablesBySchemaKey,
+                                                                       detailsByTableKey,
+                                                                       loadingTablesFor,
+                                                                       loadingDetailsFor,
+                                                                       hiddenActiveConnectionByFilter,
+                                                                       onCreateConnection,
+                                                                       onToggleConnection,
+                                                                       onEditConnection,
+                                                                       onDeleteConnection,
+                                                                       onToggleSchema,
+                                                                       onToggleTable,
+                                                                       onOpenTableContextMenu,
+                                                                       onOpenSelect,
+                                                                       onOpenCount,
+                                                                       onOpenMetadata,
+                                                                       onCopyFullName,
+                                                                       onCopySelect,
+                                                                       onOpenSchemaErd,
+                                                                       onExportConnectionDump,
+                                                                       onExportSchemaDump,
+                                                                       onExportTableDump,
+                                                                       onQuickExportTableSchema,
+                                                                       onQuickExportTableData,
+                                                                   }: Props) {
     const {t} = useI18n();
     const [filter, setFilter] = useState('');
     const [visibilityFilter, setVisibilityFilter] = useState<ResourceVisibilityFilter>('all');
@@ -186,7 +188,7 @@ export function ExplorerSidebar({
                                     connection={connection}
                                     isActive={connection.id === activeConnectionId}
                                     isExpanded={safeExpandedConnectionIds.includes(connection.id)}
-                                    schemas={safeSchemasByConnectionId[connection.id] ?? []}
+                                    schemas={safeSchemasByConnectionId[connection.id] ?? EMPTY_SCHEMAS}
                                     loadingSchemas={Boolean(safeLoadingSchemasByConnectionId[connection.id])}
                                     expandedSchemaKeys={safeExpandedSchemaKeys}
                                     expandedTableKeys={safeExpandedTableKeys}
@@ -228,4 +230,4 @@ export function ExplorerSidebar({
             </div>
         </Card>
     );
-}
+});
