@@ -203,6 +203,19 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
             provideCompletionItems(model, position) {
                 if (!activeConnectionIdRef.current) return {suggestions: []};
 
+                // Early return - avoid running on every arbitrary keystroke
+                const linePrefix = model.getValueInRange({
+                    startLineNumber: position.lineNumber,
+                    startColumn: 1,
+                    endLineNumber: position.lineNumber,
+                    endColumn: position.column,
+                });
+
+                const hasDot = /\w\.\w*$/.test(linePrefix);
+                const hasKeywordCtx = /\b(select|from|join|where|set|into|update)\b/i.test(linePrefix);
+
+                if (!hasDot && !hasKeywordCtx) return {suggestions: []};
+
                 const word = model.getWordUntilPosition(position);
                 const range: MonacoNamespace.IRange = {
                     startLineNumber: position.lineNumber,
