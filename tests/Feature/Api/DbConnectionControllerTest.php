@@ -407,7 +407,7 @@ class DbConnectionControllerTest extends TestCase
             ->actingAs($user, 'sanctum')
             ->postJson('/api/connections', [
                 'name' => 'Broken DB',
-                'driver' => 'sqlite',
+                'driver' => 'mssql',
                 'host' => '127.0.0.1',
                 'port' => 1234,
                 'database_name' => 'broken',
@@ -446,5 +446,20 @@ class DbConnectionControllerTest extends TestCase
 
         $this->assertSame('mysql', $connection->driver);
         $this->assertSame(3306, $connection->port);
+    }
+
+    public function test_store_accepts_sqlite_driver(): void
+    {
+        $user = User::factory()->create();
+
+        $this
+            ->actingAs($user, 'sanctum')
+            ->postJson('/api/connections', [
+                'name' => 'Local SQLite',
+                'driver' => 'sqlite',
+                'database_name' => 'tmp/test.sqlite',
+                'use_ssh_tunnel' => false,
+            ])
+            ->assertCreated();
     }
 }

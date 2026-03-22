@@ -51,10 +51,10 @@ class DatabaseExplorerFactoryTest extends TestCase
         $factory = $this->app->make(DatabaseExplorerFactory::class);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Unsupported explorer driver [sqlite].');
+        $this->expectExceptionMessage('Unsupported explorer driver [mssql].');
 
         $factory->for(new DbConnection([
-            'driver' => 'sqlite',
+            'driver' => 'mssql',
         ]));
     }
 }
