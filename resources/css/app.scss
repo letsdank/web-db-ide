@@ -479,6 +479,16 @@ body {
 }
 
 .erd-pane {
+    // ERD-specific design tokens - work in both SVG and HTML contexts
+    --erd-card-bg: #1a1d27;
+    --erd-card-border: #2a2d45;
+    --erd-header-bg: #1a3a6b;
+    --erd-header-text: #7aa2f7;
+    --erd-row-alt: #1e2235;
+    --erd-text: #c0caf5;
+    --erd-text-secondary: #565f89;
+    --erd-fk-line: #7aa2f7;
+
     position: relative;
     width: 100%;
     height: 100%;
