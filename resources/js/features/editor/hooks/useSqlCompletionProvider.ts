@@ -1,8 +1,15 @@
 import type * as MonacoNamespace from 'monaco-editor';
 import type {ExplorerTableDetailsDto} from "../../../types/explorer";
 import {useEffect, useMemo, useRef} from "react";
-import type { SchemaCompletionItem} from "../lib/sqlCompletions";
-import {extractAliases, isSelectContext, isTableContext} from "../lib/sqlCompletions";
+import {
+    extractAliases,
+    getDbFunctions,
+    getKeywordSnippets,
+    isSelectContext,
+    isTableContext,
+    SchemaCompletionItem
+} from "../lib/sqlCompletions";
+import {DatabaseDriver} from "../../../types/connection";
 
 function buildCompletions(
     monaco: typeof MonacoNamespace,
@@ -120,6 +127,7 @@ interface Params {
     monaco: typeof MonacoNamespace | null;
     detailsByTableKey: Record<string, ExplorerTableDetailsDto>;
     activeConnectionId: number | null;
+    driver: DatabaseDriver | null;
 }
 
 /**
@@ -127,7 +135,7 @@ interface Params {
  * The provider reads schema items via a ref, so switching connections or loading
  * new table details takes effect immediately without re-registration.
  */
-export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConnectionId}: Params) {
+export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConnectionId, driver}: Params) {
     const disposeRef = useRef<MonacoNamespace.IDisposable | null>(null);
 
     // Both refs are read inside the provider closure on every completion request,
@@ -135,8 +143,10 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
     // without re-registering the provider.
     const schemaItemsRef = useRef<SchemaCompletionItem[]>([]);
     const activeConnectionIdRef = useRef<number | null>(null);
+    const driverRef = useRef<DatabaseDriver | null>(null);
 
     activeConnectionIdRef.current = activeConnectionId;
+    driverRef.current = driver;
 
     schemaItemsRef.current = useMemo(() => {
         if (!activeConnectionId) return [];
@@ -165,8 +175,40 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
             triggerCharacters: ['.'],
             provideCompletionItems(model, position) {
                 if (!activeConnectionIdRef.current) return {suggestions: []};
+
+                const schemaSuggestions = buildCompletions(monaco, model, position, schemaItemsRef.current);
+
+                // Keywords and functions are lower priority than schema items
+                const word = model.getWordUntilPosition(position);
+                const range: MonacoNamespace.IRange = {
+                    startLineNumber: position.lineNumber,
+                    endLineNumber: position.lineNumber,
+                    startColumn: word.startColumn,
+                    endColumn: word.endColumn,
+                };
+
+                const keywords = getKeywordSnippets().map((kw) => ({
+                    label: kw.label,
+                    kind: monaco.languages.CompletionItemKind.Keyword,
+                    detail: kw.detail,
+                    insertText: kw.insertText,
+                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                    range,
+                    sortText: `8_${kw.label}`,
+                }));
+
+                const functions = getDbFunctions(driverRef.current).map((fn) => ({
+                    label: fn.label,
+                    kind: monaco.languages.CompletionItemKind.Function,
+                    detail: fn.detail,
+                    insertText: fn.insertText,
+                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                    range,
+                    sortText: `9_${fn.label}`,
+                }));
+
                 return {
-                    suggestions: buildCompletions(monaco, model, position, schemaItemsRef.current),
+                    suggestions: [...schemaSuggestions, ...keywords, ...functions],
                 };
             },
         });

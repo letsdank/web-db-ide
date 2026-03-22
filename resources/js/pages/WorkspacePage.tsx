@@ -382,6 +382,7 @@ export function WorkspacePage() {
         monaco: monacoInstance,
         detailsByTableKey,
         activeConnectionId,
+        driver: activeConnection?.driver ?? null,
     });
 
     const handleOpenTableContextMenu = useCallback(async (
