@@ -4,6 +4,7 @@ namespace App\Services\Database;
 
 use App\Enums\DatabaseDriver;
 use App\Models\DbConnection;
+use App\Services\Database\Ssh\SshTunnelManager;
 use PDO;
 
 class ConnectionProbe

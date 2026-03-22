@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Database;
+namespace App\Services\Database\Explorers;
 
 use App\Models\DbConnection;
 use PDO;

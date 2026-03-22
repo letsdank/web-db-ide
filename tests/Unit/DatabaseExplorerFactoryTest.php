@@ -4,9 +4,9 @@ namespace Tests\Unit;
 
 use App\Models\DbConnection;
 use App\Services\Database\DatabaseExplorerFactory;
-use App\Services\Database\MySqlExplorer;
-use App\Services\Database\PostgresExplorer;
-use App\Services\Database\SqliteExplorer;
+use App\Services\Database\Explorers\MySqlExplorer;
+use App\Services\Database\Explorers\PostgresExplorer;
+use App\Services\Database\Explorers\SqliteExplorer;
 use Tests\TestCase;
 
 class DatabaseExplorerFactoryTest extends TestCase

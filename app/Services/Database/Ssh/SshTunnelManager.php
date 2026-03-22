@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Database;
+namespace App\Services\Database\Ssh;
 
 use App\Models\DbConnection;
 use RuntimeException;

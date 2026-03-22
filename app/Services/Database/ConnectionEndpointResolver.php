@@ -3,6 +3,7 @@
 namespace App\Services\Database;
 
 use App\Models\DbConnection;
+use App\Services\Database\Ssh\SshTunnelManager;
 
 class ConnectionEndpointResolver
 {
