@@ -6,6 +6,7 @@ use App\Models\DbConnection;
 use App\Services\Database\DatabaseExplorerFactory;
 use App\Services\Database\MySqlExplorer;
 use App\Services\Database\PostgresExplorer;
+use App\Services\Database\SqliteExplorer;
 use Tests\TestCase;
 
 class DatabaseExplorerFactoryTest extends TestCase
@@ -34,6 +35,15 @@ class DatabaseExplorerFactoryTest extends TestCase
         $explorer = $factory->for($connection);
 
         $this->assertInstanceOf(MySqlExplorer::class, $explorer);
+    }
+
+    public function test_it_resolves_sqlite_explorer(): void
+    {
+        $factory = $this->app->make(DatabaseExplorerFactory::class);
+
+        $explorer = $factory->for(new DbConnection(['driver' => 'sqlite']));
+
+        $this->assertInstanceOf(SqliteExplorer::class, $explorer);
     }
 
     public function test_it_throws_for_unsupported_driver(): void
