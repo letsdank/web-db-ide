@@ -1,34 +1,7 @@
 import type * as MonacoNamespace from 'monaco-editor';
 import type {ExplorerTableDetailsDto} from "../../../types/explorer";
 import {useEffect, useMemo, useRef} from "react";
-
-interface SchemaCompletionItem {
-    schema: string;
-    table: string;
-    columns: { name: string; type: string }[];
-}
-
-function extractAliases(sql: string): Map<string, string> {
-    const aliases = new Map<string, string>();
-
-    // Matches: FROM/JOIN table [AS] alias
-    const pattern = /\b(?:from|join)\s+["'`]?(\w+)["'`]?\s+(?:as\s+)?["'`]?(\w+)["'`]?/gi;
-    let match: RegExpExecArray | null;
-
-    while ((match = pattern.exec(sql)) !== null) {
-        const table = match[1].toLowerCase();
-        const alias = match[2].toLowerCase();
-
-        // Skip SQL keywords that look like aliases
-        if (/^(where|on|set|left|right|inner|outer|cross|full|group|order|limit|having)$/.test(alias)) {
-            continue;
-        }
-
-        aliases.set(alias, table);
-    }
-
-    return aliases;
-}
+import {extractAliases, isSelectContext, isTableContext, SchemaCompletionItem} from "../lib/sqlCompletions";
 
 function buildCompletions(
     monaco: typeof MonacoNamespace,
@@ -57,14 +30,14 @@ function buildCompletions(
         const prefix = dotMatch[1].toLowerCase();
 
         // Get full query text up to cursor for alias resolution
-        const fullText=model.getValueInRange({
-            startLineNumber:1,
-            startColumn:1,
-            endLineNumber:position.lineNumber,
-            endColumn:position.column,
+        const fullText = model.getValueInRange({
+            startLineNumber: 1,
+            startColumn: 1,
+            endLineNumber: position.lineNumber,
+            endColumn: position.column,
         });
 
-        const aliases=extractAliases(fullText);
+        const aliases = extractAliases(fullText);
 
         // Resolve alias to table name, fall back to prefix as-is
         const resolvedTable = aliases.get(prefix) ?? prefix;
@@ -95,8 +68,8 @@ function buildCompletions(
         })
         .toLowerCase();
 
-    const isTableCtx = /\b(from|join|update|into|table)\s+[\w.]*$/.test(textBefore);
-    const isSelectCtx = /\bselect\b.*$/.test(textBefore);
+    const isTableCtx = isTableContext(textBefore);
+    const isSelectCtx = isSelectContext(textBefore);
 
     const result: MonacoNamespace.languages.CompletionItem[] = [];
 
