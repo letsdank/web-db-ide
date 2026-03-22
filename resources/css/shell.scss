@@ -1,0 +1,26 @@
+.app-shell {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 56px minmax(0, 1fr);
+    background: #0f1115;
+    color: #fff;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    &__user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    > main {
+        min-height: 0;
+        overflow: hidden;
+    }
+}

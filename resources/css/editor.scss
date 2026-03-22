@@ -1,0 +1,62 @@
+.editor-toolbar {
+    &__card {
+        padding: 10px 12px;
+    }
+
+    &__content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    &__connection {
+        min-width: 280px;
+        flex: 0 1 380px;
+    }
+
+    &__hotkeys {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+        flex-wrap: wrap;
+    }
+
+    &__connection-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    &__connection-option-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--g-color-text-primary);
+        flex-shrink: 0;
+    }
+
+    &__connection-option-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.sql-editor-pane {
+    &__card {
+        height: 100%;
+        padding: 10px;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    &__editor {
+        height: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+}

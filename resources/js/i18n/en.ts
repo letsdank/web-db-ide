@@ -219,7 +219,7 @@ const en = {
         openPreview: 'Open preview',
         countRows: 'Count rows',
         openMetadata: 'Open metadata',
-        copySelectToEditor: 'Copy SELECT to editor',
+        copySelectToEditor: 'Copy SELECT to editor.scss',
         copyFullName: 'Copy full name',
         loadingTables: 'Loading tables...',
         noTablesInSchema: 'No tables in schema.',

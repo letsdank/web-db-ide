@@ -14,7 +14,7 @@ export function isEditableElement(target: EventTarget | null): boolean {
         tagName === 'textarea' ||
         tagName === 'select' ||
         Boolean(target.closest('[contenteditable="true"]')) ||
-        Boolean(target.closest('.monaco-editor'))
+        Boolean(target.closest('.monaco-editor.scss'))
     );
 }
 

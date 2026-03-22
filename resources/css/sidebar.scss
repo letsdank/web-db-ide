@@ -1,0 +1,95 @@
+.right-sidebar-panels {
+    &__card {
+        height: 100%;
+        padding: 12px;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    &__layout {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        height: 100%;
+        min-height: 0;
+    }
+
+    &__header {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    &__title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    &__content {
+        min-height: 0;
+        overflow: auto;
+        display: grid;
+        gap: 8px;
+    }
+
+    &__saved-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr)auto;
+        gap: 8px;
+        align-items: center;
+    }
+
+    &__item {
+        text-align: left;
+        border: 1px solid var(--g-color-line-generic);
+        background: var(--g-color-base-float);
+        border-radius: 10px;
+        padding: 12px;
+        cursor: pointer;
+        color: inherit;
+    }
+
+    &__item--with-actions {
+        min-width: 0;
+    }
+
+    &__item-actions {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    &__item-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+
+    &__item-split {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    &__item-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    &__item-text {
+        display: block;
+    }
+
+    &__item-footer {
+        margin-top: 6px;
+    }
+
+    &__item-subtitle {
+        margin-bottom: 6px;
+    }
+}

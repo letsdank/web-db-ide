@@ -1,0 +1,64 @@
+.erd-pane {
+    // ERD-specific design tokens - work in both SVG and HTML contexts
+    --erd-card-bg: #1a1d27;
+    --erd-card-border: #2a2d45;
+    --erd-header-bg: #1a3a6b;
+    --erd-header-text: #7aa2f7;
+    --erd-row-alt: #1e2235;
+    --erd-text: #c0caf5;
+    --erd-text-secondary: #565f89;
+    --erd-fk-line: #7aa2f7;
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--g-color-base-background);
+    user-select: none;
+    flex: 1 1 auto;
+    min-height: 0;
+
+    &--loading,
+    &--error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        height: 100%;
+    }
+
+    &__toolbar {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 10px;
+        background: var(--g-color-base-float);
+        border: 1px solid var(--g-color-line-generic);
+        border-radius: 6px;
+    }
+
+    &__panel-content {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__reset {
+        font-size: 11px;
+        color: var(--g-color-text-brand);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}

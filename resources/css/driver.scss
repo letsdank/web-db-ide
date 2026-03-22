@@ -1,0 +1,17 @@
+.driver-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &--pgsql {
+        color: #a970ff;
+    }
+
+    &--mysql {
+        color: #57b8ff;
+    }
+
+    &--default {
+        color: var(--g-color-text-secondary);
+    }
+}
