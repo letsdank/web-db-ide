@@ -1,5 +1,5 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
-import React, {useCallback, useRef, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
@@ -692,6 +692,7 @@ export function WorkspacePage() {
             />
 
             <WorkspaceMainLayout
+                isErd={activeTab?.tab_type === 'erd'}
                 left={
                     <ExplorerSidebar
                         connections={connections}

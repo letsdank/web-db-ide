@@ -9,6 +9,7 @@ interface Props {
     editorFooter?: React.ReactNode;
     results: React.ReactNode;
     right: React.ReactNode;
+    isErd?: boolean;
 }
 
 export function WorkspaceMainLayout({
@@ -20,13 +21,14 @@ export function WorkspaceMainLayout({
                                         editorFooter,
                                         results,
                                         right,
+                                        isErd,
                                     }: Props) {
     return (
         <div className="workspace-page">
             <div className="workspace-page__layout">
                 {left}
 
-                <div className="workspace-page__center">
+                <div className={`workspace-page__center${isErd ? ' workspace-page__center--erd' : ''}`}>
                     <div className="workspace-page__tabs-row">
                         <div className="workspace-page__tabs">
                             {tabs}

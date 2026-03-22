@@ -24,6 +24,8 @@ interface CreateTabInitial {
     title?: string;
     sql_text?: string;
     db_connection_id?: number | null;
+    tab_type?: 'sql' | 'erd';
+    meta?: Record<string, unknown> | null;
 }
 
 interface ApplyQueryToTabPayload {
@@ -105,6 +107,8 @@ export function useWorkspaceTabActions({
                 title: initial?.title ?? t('workspace.newQuery'),
                 sql_text: initial?.sql_text ?? "",
                 db_connection_id: initial?.db_connection_id ?? activeConnectionId,
+                tab_type: initial?.tab_type ?? 'sql',
+                meta: initial?.meta ?? null,
                 result_limit: 500,
             });
 

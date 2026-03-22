@@ -41,6 +41,10 @@ body {
         min-height: 0;
     }
 
+    &__center--erd {
+        grid-template-rows: 44px minmax(0, 1fr);
+    }
+
     &__tabs-row {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -481,6 +485,8 @@ body {
     overflow: hidden;
     background: var(--g-color-base-background);
     user-select: none;
+    flex: 1 1 auto;
+    min-height: 0;
 
     &--loading,
     &--error {
@@ -504,6 +510,13 @@ body {
         background: var(--g-color-base-float);
         border: 1px solid var(--g-color-line-generic);
         border-radius: 6px;
+    }
+
+    &__panel-content {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
     }
 
     &__reset {

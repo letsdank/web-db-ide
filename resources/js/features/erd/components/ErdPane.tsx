@@ -90,7 +90,7 @@ function TableCard({node}: { node: TableNode }) {
     );
 
     return (
-        <g transform={`translate(${node.x}, ${node.y}`}>
+        <g transform={`translate(${node.x}, ${node.y})`}>
             {/* Table card background */}
             <rect
                 width={TABLE_WIDTH}
