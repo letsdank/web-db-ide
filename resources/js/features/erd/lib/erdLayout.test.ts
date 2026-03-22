@@ -1,4 +1,4 @@
-import {ExplorerTableDto} from "../../../types/explorer";
+import type {ExplorerTableDto} from "../../../types/explorer";
 import {describe, expect, it} from "vitest";
 import {getColumnY, layoutNodes, tableHeight} from "./erdLayout";
 

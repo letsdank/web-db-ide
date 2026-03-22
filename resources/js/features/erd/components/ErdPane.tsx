@@ -9,7 +9,7 @@ import {
     TABLE_HEADER_HEIGHT,
     TABLE_WIDTH,
     tableHeight,
-    TableNode
+    type TableNode
 } from "../lib/erdLayout";
 
 interface ErdData {
