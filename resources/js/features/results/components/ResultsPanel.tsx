@@ -92,47 +92,29 @@ export function ResultsPanel({
     const contextCell = cellMenuState.payload;
     const contextHeader = headerMenuState.payload;
 
-    function handleExportCsv() {
-        const fileBaseName = (activeTabTitle || 'query-results')
+    function buildExportFileName(title: string | null | undefined, ext: string): string {
+        const base = (title || 'query-results')
             .toLowerCase()
             .replace(/[^a-z0-9-_]+/gi, '-')
-            .replace(/^-+|-+$/g, '');
+            .replace(/^-+|-+$/g, '') || 'query-results';
 
-        downloadFile(
-            `${fileBaseName || 'query-results'}.csv`,
-            buildCsv(visibleColumns, visibleRows),
-            'text/csv;charset=utf-8;',
-        );
+        return `${base}.${ext}`;
+    }
+
+    function handleExportCsv() {
+        downloadFile(buildExportFileName(activeTabTitle, 'csv'), buildCsv(visibleColumns, visibleRows), 'text/csv;charset=utf-8;');
     }
 
     function handleExportJson() {
-        const fileBaseName = (activeTabTitle || 'query-results')
-            .toLowerCase()
-            .replace(/[^a-z0-9-_]+/gi, '-')
-            .replace(/^-+|-+$/g, '');
-
         const rows = visibleRows.map((row) =>
             Object.fromEntries(visibleColumns.map((col, i) => [col.name, row[i] ?? null])),
         );
 
-        downloadFile(
-            `${fileBaseName || 'query-results'}.json`,
-            JSON.stringify(rows, null, 2),
-            'application/json',
-        );
+        downloadFile(buildExportFileName(activeTabTitle, 'json'), JSON.stringify(rows, null, 2), 'application/json');
     }
 
     function handleExportTsv() {
-        const fileBaseName = (activeTabTitle || 'query-results')
-            .toLowerCase()
-            .replace(/[^a-z0-9-_]+/gi, '-')
-            .replace(/^-+|-+$/g, '');
-
-        downloadFile(
-            `${fileBaseName || 'query-results'}.tsv`,
-            buildTsv(visibleColumns, visibleRows),
-            'text/tab-separated-values',
-        );
+        downloadFile(buildExportFileName(activeTabTitle, 'tsv'), buildTsv(visibleColumns, visibleRows), 'text/tab-separated-values');
     }
 
     return (
