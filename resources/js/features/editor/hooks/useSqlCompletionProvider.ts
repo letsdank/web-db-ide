@@ -122,6 +122,11 @@ interface Params {
     activeConnectionId: number | null;
 }
 
+/**
+ * Registers a Monaco SQL completion provider scoped to the active connection.
+ * The provider reads schema items via a ref, so switching connections or loading
+ * new table details takes effect immediately without re-registration.
+ */
 export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConnectionId}: Params) {
     const disposeRef = useRef<MonacoNamespace.IDisposable | null>(null);
 

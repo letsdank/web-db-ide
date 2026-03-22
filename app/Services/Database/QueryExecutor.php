@@ -14,6 +14,15 @@ class QueryExecutor
     {
     }
 
+    /**
+     * Executes a raw SQL query against the given connection and returns
+     * structured results with column metadata.
+     *
+     * @param DbConnection $connection Target database connection
+     * @param string $sql Raw SQL to execute
+     * @param int $maxRows Maximum rows to fetch before truncating
+     * @return array{columns: array, rows: array, row_count: int, has_more: bool, duration_ms: int}
+     */
     public function execute(DbConnection $connection, string $sql, int $maxRows = 500): array
     {
         $resolved = $this->endpointResolver->resolve($connection);

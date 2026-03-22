@@ -68,6 +68,13 @@ export interface ExplorerTableContextPayload {
     details?: ExplorerTableDetailsDto;
 }
 
+/**
+ * Manages the explorer sidebar tree state: loading schemas/tables/details,
+ * expand/collapse, and persistence to localStorage.
+ *
+ * Restored state from localStorage triggers lazy data loads on mount
+ * so the tree looks the same after a page reload.
+ */
 export function useExplorerTree({
                                     connections,
                                     activeConnectionId,
