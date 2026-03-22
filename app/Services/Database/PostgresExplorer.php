@@ -3,38 +3,13 @@
 namespace App\Services\Database;
 
 use App\Models\DbConnection;
-use App\Services\Database\Contracts\DatabaseExplorer;
 use PDO;
 
-class PostgresExplorer implements DatabaseExplorer
+class PostgresExplorer extends AbstractNetworkExplorer
 {
-    public function __construct(
-        protected ConnectionEndpointResolver $endpointResolver,
-    )
+    protected function buildDsn(DbConnection $connection, string $host, int $port): string
     {
-    }
-
-    protected function pdo(DbConnection $connection): array
-    {
-        $resolved = $this->endpointResolver->resolve($connection);
-
-        $dsn = sprintf(
-            "pgsql:host=%s;port=%s;dbname=%s",
-            $resolved->host,
-            $resolved->port,
-            $connection->database_name
-        );
-
-        $pdo = new PDO(
-            $dsn,
-            $connection->username,
-            decrypt($connection->password_encrypted),
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            ]
-        );
-
-        return [$pdo, $resolved];
+        return sprintf('pgsql:host=%s;port=%s;dbname=%s', $host, $port, $connection->database_name);
     }
 
     public function schemas(DbConnection $connection): array
