@@ -40,6 +40,7 @@ import {
 } from "../features/explorer/lib/tableActions";
 import {useSqlCompletionProvider} from "../features/editor/hooks/useSqlCompletionProvider";
 import {ErdTabMeta} from "../types/queryTab";
+import {ErdPane} from "../features/erd/components/ErdPane";
 
 export function WorkspacePage() {
     const {
@@ -778,7 +779,7 @@ export function WorkspacePage() {
                     />
                 }
                 toolbar={
-                    <EditorToolbar
+                    activeTab?.tab_type !== 'erd' ? <EditorToolbar
                         connections={connections}
                         activeConnectionId={activeConnectionId}
                         isExecuting={isExecuting}
@@ -786,18 +787,25 @@ export function WorkspacePage() {
                         onSelectConnection={handleSelectConnection}
                         onRun={() => handleRun('full')}
                         onRunSelection={handleRunSelection}
-                    />
+                    /> : null
                 }
                 editor={
-                    <SqlEditorPane
-                        ref={editorRef}
-                        value={activeTab?.sql_text ?? ''}
-                        onChange={handleChangeSql}
-                        onSelectionChange={handleEditorSelectionChange}
-                        onRun={() => handleRun('auto')}
-                        onRunSelection={handleRunSelection}
-                        onMonacoMount={handleMonacoMount}
-                    />
+                    activeTab?.tab_type === 'erd' ? (
+                        <ErdPane
+                            connectionId={(activeTab.meta as ErdTabMeta).connectionId}
+                            schema={(activeTab.meta as ErdTabMeta).schema}
+                        />
+                    ) : (
+                        <SqlEditorPane
+                            ref={editorRef}
+                            value={activeTab?.sql_text ?? ''}
+                            onChange={handleChangeSql}
+                            onSelectionChange={handleEditorSelectionChange}
+                            onRun={() => handleRun('auto')}
+                            onRunSelection={handleRunSelection}
+                            onMonacoMount={handleMonacoMount}
+                        />
+                    )
                 }
                 editorFooter={
                     <EditorStatusBar
@@ -813,14 +821,14 @@ export function WorkspacePage() {
                     />
                 }
                 results={
-                    <ResultsPanel
+                    activeTab?.tab_type !== 'erd' ? <ResultsPanel
                         result={activeResult}
                         activeConnectionName={activeConnection?.name ?? null}
                         activeDatabaseName={activeConnection?.database_name ?? null}
                         activeTabTitle={activeTab?.title ?? null}
                         resultLimit={activeTab?.result_limit ?? 500}
                         onChangeResultLimit={handleChangeResultLimitAndRerun}
-                    />
+                    /> : null
                 }
                 right={
                     <RightSidebarPanels

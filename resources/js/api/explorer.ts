@@ -1,5 +1,11 @@
 import {apiClient} from "./client";
-import type {ExplorerColumnDto, ExplorerIndexDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../types/explorer";
+import type {
+    ExplorerColumnDto,
+    ExplorerForeignKeyDto,
+    ExplorerIndexDto,
+    ExplorerTableDetailsDto,
+    ExplorerTableDto
+} from "../types/explorer";
 
 interface ExplorerTableApiDto {
     table_name?: unknown;
@@ -87,6 +93,19 @@ export async function fetchTableDetails(
     );
 
     return normalizeExplorerTableDetails(response.data);
+}
+
+export async function fetchForeignKeys(
+    connectionId: number,
+    schema: string,
+): Promise<ExplorerForeignKeyDto[]> {
+    const response = await apiClient.get<{ data: unknown[] }>(
+        `/connections/${connectionId}/schemas/${encodeURIComponent(schema)}/foreign-keys`,
+    );
+
+    return Array.isArray(response.data.data)
+        ? (response.data.data as ExplorerForeignKeyDto[])
+        : [];
 }
 
 export {

@@ -21,3 +21,11 @@ export interface ExplorerTableDetailsDto {
     columns: ExplorerColumnDto[];
     indexes: ExplorerIndexDto[];
 }
+
+export interface ExplorerForeignKeyDto {
+    from_table: string;
+    from_column: string;
+    to_table: string;
+    to_column: string;
+    constraint_name: string;
+}
