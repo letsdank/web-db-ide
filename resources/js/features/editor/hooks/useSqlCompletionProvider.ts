@@ -171,14 +171,38 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
 
         if (!monaco) return;
 
+        // Pre-compute static suggestions once at registration time.
+        // Driver-specific functions are captured via driverRef on each call,
+        // but the mapping is done here to avoid per-keystroke allocations.
+        const keywordSuggestions = getKeywordSnippets().map((kw) => ({
+            label: kw.label,
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            detail: kw.detail,
+            insertText: kw.insertText,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            sortText: `8_${kw.label}`,
+        }));
+
+        // Pre-compute per-driver function maps so we never map on keystroke
+        const functionSuggestionsByDriver = new Map(
+            (['pgsql', 'mysql', 'sqlite', null] as const).map((d) => [
+                d,
+                getDbFunctions(d).map((fn) => ({
+                    label: fn.label,
+                    kind: monaco.languages.CompletionItemKind.Function,
+                    detail: fn.detail,
+                    insertText: fn.insertText,
+                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                    sortText: `9_${fn.label}`,
+                })),
+            ]),
+        );
+
         disposeRef.current = monaco.languages.registerCompletionItemProvider('sql', {
             triggerCharacters: ['.'],
             provideCompletionItems(model, position) {
                 if (!activeConnectionIdRef.current) return {suggestions: []};
 
-                const schemaSuggestions = buildCompletions(monaco, model, position, schemaItemsRef.current);
-
-                // Keywords and functions are lower priority than schema items
                 const word = model.getWordUntilPosition(position);
                 const range: MonacoNamespace.IRange = {
                     startLineNumber: position.lineNumber,
@@ -187,28 +211,22 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
                     endColumn: word.endColumn,
                 };
 
-                const keywords = getKeywordSnippets().map((kw) => ({
-                    label: kw.label,
-                    kind: monaco.languages.CompletionItemKind.Keyword,
-                    detail: kw.detail,
-                    insertText: kw.insertText,
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    range,
-                    sortText: `8_${kw.label}`,
-                }));
+                // Schema suggestions are built fresh (depend on cursor context)
+                const schemaSuggestions = buildCompletions(
+                    monaco, model, position, schemaItemsRef.current,
+                );
 
-                const functions = getDbFunctions(driverRef.current).map((fn) => ({
-                    label: fn.label,
-                    kind: monaco.languages.CompletionItemKind.Function,
-                    detail: fn.detail,
-                    insertText: fn.insertText,
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    range,
-                    sortText: `9_${fn.label}`,
-                }));
+                // Attach range to pre-computed static suggestions
+                const driver = driverRef.current ?? null;
+                const fnSuggestions = (
+                    functionSuggestionsByDriver.get(driver) ??
+                    functionSuggestionsByDriver.get(null)!
+                ).map((s) => ({...s, range}));
+
+                const kwSuggestions = keywordSuggestions.map((s) => ({...s, range}));
 
                 return {
-                    suggestions: [...schemaSuggestions, ...keywords, ...functions],
+                    suggestions: [...schemaSuggestions, ...kwSuggestions, ...fnSuggestions],
                 };
             },
         });
