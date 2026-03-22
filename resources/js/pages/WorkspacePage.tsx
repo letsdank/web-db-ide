@@ -808,17 +808,19 @@ export function WorkspacePage() {
                     )
                 }
                 editorFooter={
-                    <EditorStatusBar
-                        connectionName={activeConnection?.name ?? null}
-                        resultLimit={activeTab?.result_limit ?? null}
-                        cursorLine={activeCursorPosition?.lineNumber ?? null}
-                        cursorColumn={activeCursorPosition?.column ?? null}
-                        selectedText={activeTab?.selected_text ?? null}
-                        selectedLineCount={activeSelectedLineCount}
-                        isExecuting={isExecuting}
-                        rowsCount={activeRowsMeta.rowsCount}
-                        hasMoreRows={activeRowsMeta.hasMoreRows}
-                    />
+                    activeTab?.tab_type !== 'erd' ? (
+                        <EditorStatusBar
+                            connectionName={activeConnection?.name ?? null}
+                            resultLimit={activeTab?.result_limit ?? null}
+                            cursorLine={activeCursorPosition?.lineNumber ?? null}
+                            cursorColumn={activeCursorPosition?.column ?? null}
+                            selectedText={activeTab?.selected_text ?? null}
+                            selectedLineCount={activeSelectedLineCount}
+                            isExecuting={isExecuting}
+                            rowsCount={activeRowsMeta.rowsCount}
+                            hasMoreRows={activeRowsMeta.hasMoreRows}
+                        />
+                    ) : null
                 }
                 results={
                     activeTab?.tab_type !== 'erd' ? <ResultsPanel
