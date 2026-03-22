@@ -28,6 +28,7 @@ describe('databaseDrivers', () => {
         expect(getDatabaseDriverOptions()).toEqual([
             {value: 'pgsql', content: 'PostgreSQL'},
             {value: 'mysql', content: 'MySQL / MariaDB'},
+            {value: 'sqlite', content: 'SQLite'},
         ]);
     });
 });
