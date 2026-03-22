@@ -1,6 +1,7 @@
 import type {QueryTabDto} from "../../../types/queryTab";
 import {describe, expect, it} from "vitest";
 import {moveTabInsideGroup, withSequentialSortOrder} from "./useWorkspaceTabActions";
+import {makeQueryTab} from "../../../test/factories";
 
 function makeTab(
     id: number,
@@ -8,7 +9,7 @@ function makeTab(
     sortOrder: number,
     isPinned = false,
 ): QueryTabDto {
-    return {
+    return makeQueryTab({
         id,
         user_id: 1,
         db_connection_id: null,
@@ -25,7 +26,7 @@ function makeTab(
         connection: null,
         created_at: '',
         updated_at: '',
-    };
+    });
 }
 
 describe('withSequentialSortOrder', () => {

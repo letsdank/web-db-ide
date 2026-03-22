@@ -9,6 +9,7 @@ import type {QueryHistoryDto} from "../../../types/queryHistory";
 import type {SavedQueryDto} from "../../../types/savedQuery";
 import {useWorkspaceBoot} from "./useWorkspaceBoot";
 import {render, waitFor} from "@testing-library/react";
+import {makeQueryTab} from "../../../test/factories";
 
 vi.mock('../../../api/connections', async () => ({
     fetchConnections: vi.fn(),
@@ -66,7 +67,7 @@ function makeConnection(overrides: Partial<ConnectionDto> = {}): ConnectionDto {
 }
 
 function makeTab(overrides: Partial<QueryTabDto> = {}): QueryTabDto {
-    return {
+    return makeQueryTab({
         id: 1,
         user_id: 1,
         db_connection_id: 10,
@@ -83,7 +84,7 @@ function makeTab(overrides: Partial<QueryTabDto> = {}): QueryTabDto {
         updated_at: '',
         connection: null,
         ...overrides,
-    };
+    });
 }
 
 function makeHistory(overrides: Partial<QueryHistoryDto> = {}): QueryHistoryDto {

@@ -39,7 +39,7 @@ import {
     buildExplorerSelectSql
 } from "../features/explorer/lib/tableActions";
 import {useSqlCompletionProvider} from "../features/editor/hooks/useSqlCompletionProvider";
-import {ErdTabMeta} from "../types/queryTab";
+import type {ErdTabMeta} from "../types/queryTab";
 import {ErdPane} from "../features/erd/components/ErdPane";
 
 export function WorkspacePage() {

@@ -1,4 +1,4 @@
-import {ExplorerForeignKeyDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
+import type {ExplorerForeignKeyDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {fetchForeignKeys, fetchTableDetails, fetchTables} from "../../../api/explorer";
 import {Loader, Text} from "@gravity-ui/uikit";
@@ -53,15 +53,12 @@ function getColumnY(node: TableNode, columnName: string): number {
     return node.y + TABLE_HEADER_HEIGHT + row * ROW_HEIGHT + ROW_HEIGHT / 2;
 }
 
-function FkLine({from, to, fk, nodes}: {
+function FkLine({from, to, fk}: {
     from: TableNode;
     to: TableNode;
     fk: ExplorerForeignKeyDto;
-    nodes: TableNode[];
 }) {
-    const x1 = from.x + TABLE_WIDTH;
     const y1 = getColumnY(from, fk.from_column);
-    const x2 = to.x;
     const y2 = getColumnY(to, fk.to_column);
 
     // If target is to the left, flip the connection sides
@@ -221,7 +218,7 @@ export function ErdPane({connectionId, schema}: Props) {
 
                 const nodes = layoutNodes(tables, detailsMap);
                 setErdData({nodes, foreignKeys});
-            } catch (e) {
+            } catch (_e) {
                 if (!cancelled) setError('Failed to load schema data.');
             } finally {
                 if (!cancelled) setLoading(false);
@@ -285,10 +282,6 @@ export function ErdPane({connectionId, schema}: Props) {
     const {nodes, foreignKeys} = erdData;
     const nodeMap = Object.fromEntries(nodes.map((n) => [n.table.table_name, n]));
 
-    // Canvas size - enough to fit all nodes
-    const maxX = Math.max(...nodes.map((n) => n.x + TABLE_WIDTH)) + 40;
-    const maxY = Math.max(...nodes.map((n) => n.y + tableHeight(n))) + 40;
-
     return (
         <div
             ref={containerRef}
@@ -327,7 +320,6 @@ export function ErdPane({connectionId, schema}: Props) {
                                 from={from}
                                 to={to}
                                 fk={fk}
-                                nodes={nodes}
                             />
                         );
                     })}

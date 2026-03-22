@@ -5,6 +5,7 @@ import type {SavedQueryDto} from "../../../types/savedQuery";
 import * as savedQueriesApi from '../../../api/savedQueries';
 import {render} from "@testing-library/react";
 import type {SaveQueryDialogSubmitPayload} from "../../../components/workspace/SaveQueryDialog";
+import {makeQueryTab} from "../../../test/factories";
 
 vi.mock('../../../api/savedQueries', async () => {
     return {
@@ -45,7 +46,7 @@ describe('useWorkspaceLibrary', () => {
 
         function TestHarness() {
             const api = useWorkspaceLibrary({
-                activeTab: {
+                activeTab: makeQueryTab({
                     id: 7,
                     user_id: 1,
                     db_connection_id: 12,
@@ -61,7 +62,7 @@ describe('useWorkspaceLibrary', () => {
                     selection_range: null,
                     last_executed_at: null,
                     connection: null,
-                },
+                }),
                 activeConnectionId: 12,
                 addSavedQuery,
                 setRightPanel,
@@ -105,7 +106,7 @@ describe('useWorkspaceLibrary', () => {
 
         function TestHarness() {
             const api = useWorkspaceLibrary({
-                activeTab: {
+                activeTab: makeQueryTab({
                     id: 7,
                     user_id: 1,
                     db_connection_id: 12,
@@ -121,7 +122,7 @@ describe('useWorkspaceLibrary', () => {
                     selection_range: null,
                     last_executed_at: null,
                     connection: null,
-                },
+                }),
                 activeConnectionId: 12,
                 addSavedQuery: vi.fn(),
                 setRightPanel: vi.fn(),
@@ -167,7 +168,7 @@ describe('useWorkspaceLibrary', () => {
 
         function TestHarness() {
             const api = useWorkspaceLibrary({
-                activeTab: {
+                activeTab: makeQueryTab({
                     id: 7,
                     user_id: 1,
                     db_connection_id: 12,
@@ -183,7 +184,7 @@ describe('useWorkspaceLibrary', () => {
                     selection_range: null,
                     last_executed_at: null,
                     connection: null,
-                },
+                }),
                 activeConnectionId: 12,
                 addSavedQuery: vi.fn(),
                 setRightPanel: vi.fn(),
@@ -250,7 +251,7 @@ describe('useWorkspaceLibrary', () => {
 
         function TestHarness() {
             const api = useWorkspaceLibrary({
-                activeTab: {
+                activeTab: makeQueryTab({
                     id: 7,
                     user_id: 1,
                     db_connection_id: 12,
@@ -266,7 +267,7 @@ describe('useWorkspaceLibrary', () => {
                     selection_range: null,
                     last_executed_at: null,
                     connection: null,
-                },
+                }),
                 activeConnectionId: 12,
                 addSavedQuery: vi.fn(),
                 updateSavedQueryInList,

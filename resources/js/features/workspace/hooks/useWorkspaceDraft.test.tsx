@@ -4,6 +4,7 @@ import * as queryTabsApi from '../../../api/queryTabs';
 import {useWorkspaceDraft} from "./useWorkspaceDraft";
 import React from "react";
 import {render} from "@testing-library/react";
+import {makeQueryTab} from "../../../test/factories";
 
 const debouncedCalls: Array<{
     tabId: number;
@@ -32,7 +33,7 @@ vi.mock('../../../hooks/useDebouncedCallback', async () => {
 });
 
 function makeTab(overrides: Partial<QueryTabDto> = {}): QueryTabDto {
-    return {
+    return makeQueryTab({
         id: 7,
         user_id: 1,
         db_connection_id: 12,
@@ -49,7 +50,7 @@ function makeTab(overrides: Partial<QueryTabDto> = {}): QueryTabDto {
         updated_at: '',
         connection: null,
         ...overrides,
-    };
+    });
 }
 
 describe('useWorkspaceDraft', () => {

@@ -4,6 +4,7 @@ import {describe, expect, it} from "vitest";
 import {useActiveWorkspace} from "./useActiveWorkspace";
 import React from "react";
 import {render} from "@testing-library/react";
+import {makeQueryTab} from "../../../test/factories";
 
 function makeConnection(overrides: Partial<ConnectionDto> = {}): ConnectionDto {
     return {
@@ -45,7 +46,7 @@ function makeConnection(overrides: Partial<ConnectionDto> = {}): ConnectionDto {
 }
 
 function makeTab(overrides: Partial<QueryTabDto> = {}): QueryTabDto {
-    return {
+    return makeQueryTab({
         id: 1,
         user_id: 1,
         db_connection_id: 10,
@@ -62,7 +63,7 @@ function makeTab(overrides: Partial<QueryTabDto> = {}): QueryTabDto {
         updated_at: '',
         connection: null,
         ...overrides,
-    };
+    });
 }
 
 function renderUseActiveWorkspace(params: Parameters<typeof useActiveWorkspace>[0]) {
