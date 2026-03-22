@@ -6,6 +6,7 @@ enum DatabaseDriver: string
 {
     case Postgres = 'pgsql';
     case MySql = 'mysql';
+    case Sqlite = 'sqlite';
 
     public static function values(): array
     {
@@ -20,6 +21,7 @@ enum DatabaseDriver: string
         return match ($this) {
             self::Postgres => 5432,
             self::MySql => 3306,
+            self::Sqlite => 0,
         };
     }
 
@@ -28,6 +30,7 @@ enum DatabaseDriver: string
         return match ($this) {
             self::Postgres => true,
             self::MySql => false,
+            self::Sqlite => false,
         };
     }
 
@@ -36,6 +39,7 @@ enum DatabaseDriver: string
         return match ($this) {
             self::Postgres => true,
             self::MySql => false,
+            self::Sqlite => false,
         };
     }
 }

@@ -75,6 +75,18 @@ class QueryExecutor
         int            $port
     ): PDO
     {
+        if ($driver === DatabaseDriver::Sqlite) {
+            return new PDO(
+                'sqlite:' . $connection->database_name,
+                null,
+                null,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_TIMEOUT => $connection->connect_timeout_seconds ?? 10,
+                ],
+            );
+        }
+
         $dsn = match ($driver) {
             DatabaseDriver::Postgres => sprintf(
                 "pgsql:host=%s;port=%s;dbname=%s",

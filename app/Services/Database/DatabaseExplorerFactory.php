@@ -10,6 +10,7 @@ class DatabaseExplorerFactory
     public function __construct(
         protected PostgresExplorer $postgresExplorer,
         protected MySqlExplorer    $mySqlExplorer,
+        protected SqliteExplorer   $sqliteExplorer,
     )
     {
     }
@@ -19,6 +20,7 @@ class DatabaseExplorerFactory
         return match ($connection->driver) {
             'pgsql' => $this->postgresExplorer,
             'mysql' => $this->mySqlExplorer,
+            'sqlite' => $this->sqliteExplorer,
             default => throw new \InvalidArgumentException(
                 sprintf('Unsupported explorer driver [%s].', $connection->driver)
             ),

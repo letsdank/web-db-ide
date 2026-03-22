@@ -17,10 +17,11 @@ class UpdateConnectionRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'string', 'max:255'],
-            'host' => ['sometimes', Rule::in(DatabaseDriver::values())],
-            'port' => ['sometimes', 'integer'],
+            'driver' => ['sometimes', Rule::in(DatabaseDriver::values())],
+            'host' => ['sometimes', 'nullable', 'string'],
+            'port' => ['sometimes', 'nullable', 'integer'],
             'database_name' => ['sometimes', 'string'],
-            'username' => ['sometimes', 'string'],
+            'username' => ['sometimes', 'nullable', 'string'],
             'password' => ['nullable', 'string'],
 
             'ssl_mode' => ['nullable', 'string'],

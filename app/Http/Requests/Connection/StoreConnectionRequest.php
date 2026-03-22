@@ -18,11 +18,16 @@ class StoreConnectionRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'driver' => ['required', Rule::in(DatabaseDriver::values())],
-            'host' => ['required', 'string'],
-            'port' => ['required', 'integer'],
+            'host' => ['required_unless:driver,sqlite', 'nullable', 'string'],
+            'port' => ['required_unless:driver,sqlite', 'nullable', 'integer'],
             'database_name' => ['required', 'string'],
-            'username' => ['required', 'string'],
-            'password' => ['required', 'string'],
+            'username' => ['required_unless:driver,sqlite', 'nullable', 'string'],
+            'password' => [
+                $this->isMethod('POST') && $this->input('driver') !== 'sqlite'
+                    ? 'required'
+                    : 'nullable',
+                'string',
+            ],
 
             'ssl_mode' => ['nullable', 'string'],
             'schema_default' => ['nullable', 'string'],
