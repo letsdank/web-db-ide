@@ -1,5 +1,6 @@
 import {describe, expect, it} from "vitest";
 import {
+    buildErdTabInput,
     buildExplorerCountTabInput,
     buildExplorerMetadataSqlText,
     buildExplorerMetadataTabInput,
@@ -108,6 +109,19 @@ describe('explorer table actions', () => {
             title: 'users Columns',
             sql_text: '-- public.users\nid bigint not null',
             db_connection_id: 3,
+        });
+    });
+
+    it('builds erd tab input with correct type and meta', () => {
+        expect(buildErdTabInput({connectionId: 5, schema: 'public'})).toEqual({
+            title: 'public ERD',
+            sql_text: '',
+            db_connection_id: 5,
+            tab_type: 'erd',
+            meta: {
+                connectionId: 5,
+                schema: 'public',
+            },
         });
     });
 });
