@@ -55,6 +55,7 @@ export const CONNECTIONS_I18N_KEYS = {
         privateKeyKeep: 'connections.placeholders.privateKeyKeep',
         passphrase: 'connections.placeholders.passphrase',
         passphraseKeep: 'connections.placeholders.passphraseKeep',
+        filePath: 'connections.placeholders.filePath',
     },
 
     status: {

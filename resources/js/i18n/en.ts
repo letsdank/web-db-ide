@@ -182,10 +182,12 @@ const en = {
             privateKeyKeep: 'Private key (leave empty to keep current)',
             passphrase: 'Passphrase',
             passphraseKeep: 'Passphrase (leave empty to keep current)',
+            filePath:'/path/to/database.sqlite',
         },
         driver: {
             pgsql: 'PostgreSQL',
             mysql: 'MySQL / MariaDB',
+            sqlite: 'SQLite',
         },
     },
 

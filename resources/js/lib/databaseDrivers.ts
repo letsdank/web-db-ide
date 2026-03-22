@@ -26,6 +26,14 @@ export const DATABASE_DRIVERS: Record<DatabaseDriver, DatabaseDriverDefinition> 
         supportsSchemaDefault: false,
         supportsDumpExport: false,
     },
+    sqlite: {
+        id: 'sqlite',
+        label: 'SQLite',
+        defaultPort: 0,
+        defaultSchema: null,
+        supportsSchemaDefault: false,
+        supportsDumpExport: false,
+    },
 };
 
 export function getDatabaseDriverDefinition(driver: DatabaseDriver | string | null | undefined): DatabaseDriverDefinition {

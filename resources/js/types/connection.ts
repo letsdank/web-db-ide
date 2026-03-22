@@ -1,4 +1,4 @@
-export type DatabaseDriver = 'pgsql' | 'mysql';
+export type DatabaseDriver = 'pgsql' | 'mysql' | 'sqlite';
 
 export interface ConnectionDto {
     id: number;

@@ -114,10 +114,13 @@ export function ConnectionFormDialog({
     const canSubmit = useMemo(() => {
         if (!form.name.trim()) return false;
         if (!form.driver.trim()) return false;
-        if (!form.host.trim()) return false;
-        if (!form.port.trim()) return false;
         if (!form.database_name.trim()) return false;
-        if (!form.username.trim()) return false;
+
+        if (form.driver !== 'sqlite') {
+            if (!form.host.trim()) return false;
+            if (!form.port.trim()) return false;
+            if (!form.username.trim()) return false;
+        }
 
         if (!isEditMode && !form.password.trim()) {
             return false;
@@ -259,6 +262,8 @@ export function ConnectionFormDialog({
         }
     }
 
+    const isSqlite = form.driver === 'sqlite';
+
     if (!open) {
         return null;
     }
@@ -296,40 +301,52 @@ export function ConnectionFormDialog({
                                     options={getDatabaseDriverOptions()}
                                 />
 
-                                <TextInput
-                                    value={form.host}
-                                    placeholder={t(CONNECTIONS_I18N_KEYS.placeholders.host)}
-                                    onUpdate={(value) => patch('host', value)}
-                                />
+                                {!isSqlite && (
+                                    <>
+                                        <TextInput
+                                            value={form.host}
+                                            placeholder={t(CONNECTIONS_I18N_KEYS.placeholders.host)}
+                                            onUpdate={(value) => patch('host', value)}
+                                        />
 
-                                <TextInput
-                                    value={form.port}
-                                    placeholder={t(CONNECTIONS_I18N_KEYS.placeholders.port)}
-                                    onUpdate={(value) => patch('port', value)}
-                                />
+                                        <TextInput
+                                            value={form.port}
+                                            placeholder={t(CONNECTIONS_I18N_KEYS.placeholders.port)}
+                                            onUpdate={(value) => patch('port', value)}
+                                        />
+                                    </>
+                                )}
 
                                 <TextInput
                                     value={form.database_name}
-                                    placeholder={t(CONNECTIONS_I18N_KEYS.placeholders.database)}
+                                    placeholder={t(
+                                        isSqlite
+                                            ? CONNECTIONS_I18N_KEYS.placeholders.filePath
+                                            : CONNECTIONS_I18N_KEYS.placeholders.database
+                                    )}
                                     onUpdate={(value) => patch('database_name', value)}
                                 />
 
-                                <TextInput
-                                    value={form.username}
-                                    placeholder={t(CONNECTIONS_I18N_KEYS.placeholders.username)}
-                                    onUpdate={(value) => patch('username', value)}
-                                />
+                                {!isSqlite && (
+                                    <>
+                                        <TextInput
+                                            value={form.username}
+                                            placeholder={t(CONNECTIONS_I18N_KEYS.placeholders.username)}
+                                            onUpdate={(value) => patch('username', value)}
+                                        />
 
-                                <TextInput
-                                    type="password"
-                                    value={form.password}
-                                    placeholder={t(
-                                        isEditMode
-                                            ? CONNECTIONS_I18N_KEYS.placeholders.passwordKeep
-                                            : CONNECTIONS_I18N_KEYS.placeholders.password
-                                    )}
-                                    onUpdate={(value) => patch('password', value)}
-                                />
+                                        <TextInput
+                                            type="password"
+                                            value={form.password}
+                                            placeholder={t(
+                                                isEditMode
+                                                    ? CONNECTIONS_I18N_KEYS.placeholders.passwordKeep
+                                                    : CONNECTIONS_I18N_KEYS.placeholders.password
+                                            )}
+                                            onUpdate={(value) => patch('password', value)}
+                                        />
+                                    </>
+                                )}
 
                                 {driverDefinition.supportsSchemaDefault ? (
                                     <TextInput
