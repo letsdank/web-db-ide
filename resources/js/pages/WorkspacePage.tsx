@@ -1,5 +1,5 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useRef, useState} from "react";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";

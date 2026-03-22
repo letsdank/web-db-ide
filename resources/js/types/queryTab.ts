@@ -5,6 +5,8 @@ export type QueryTabType = 'sql' | 'erd';
 export interface ErdTabMeta {
     connectionId: number;
     schema: string;
+
+    [key: string]: unknown; // satisfy Record<string, unknown>
 }
 
 export interface QueryTabDto {

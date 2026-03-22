@@ -1,7 +1,8 @@
 import type * as MonacoNamespace from 'monaco-editor';
 import type {ExplorerTableDetailsDto} from "../../../types/explorer";
 import {useEffect, useMemo, useRef} from "react";
-import {extractAliases, isSelectContext, isTableContext, SchemaCompletionItem} from "../lib/sqlCompletions";
+import type { SchemaCompletionItem} from "../lib/sqlCompletions";
+import {extractAliases, isSelectContext, isTableContext} from "../lib/sqlCompletions";
 
 function buildCompletions(
     monaco: typeof MonacoNamespace,

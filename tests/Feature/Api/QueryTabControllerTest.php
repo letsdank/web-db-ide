@@ -154,4 +154,53 @@ class QueryTabControllerTest extends TestCase
 
         $this->assertSame('Foreign tab', $foreignTab->fresh()->title);
     }
+
+    public function test_store_creates_erd_tab_with_type_and_meta(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user, 'sanctum')
+            ->postJson('/api/query-tabs', [
+                'title' => 'public ERD',
+                'tab_type' => 'erd',
+                'meta' => ['connectionId' => 1, 'schema' => 'public'],
+                'sql_text' => '',
+            ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('data.tab_type', 'erd')
+            ->assertJsonPath('data.meta.schema', 'public')
+            ->assertJsonPath('data.meta.connectionId', 1);
+    }
+
+    public function test_store_defaults_tab_type_to_sql(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user, 'sanctum')
+            ->postJson('/api/query-tabs', [
+                'title' => 'New Query',
+                'sql_text' => 'select 1',
+            ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('data.tab_type', 'sql');
+    }
+
+    public function test_store_rejects_invalid_tab_type(): void
+    {
+        $user = User::factory()->create();
+
+        $this
+            ->actingAs($user, 'sanctum')
+            ->postJson('/api/query-tabs', [
+                'title' => 'Bad Tab',
+                'tab_type' => 'unknown',
+            ])
+            ->assertUnprocessable();
+    }
 }
