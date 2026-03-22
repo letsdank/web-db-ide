@@ -1,6 +1,6 @@
 import type {ConnectionDto} from "../../../types/connection";
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
-import React, {useMemo} from "react";
+import React, {useCallback, useMemo} from "react";
 import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerSchemaNode} from "./ExplorerSchemaNode";
 import {ChevronDown, ChevronRight, Ellipsis} from "@gravity-ui/icons";
@@ -28,11 +28,11 @@ interface Props {
     loadingTablesFor: string | null;
     loadingDetailsFor: string | null;
     filter: string;
-    onToggleConnection: () => void;
-    onEditConnection: () => void;
-    onDeleteConnection: () => void;
-    onToggleSchema: (schema: string) => void;
-    onToggleTable: (schema: string, tableName: string) => void;
+    onToggleConnection: (connectionId: number) => void;
+    onEditConnection: (connection: ConnectionDto) => void;
+    onDeleteConnection: (connection: ConnectionDto) => void;
+    onToggleSchema: (connectionId: number, schema: string) => void;
+    onToggleTable: (connectionId: number, schema: string, tableName: string) => void;
     onOpenTableContextMenu: (
         event: React.MouseEvent,
         payload: {
@@ -42,51 +42,70 @@ interface Props {
             details?: ExplorerTableDetailsDto;
         }
     ) => void;
-    onOpenSelect: (schema: string, table: ExplorerTableDto) => void;
-    onOpenCount: (schema: string, table: ExplorerTableDto) => void;
-    onOpenMetadata: (schema: string, table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
-    onCopyFullName: (schema: string, table: ExplorerTableDto) => void;
-    onCopySelect: (schema: string, table: ExplorerTableDto) => void;
-    onOpenSchemaErd: (schema: string) => void;
-    onExportConnectionDump: () => void;
-    onExportSchemaDump: (schema: string) => void;
-    onExportTableDump: (schema: string, table: ExplorerTableDto) => void;
-    onQuickExportTableSchema: (schema: string, table: ExplorerTableDto) => void;
-    onQuickExportTableData: (schema: string, table: ExplorerTableDto) => void;
+    onOpenSelect: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onOpenCount: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onOpenMetadata: (connectionId: number, schema: string, table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
+    onCopyFullName: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onCopySelect: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onOpenSchemaErd: (connectionId: number, schema: string) => void;
+    onExportConnectionDump: (connection: ConnectionDto) => void;
+    onExportSchemaDump: (connectionId: number, schema: string) => void;
+    onExportTableDump: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onQuickExportTableSchema: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
+    onQuickExportTableData: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
 }
 
-export function ExplorerConnectionCard({
-                                           connection,
-                                           isActive,
-                                           isExpanded,
-                                           schemas,
-                                           loadingSchemas,
-                                           expandedSchemaKeys,
-                                           expandedTableKeys,
-                                           tablesBySchemaKey,
-                                           detailsByTableKey,
-                                           loadingTablesFor,
-                                           loadingDetailsFor,
-                                           filter,
-                                           onToggleConnection,
-                                           onEditConnection,
-                                           onDeleteConnection,
-                                           onToggleSchema,
-                                           onToggleTable,
-                                           onOpenTableContextMenu,
-                                           onOpenSelect,
-                                           onOpenCount,
-                                           onOpenMetadata,
-                                           onCopyFullName,
-                                           onCopySelect,
-                                           onOpenSchemaErd,
-                                           onExportConnectionDump,
-                                           onExportSchemaDump,
-                                           onExportTableDump,
-                                           onQuickExportTableSchema,
-                                           onQuickExportTableData,
-                                       }: Props) {
+export const ExplorerConnectionCard = React.memo(function ExplorerConnectionCard({
+                                                                                     connection,
+                                                                                     isActive,
+                                                                                     isExpanded,
+                                                                                     schemas,
+                                                                                     loadingSchemas,
+                                                                                     expandedSchemaKeys,
+                                                                                     expandedTableKeys,
+                                                                                     tablesBySchemaKey,
+                                                                                     detailsByTableKey,
+                                                                                     loadingTablesFor,
+                                                                                     loadingDetailsFor,
+                                                                                     filter,
+                                                                                     onToggleConnection,
+                                                                                     onEditConnection,
+                                                                                     onDeleteConnection,
+                                                                                     onToggleSchema,
+                                                                                     onToggleTable,
+                                                                                     onOpenTableContextMenu,
+                                                                                     onOpenSelect,
+                                                                                     onOpenCount,
+                                                                                     onOpenMetadata,
+                                                                                     onCopyFullName,
+                                                                                     onCopySelect,
+                                                                                     onOpenSchemaErd,
+                                                                                     onExportConnectionDump,
+                                                                                     onExportSchemaDump,
+                                                                                     onExportTableDump,
+                                                                                     onQuickExportTableSchema,
+                                                                                     onQuickExportTableData,
+                                                                                 }: Props) {
     const {t} = useI18n();
+
+    const id = connection.id;
+
+    const handleToggleConnection = useCallback(() => onToggleConnection(id), [onToggleConnection, id]);
+    const handleEditConnection = useCallback(() => onEditConnection(connection), [onEditConnection, connection]);
+    const handleDeleteConnection = useCallback(() => onDeleteConnection(connection), [onDeleteConnection, connection]);
+    const handleToggleSchema = useCallback((schema: string) => onToggleSchema(id, schema), [onToggleSchema, id]);
+    const handleToggleTable = useCallback((schema: string, tableName: string) => onToggleTable(id, schema, tableName), [onToggleTable, id]);
+    const handleOpenSelect = useCallback((schema: string, table: ExplorerTableDto) => onOpenSelect(id, schema, table), [onOpenSelect, id]);
+    const handleOpenCount = useCallback((schema: string, table: ExplorerTableDto) => onOpenCount(id, schema, table), [onOpenCount, id]);
+    const handleOpenMetadata = useCallback((schema: string, table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => onOpenMetadata(id, schema, table, details), [onOpenMetadata, id]);
+    const handleCopyFullName = useCallback((schema: string, table: ExplorerTableDto) => onCopyFullName(id, schema, table), [onCopyFullName, id]);
+    const handleCopySelect = useCallback((schema: string, table: ExplorerTableDto) => onCopySelect(id, schema, table), [onCopySelect, id]);
+    const handleOpenSchemaErd = useCallback((schema: string) => onOpenSchemaErd(id, schema), [onOpenSchemaErd, id]);
+    const handleExportConnectionDump = useCallback(() => onExportConnectionDump(connection), [onExportConnectionDump, connection]);
+    const handleExportSchemaDump = useCallback((schema: string) => onExportSchemaDump(id, schema), [onExportSchemaDump, id]);
+    const handleExportTableDump = useCallback((schema: string, table: ExplorerTableDto) => onExportTableDump(id, schema, table), [onExportTableDump, id]);
+    const handleQuickExportTableSchema = useCallback((schema: string, table: ExplorerTableDto) => onQuickExportTableSchema(id, schema, table), [onQuickExportTableSchema, id]);
+    const handleQuickExportTableData = useCallback((schema: string, table: ExplorerTableDto) => onQuickExportTableData(id, schema, table), [onQuickExportTableData, id]);
 
     const marker = getResourceMarker(connection);
     const markerLabelKey = getResourceMarkerLabelKey(connection);
@@ -127,11 +146,11 @@ export function ExplorerConnectionCard({
                 <div
                     role="button"
                     tabIndex={0}
-                    onClick={onToggleConnection}
+                    onClick={handleToggleConnection}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            onToggleConnection();
+                            handleToggleConnection();
                         }
                     }}
                     className="explorer-connection-card__toggle"
@@ -175,16 +194,16 @@ export function ExplorerConnectionCard({
                         items={[
                             {
                                 text: t('explorer.exportDatabaseDump'),
-                                action: onExportConnectionDump,
+                                action: handleExportConnectionDump,
                             },
                             ...(canManageConnection ? [
                                 {
                                     text: t('connections.editConnection'),
-                                    action: onEditConnection,
+                                    action: handleEditConnection,
                                 },
                                 {
                                     text: t('connections.deleteConnection'),
-                                    action: onDeleteConnection,
+                                    action: handleDeleteConnection,
                                     theme: 'danger' as const,
                                 },
                             ] : []),
@@ -239,19 +258,19 @@ export function ExplorerConnectionCard({
                                     detailsByTableKey={detailsByTableKey}
                                     loadingDetailsFor={loadingDetailsFor}
                                     canExportDump={canExportDump}
-                                    onToggleSchema={() => onToggleSchema(schema)}
-                                    onToggleTable={(tableName) => onToggleTable(schema, tableName)}
+                                    onToggleSchema={handleToggleSchema}
+                                    onToggleTable={handleToggleTable}
                                     onOpenTableContextMenu={onOpenTableContextMenu}
-                                    onOpenSelect={(table) => onOpenSelect(schema, table)}
-                                    onOpenCount={(table) => onOpenCount(schema, table)}
-                                    onOpenMetadata={(table, details) => onOpenMetadata(schema, table, details)}
-                                    onCopyFullName={(table) => onCopyFullName(schema, table)}
-                                    onCopySelect={(table) => onCopySelect(schema, table)}
-                                    onOpenErd={() => onOpenSchemaErd(schema)}
-                                    onExportSchemaDump={() => onExportSchemaDump(schema)}
-                                    onExportTableDump={(table) => onExportTableDump(schema, table)}
-                                    onQuickExportTableSchema={(table) => onQuickExportTableSchema(schema, table)}
-                                    onQuickExportTableData={(table) => onQuickExportTableData(schema, table)}
+                                    onOpenSelect={handleOpenSelect}
+                                    onOpenCount={handleOpenCount}
+                                    onOpenMetadata={handleOpenMetadata}
+                                    onCopyFullName={handleCopyFullName}
+                                    onCopySelect={handleCopySelect}
+                                    onOpenErd={handleOpenSchemaErd}
+                                    onExportSchemaDump={handleExportSchemaDump}
+                                    onExportTableDump={handleExportTableDump}
+                                    onQuickExportTableSchema={handleQuickExportTableSchema}
+                                    onQuickExportTableData={handleQuickExportTableData}
                                 />
                             );
                         })
@@ -266,4 +285,4 @@ export function ExplorerConnectionCard({
             ) : null}
         </div>
     );
-}
+});

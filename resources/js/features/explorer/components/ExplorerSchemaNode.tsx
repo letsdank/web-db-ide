@@ -19,8 +19,8 @@ interface Props {
     detailsByTableKey: Record<string, ExplorerTableDetailsDto>;
     loadingDetailsFor: string | null;
     canExportDump: boolean;
-    onToggleSchema: () => void;
-    onToggleTable: (tableName: string) => void;
+    onToggleSchema: (schema: string) => void;
+    onToggleTable: (schema: string, tableName: string) => void;
     onOpenTableContextMenu: (
         event: React.MouseEvent,
         payload: {
@@ -30,44 +30,44 @@ interface Props {
             details?: ExplorerTableDetailsDto;
         }
     ) => void;
-    onOpenSelect: (table: ExplorerTableDto) => void;
-    onOpenCount: (table: ExplorerTableDto) => void;
-    onOpenMetadata: (table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
-    onCopyFullName: (table: ExplorerTableDto) => void;
-    onCopySelect: (table: ExplorerTableDto) => void;
-    onOpenErd: () => void;
-    onExportSchemaDump: () => void;
-    onExportTableDump: (table: ExplorerTableDto) => void;
-    onQuickExportTableSchema: (table: ExplorerTableDto) => void;
-    onQuickExportTableData: (table: ExplorerTableDto) => void;
+    onOpenSelect: (schema: string, table: ExplorerTableDto) => void;
+    onOpenCount: (schema: string, table: ExplorerTableDto) => void;
+    onOpenMetadata: (schema: string, table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
+    onCopyFullName: (schema: string, table: ExplorerTableDto) => void;
+    onCopySelect: (schema: string, table: ExplorerTableDto) => void;
+    onOpenErd: (schema: string) => void;
+    onExportSchemaDump: (schema: string) => void;
+    onExportTableDump: (schema: string, table: ExplorerTableDto) => void;
+    onQuickExportTableSchema: (schema: string, table: ExplorerTableDto) => void;
+    onQuickExportTableData: (schema: string, table: ExplorerTableDto) => void;
 }
 
-export function ExplorerSchemaNode({
-                                       driver,
-                                       connectionId,
-                                       schema,
-                                       filter,
-                                       isExpanded,
-                                       tables,
-                                       loadingTables,
-                                       expandedTableKeys,
-                                       detailsByTableKey,
-                                       loadingDetailsFor,
-                                       canExportDump,
-                                       onToggleSchema,
-                                       onToggleTable,
-                                       onOpenTableContextMenu,
-                                       onOpenSelect,
-                                       onOpenCount,
-                                       onOpenMetadata,
-                                       onCopyFullName,
-                                       onCopySelect,
-                                       onOpenErd,
-                                       onExportSchemaDump,
-                                       onExportTableDump,
-                                       onQuickExportTableSchema,
-                                       onQuickExportTableData,
-                                   }: Props) {
+export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
+                                                                             driver,
+                                                                             connectionId,
+                                                                             schema,
+                                                                             filter,
+                                                                             isExpanded,
+                                                                             tables,
+                                                                             loadingTables,
+                                                                             expandedTableKeys,
+                                                                             detailsByTableKey,
+                                                                             loadingDetailsFor,
+                                                                             canExportDump,
+                                                                             onToggleSchema,
+                                                                             onToggleTable,
+                                                                             onOpenTableContextMenu,
+                                                                             onOpenSelect,
+                                                                             onOpenCount,
+                                                                             onOpenMetadata,
+                                                                             onCopyFullName,
+                                                                             onCopySelect,
+                                                                             onOpenErd,
+                                                                             onExportSchemaDump,
+                                                                             onExportTableDump,
+                                                                             onQuickExportTableSchema,
+                                                                             onQuickExportTableData,
+                                                                         }: Props) {
     const {t} = useI18n();
 
     const visibleTables = useMemo(() => {
@@ -87,11 +87,11 @@ export function ExplorerSchemaNode({
                     role="button"
                     tabIndex={0}
                     className="explorer-schema-node__toggle"
-                    onClick={onToggleSchema}
+                    onClick={()=>onToggleSchema(schema)}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            onToggleSchema();
+                            onToggleSchema(schema);
                         }
                     }}
                 >
@@ -118,11 +118,11 @@ export function ExplorerSchemaNode({
                         items={[
                             {
                                 text: 'ERD',
-                                action: onOpenErd,
+                                action: ()=>onOpenErd(schema),
                             },
                             {
                                 text: t('explorer.exportSchemaDump'),
-                                action: onExportSchemaDump,
+                                action: ()=>onExportSchemaDump(schema),
                                 disabled: !canExportDump,
                             },
                         ]}
@@ -166,16 +166,16 @@ export function ExplorerSchemaNode({
                                     details={detailsByTableKey[tableKey]}
                                     isLoadingDetails={loadingDetailsFor === tableKey}
                                     canExportDump={canExportDump}
-                                    onToggle={() => onToggleTable(table.table_name)}
+                                    onToggle={() => onToggleTable(schema, table.table_name)}
                                     onOpenContextMenu={onOpenTableContextMenu}
-                                    onOpenSelect={() => onOpenSelect(table)}
-                                    onOpenCount={() => onOpenCount(table)}
-                                    onOpenMetadata={(details) => onOpenMetadata(table, details)}
-                                    onCopyFullName={() => onCopyFullName(table)}
-                                    onCopySelect={() => onCopySelect(table)}
-                                    onExportDump={() => onExportTableDump(table)}
-                                    onQuickExportSchema={() => onQuickExportTableSchema(table)}
-                                    onQuickExportData={() => onQuickExportTableData(table)}
+                                    onOpenSelect={() => onOpenSelect(schema, table)}
+                                    onOpenCount={() => onOpenCount(schema, table)}
+                                    onOpenMetadata={(details) => onOpenMetadata(schema, table, details)}
+                                    onCopyFullName={() => onCopyFullName(schema, table)}
+                                    onCopySelect={() => onCopySelect(schema, table)}
+                                    onExportDump={() => onExportTableDump(schema, table)}
+                                    onQuickExportSchema={() => onQuickExportTableSchema(schema, table)}
+                                    onQuickExportData={() => onQuickExportTableData(schema, table)}
                                 />
                             );
                         })
@@ -190,4 +190,4 @@ export function ExplorerSchemaNode({
             ) : null}
         </div>
     );
-}
+});

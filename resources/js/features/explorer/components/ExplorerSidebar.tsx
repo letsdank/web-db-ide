@@ -195,23 +195,23 @@ export function ExplorerSidebar({
                                     loadingTablesFor={loadingTablesFor}
                                     loadingDetailsFor={loadingDetailsFor}
                                     filter={filter.trim().toLowerCase()}
-                                    onToggleConnection={() => onToggleConnection(connection.id)}
-                                    onEditConnection={() => onEditConnection(connection)}
-                                    onDeleteConnection={() => onDeleteConnection(connection)}
-                                    onToggleSchema={(schema) => onToggleSchema(connection.id, schema)}
-                                    onToggleTable={(schema, tableName) => onToggleTable(connection.id, schema, tableName)}
+                                    onToggleConnection={onToggleConnection}
+                                    onEditConnection={onEditConnection}
+                                    onDeleteConnection={onDeleteConnection}
+                                    onToggleSchema={onToggleSchema}
+                                    onToggleTable={onToggleTable}
                                     onOpenTableContextMenu={onOpenTableContextMenu}
-                                    onOpenSelect={(schema, table) => onOpenSelect(connection.id, schema, table)}
-                                    onOpenCount={(schema, table) => onOpenCount(connection.id, schema, table)}
-                                    onOpenMetadata={(schema, table, details) => onOpenMetadata(connection.id, schema, table, details)}
-                                    onCopyFullName={(schema, table) => onCopyFullName(connection.id, schema, table)}
-                                    onCopySelect={(schema, table) => onCopySelect(connection.id, schema, table)}
-                                    onOpenSchemaErd={(schema) => onOpenSchemaErd(connection.id, schema)}
-                                    onExportConnectionDump={() => onExportConnectionDump(connection)}
-                                    onExportSchemaDump={(schema) => onExportSchemaDump(connection.id, schema)}
-                                    onExportTableDump={(schema, table) => onExportTableDump(connection.id, schema, table)}
-                                    onQuickExportTableSchema={(schema, table) => onQuickExportTableSchema(connection.id, schema, table)}
-                                    onQuickExportTableData={(schema, table) => onQuickExportTableData(connection.id, schema, table)}
+                                    onOpenSelect={onOpenSelect}
+                                    onOpenCount={onOpenCount}
+                                    onOpenMetadata={onOpenMetadata}
+                                    onCopyFullName={onCopyFullName}
+                                    onCopySelect={onCopySelect}
+                                    onOpenSchemaErd={onOpenSchemaErd}
+                                    onExportConnectionDump={onExportConnectionDump}
+                                    onExportSchemaDump={onExportSchemaDump}
+                                    onExportTableDump={onExportTableDump}
+                                    onQuickExportTableSchema={onQuickExportTableSchema}
+                                    onQuickExportTableData={onQuickExportTableData}
                                 />
                             ))
                         ) : (

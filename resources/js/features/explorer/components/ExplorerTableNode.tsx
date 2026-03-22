@@ -32,25 +32,26 @@ interface Props {
     onQuickExportData: () => void;
 }
 
-export function ExplorerTableNode({
-                                      connectionId,
-                                      schema,
-                                      table,
-                                      isExpanded,
-                                      details,
-                                      isLoadingDetails,
-                                      canExportDump,
-                                      onToggle,
-                                      onOpenContextMenu,
-                                      onOpenSelect,
-                                      onOpenCount,
-                                      onOpenMetadata,
-                                      onCopyFullName,
-                                      onCopySelect,
-                                      onExportDump,
-                                      onQuickExportSchema,
-                                      onQuickExportData,
-                                  }: Props) {
+export const ExplorerTableNode =
+    React.memo(function ExplorerTableNode({
+                                                                           connectionId,
+                                                                           schema,
+                                                                           table,
+                                                                           isExpanded,
+                                                                           details,
+                                                                           isLoadingDetails,
+                                                                           canExportDump,
+                                                                           onToggle,
+                                                                           onOpenContextMenu,
+                                                                           onOpenSelect,
+                                                                           onOpenCount,
+                                                                           onOpenMetadata,
+                                                                           onCopyFullName,
+                                                                           onCopySelect,
+                                                                           onExportDump,
+                                                                           onQuickExportSchema,
+                                                                           onQuickExportData,
+                                                                       }: Props) {
     const {t} = useI18n();
 
     return (
@@ -190,4 +191,4 @@ export function ExplorerTableNode({
             ) : null}
         </div>
     );
-}
+});
