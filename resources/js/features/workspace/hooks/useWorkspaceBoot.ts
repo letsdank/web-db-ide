@@ -53,8 +53,17 @@ export function useWorkspaceBoot({
                 setSavedQueries(savedQueriesData);
 
                 const initialTab = tabsData[0] ?? null;
+                const availableConnectionIds = new Set(connectionsData.map((connection) => connection.id));
+
+                const initialTabConnectionId = (
+                    initialTab?.db_connection_id != null &&
+                    availableConnectionIds.has(initialTab.db_connection_id)
+                )
+                    ? initialTab.db_connection_id
+                    : null;
+
                 const initialConnectionId =
-                    initialTab?.db_connection_id ??
+                    initialTabConnectionId ??
                     connectionsData[0]?.id ??
                     null;
 
