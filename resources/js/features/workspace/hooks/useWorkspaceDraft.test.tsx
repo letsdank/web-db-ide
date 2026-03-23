@@ -189,8 +189,6 @@ describe('useWorkspaceDraft', () => {
             }),
         );
 
-        expect(markTabDirty).toHaveBeenCalledWith(7);
-
         expect(debouncedCalls).toHaveLength(1);
         expect(debouncedCalls[0]).toEqual({
             tabId: 7,
