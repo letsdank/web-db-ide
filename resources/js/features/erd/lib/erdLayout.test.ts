@@ -99,3 +99,41 @@ describe('getColumnY', () => {
         expect(getColumnY(node, 'unknown')).toBe(getColumnY(node, 'id'));
     });
 });
+
+describe('layoutNodes - multi-level chain', () => {
+    it('assigns increasing x for a->b->c chain', () => {
+        const tables = [makeTable('a'), makeTable('b'), makeTable('c')];
+        const fks = [
+            {from_table: 'b', from_column: 'a_id', to_table: 'a', to_column: 'id', constraint_name: 'fk1'},
+            {from_table: 'c', from_column: 'b_id', to_table: 'b', to_column: 'id', constraint_name: 'fk2'},
+        ];
+        const nodes = layoutNodes(tables, {}, fks);
+        const xa = nodes.find((n) => n.table.table_name === 'a')!.x;
+        const xb = nodes.find((n) => n.table.table_name === 'b')!.x;
+        const xc = nodes.find((n) => n.table.table_name === 'c')!.x;
+
+        expect(xb).toBeGreaterThan(xa);
+        expect(xc).toBeGreaterThan(xb);
+    });
+
+    it('stacks tables of same depth vertically (different y, same x)', () => {
+        const tables = [makeTable('users'), makeTable('products'), makeTable('orders')];
+        const fks = [
+            {from_table: 'orders', from_column: 'user_id', to_table: 'users', to_column: 'id', constraint_name: 'fk1'},
+            {
+                from_table: 'orders',
+                from_column: 'product_id',
+                to_table: 'products',
+                to_column: 'id',
+                constraint_name: 'fk2'
+            },
+        ];
+        const nodes = layoutNodes(tables, {}, fks);
+        const users = nodes.find((n) => n.table.table_name === 'users')!;
+        const products = nodes.find((n) => n.table.table_name === 'products')!;
+
+        // users and products are both at depth 0 - same x, different y
+        expect(users.x).toBe(products.x);
+        expect(users.y).not.toBe(products.y);
+    });
+})
