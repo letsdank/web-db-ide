@@ -3,7 +3,15 @@ import {useResultView} from "../hooks/useResultView";
 import {useContextMenu} from "../../../hooks/useContextMenu";
 import {ResultsEmptyState} from "./ResultsEmptyState";
 import {ResultsErrorState} from "./ResultsErrorState";
-import {buildCsv, buildRowJson, buildRowTsv, buildTsv, copyText, downloadFile} from "../utils/resultExport";
+import {
+    buildCsv,
+    buildExportFileName,
+    buildRowJson,
+    buildRowTsv,
+    buildTsv,
+    copyText,
+    downloadFile
+} from "../utils/resultExport";
 import {Card} from "@gravity-ui/uikit";
 import {WorkspaceContextMenu} from "../../../components/workspace/WorkspaceContextMenu";
 import {ResultsToolbar} from "./ResultsToolbar";
@@ -91,15 +99,6 @@ export function ResultsPanel({
 
     const contextCell = cellMenuState.payload;
     const contextHeader = headerMenuState.payload;
-
-    function buildExportFileName(title: string | null | undefined, ext: string): string {
-        const base = (title || 'query-results')
-            .toLowerCase()
-            .replace(/[^a-z0-9-_]+/gi, '-')
-            .replace(/^-+|-+$/g, '') || 'query-results';
-
-        return `${base}.${ext}`;
-    }
 
     function handleExportCsv() {
         downloadFile(buildExportFileName(activeTabTitle, 'csv'), buildCsv(visibleColumns, visibleRows), 'text/csv;charset=utf-8;');

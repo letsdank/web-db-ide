@@ -1,3 +1,12 @@
+export function buildExportFileName(title: string | null | undefined, ext: string): string {
+    const base = (title || 'query-results')
+        .toLowerCase()
+        .replace(/[^a-z0-9-_]+/gi, '-')
+        .replace(/^-+|-+$/g, '') || 'query-results';
+
+    return `${base}.${ext}`;
+}
+
 export function escapeCsvValue(value: unknown): string {
     if (value === null || value === undefined) {
         return '';
