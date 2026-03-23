@@ -383,6 +383,7 @@ export function WorkspacePage() {
     useSqlCompletionProvider({
         monaco: monacoInstance,
         detailsByTableKey,
+        tablesBySchemaKey,
         activeConnectionId,
         driver: activeConnection?.driver ?? null,
     });

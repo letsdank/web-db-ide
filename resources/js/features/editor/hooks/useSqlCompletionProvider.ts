@@ -1,5 +1,5 @@
 import type * as MonacoNamespace from 'monaco-editor';
-import type {ExplorerTableDetailsDto} from "../../../types/explorer";
+import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import {useEffect, useMemo, useRef} from "react";
 import {
     extractAliases,
@@ -126,6 +126,7 @@ function buildCompletions(
 interface Params {
     monaco: typeof MonacoNamespace | null;
     detailsByTableKey: Record<string, ExplorerTableDetailsDto>;
+    tablesBySchemaKey: Record<string, ExplorerTableDto[]>;
     activeConnectionId: number | null;
     driver: DatabaseDriver | null;
 }
@@ -135,7 +136,13 @@ interface Params {
  * The provider reads schema items via a ref, so switching connections or loading
  * new table details takes effect immediately without re-registration.
  */
-export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConnectionId, driver}: Params) {
+export function useSqlCompletionProvider({
+                                             monaco,
+                                             detailsByTableKey,
+                                             tablesBySchemaKey,
+                                             activeConnectionId,
+                                             driver
+                                         }: Params) {
     const disposeRef = useRef<MonacoNamespace.IDisposable | null>(null);
 
     // Both refs are read inside the provider closure on every completion request,
@@ -151,7 +158,8 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
     schemaItemsRef.current = useMemo(() => {
         if (!activeConnectionId) return [];
 
-        return Object.entries(detailsByTableKey)
+        // Tables with loaded details - full completions
+        const detailItems = Object.entries(detailsByTableKey)
             .filter(([key]) => Number(key.split(':')[0]) === activeConnectionId)
             .map(([, details]) => ({
                 schema: details.schema,
@@ -161,7 +169,25 @@ export function useSqlCompletionProvider({monaco, detailsByTableKey, activeConne
                     type: col.data_type,
                 })),
             }));
-    }, [detailsByTableKey, activeConnectionId]);
+
+        const loadedKeys = new Set(detailItems.map((i) => `${i.schema}.${i.table}`));
+
+        // Tables without details - table-name completions only (no columns)
+        const tableOnlyItems = Object.entries(tablesBySchemaKey)
+            .filter(([key]) => Number(key.split(':')[0]) == activeConnectionId)
+            .flatMap(([key, tables]) => {
+                const schema = key.split(':')[1] ?? '';
+                return tables
+                    .filter((t) => !loadedKeys.has(`${schema}.${t.table_name}`))
+                    .map((t) => ({
+                        schema,
+                        table: t.table_name,
+                        columns: [],
+                    }));
+            });
+
+        return [...detailItems, ...tableOnlyItems];
+    }, [detailsByTableKey, tablesBySchemaKey, activeConnectionId]);
 
     // Register provider once per monaco instance - both schema and active connection
     // are read via refs so no re-registration needed on connection switch.

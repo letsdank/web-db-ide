@@ -198,23 +198,6 @@ export function useExplorerTree({
         [connections, activeConnectionId],
     );
 
-    const loadSchemas = useCallback(async (connectionId: number) => {
-        setLoadingSchemasFor(connectionId);
-
-        try {
-            const schemas = await fetchSchemas(connectionId);
-
-            setSchemasByConnectionId((prev) => ({
-                ...prev,
-                [connectionId]: schemas,
-            }));
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoadingSchemasFor((current) => (current === connectionId ? null : current));
-        }
-    }, []);
-
     const loadTables = useCallback(async (connectionId: number, schema: string) => {
         const key = `${connectionId}:${schema}`;
         setLoadingTablesFor(key);
@@ -280,6 +263,30 @@ export function useExplorerTree({
             setLoadingTablesFor((current) => (current === key ? null : current));
         }
     }, []);
+
+    const loadSchemas = useCallback(async (connectionId: number) => {
+        setLoadingSchemasFor(connectionId);
+
+        try {
+            const schemas = await fetchSchemas(connectionId);
+
+            setSchemasByConnectionId((prev) => ({
+                ...prev,
+                [connectionId]: schemas,
+            }));
+
+            // Auto-load tables for all schemas of the active connection
+            // so autocomplete has table names available without manual expansion.
+            // Details (columns) are still lazy - loaded only on expand.
+            await Promise.all(
+                schemas.map((schema) => loadTables(connectionId, schema)),
+            );
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoadingSchemasFor((current) => (current === connectionId ? null : current));
+        }
+    }, [loadTables]);
 
     const loadTableDetails = useCallback(async (connectionId: number, schema: string, table: string) => {
         const key = `${connectionId}:${schema}:${table}`;
