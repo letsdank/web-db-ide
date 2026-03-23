@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {buildCsv, buildRowJson, buildRowTsv, buildTsv, escapeCsvValue} from "./resultExport";
+import {buildCsv, buildExportFileName, buildRowJson, buildRowTsv, buildTsv, escapeCsvValue} from "./resultExport";
 
 const columns = [
     {name: 'id', native_type: 'int'},
@@ -94,5 +94,31 @@ describe('buildRowJson', () => {
     it('handles null cells', () => {
         const result = JSON.parse(buildRowJson([1, null], ['id', 'name']));
         expect(result).toEqual({id: 1, name: null});
+    });
+});
+
+describe('buildExportFileName', () => {
+    it('builds filename from tab title and extension', () => {
+        expect(buildExportFileName('My Query', 'csv')).toBe('my-query.csv');
+    });
+
+    it('falls back to query-results when title is null', () => {
+        expect(buildExportFileName(null, 'json')).toBe('query-results.json');
+    });
+
+    it('falls back to query-results when title is empty string', () => {
+        expect(buildExportFileName('', 'tsv')).toBe('query-results.tsv');
+    });
+
+    it('strips leading and trailing dashes', () => {
+        expect(buildExportFileName('  my query  ', 'csv')).toBe('my-query.csv');
+    });
+
+    it('replaces special characters with dashes', () => {
+        expect(buildExportFileName('users & orders (2024)', 'csv')).toBe('users-orders-2024.csv');
+    });
+
+    it('collapses multiple consecutive special chars into single dash', () => {
+        expect(buildExportFileName('a  b   c', 'csv')).toBe('a-b-c.csv');
     });
 });
