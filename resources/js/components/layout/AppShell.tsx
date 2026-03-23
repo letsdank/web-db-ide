@@ -4,6 +4,7 @@ import {logout} from "../../api/auth";
 import {Button, Select, Text} from "@gravity-ui/uikit";
 import {useI18n} from "../../i18n";
 import {useSettingsStore} from "../../stores/settingsStore";
+import {IdeStatusBar} from "./IdeStatusBar";
 
 export function AppShell({children}: PropsWithChildren) {
     const user = useAuthStore((state) => state.user);
@@ -52,6 +53,7 @@ export function AppShell({children}: PropsWithChildren) {
             </header>
 
             <main>{children}</main>
+            <IdeStatusBar />
         </div>
     );
 }

@@ -2,6 +2,7 @@ import type {ConnectionDto} from "../../../types/connection";
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {fetchSchemas, fetchTableDetails, fetchTables} from "../../../api/explorer";
+import {useIdeStatusStore} from "../../../stores/ideStatusStore";
 
 const EXPLORER_TREE_STORAGE_KEY = 'web-db-ide-explorer-tree';
 
@@ -264,7 +265,10 @@ export function useExplorerTree({
         }
     }, []);
 
+    const setSchemaLoadPhase = useIdeStatusStore((s) => s.setSchemaLoadPhase);
+
     const loadSchemas = useCallback(async (connectionId: number) => {
+        setSchemaLoadPhase('loading-schemas');
         setLoadingSchemasFor(connectionId);
 
         try {
@@ -278,15 +282,18 @@ export function useExplorerTree({
             // Auto-load tables for all schemas of the active connection
             // so autocomplete has table names available without manual expansion.
             // Details (columns) are still lazy - loaded only on expand.
+            setSchemaLoadPhase('loading-tables');
             await Promise.all(
                 schemas.map((schema) => loadTables(connectionId, schema)),
             );
+            setSchemaLoadPhase('ready');
         } catch (error) {
             console.error(error);
+            setSchemaLoadPhase('idle');
         } finally {
             setLoadingSchemasFor((current) => (current === connectionId ? null : current));
         }
-    }, [loadTables]);
+    }, [loadTables, setSchemaLoadPhase]);
 
     const loadTableDetails = useCallback(async (connectionId: number, schema: string, table: string) => {
         const key = `${connectionId}:${schema}:${table}`;

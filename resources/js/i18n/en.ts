@@ -182,7 +182,7 @@ const en = {
             privateKeyKeep: 'Private key (leave empty to keep current)',
             passphrase: 'Passphrase',
             passphraseKeep: 'Passphrase (leave empty to keep current)',
-            filePath:'/path/to/database.sqlite',
+            filePath: '/path/to/database.sqlite',
         },
         driver: {
             pgsql: 'PostgreSQL',
@@ -228,6 +228,14 @@ const en = {
         loadingColumns: 'Loading columns...',
         columnsCount: '{count} columns',
         indexesCount: '{count} indexes',
+    },
+
+    status: {
+        loadingSchemas: 'Loading schemas...',
+        loadingTables: 'Loading tables...',
+        loadingColumns: 'Loading columns...',
+        executingQuery: 'Executing...',
+        noConnection: 'No connection',
     },
 } as const;
 

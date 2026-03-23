@@ -229,6 +229,14 @@ const ru = {
         columnsCount: '{count} колонок',
         indexesCount: '{count} индексов',
     },
+
+    status: {
+        loadingSchemas: 'Загрузка схем...',
+        loadingTables: 'Загрузка таблиц...',
+        loadingColumns: 'Загрузка колонок...',
+        executingQuery: 'Выполняется...',
+        noConnection: 'Нет подключения',
+    },
 } as const;
 
 export default ru;

@@ -1,7 +1,7 @@
 .app-shell {
     height: 100vh;
     display: grid;
-    grid-template-rows: 56px minmax(0, 1fr);
+    grid-template-rows: 56px minmax(0, 1fr) 24px;
     background: #0f1115;
     color: #fff;
 
@@ -22,5 +22,38 @@
     > main {
         min-height: 0;
         overflow: hidden;
+    }
+
+    &__status {
+        min-height: 0;
+    }
+}
+
+.ide-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    height: 24px;
+    background: #0b0d10;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 8px;
+
+    &__left,
+    &__center,
+    &__right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    &__center {
+        flex: 1;
+        justify-content: center;
+    }
+
+    &__right {
+        flex-shrink: 0;
     }
 }
