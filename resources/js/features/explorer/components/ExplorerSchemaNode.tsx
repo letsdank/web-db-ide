@@ -1,5 +1,5 @@
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
-import React, {useCallback, useMemo} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerTableNode} from "./ExplorerTableNode";
 import {ChevronDown, ChevronRight, Ellipsis, Folder} from "@gravity-ui/icons";
@@ -8,6 +8,22 @@ import type {DatabaseDriver} from "../../../types/connection";
 import {getExplorerGroupLabelKey} from "../lib/driverPresentation";
 import {useContextMenu} from "../../../hooks/useContextMenu";
 import {WorkspaceContextAction, WorkspaceContextMenu} from "../../../components/workspace/WorkspaceContextMenu";
+
+const INITIAL_TABLE_RENDER_BATCH = 60;
+const TABLE_RENDER_BATCH_STEP = 80;
+
+type IdleDeadlineLike = {
+    didTimeout: boolean;
+    timeRemaining: () => number;
+}
+
+type IdleWindow = Window & {
+    requestIdleCallback?: (
+        callback: (deadline: IdleDeadlineLike) => void,
+        options?: { timeout: number }
+    ) => number;
+    cancelIdleCallback?: (handle: number) => void;
+}
 
 interface ExplorerTableMenuPayload {
     connectionId: number;
@@ -51,6 +67,46 @@ interface Props {
     onQuickExportTableData: (schema: string, table: ExplorerTableDto) => void;
 }
 
+function scheduleExplorerBatch(callback: () => void): () => void {
+    if (typeof window === 'undefined') {
+        callback();
+        return () => undefined;
+    }
+
+    const idleWindow = window as IdleWindow;
+    let timeoutId: number | null = null;
+    let idleId: number | null = null;
+    let cancelled = false;
+
+    const run = () => {
+        if (!cancelled) {
+            callback();
+        }
+    };
+
+    if (typeof idleWindow.requestIdleCallback === 'function') {
+        idleId = idleWindow.requestIdleCallback(() => run(), {timeout: 120});
+
+        return () => {
+            cancelled = true;
+
+            if (idleId !== null && typeof idleWindow.cancelIdleCallback === 'function') {
+                idleWindow.cancelIdleCallback(idleId);
+            }
+        };
+    }
+
+    timeoutId = window.setTimeout(run, 16);
+
+    return () => {
+        cancelled = true;
+
+        if (timeoutId !== null) {
+            window.clearTimeout(timeoutId);
+        }
+    };
+}
+
 export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
                                                                              driver,
                                                                              connectionId,
@@ -87,6 +143,8 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
         closeContextMenu: closeTableMenu,
     } = useContextMenu<ExplorerTableMenuPayload>();
 
+    const [renderedTableCount, setRenderedTableCount] = useState(INITIAL_TABLE_RENDER_BATCH);
+
     const visibleTables = useMemo(() => {
         if (!filter) {
             return tables;
@@ -96,6 +154,39 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
             table.table_name.toLowerCase().includes(filter),
         );
     }, [filter, tables]);
+
+    useEffect(() => {
+        if (!isExpanded || loadingTables) {
+            setRenderedTableCount(INITIAL_TABLE_RENDER_BATCH);
+            return;
+        }
+
+        setRenderedTableCount(Math.min(visibleTables.length, INITIAL_TABLE_RENDER_BATCH));
+    }, [isExpanded, loadingTables, schema, filter, visibleTables.length]);
+
+    useEffect(() => {
+        if (!isExpanded || loadingTables || renderedTableCount >= visibleTables.length) {
+            return;
+        }
+
+        return scheduleExplorerBatch(() => {
+            setRenderedTableCount((current) => {
+                if (current >= visibleTables.length) {
+                    return current;
+                }
+
+                return Math.min(visibleTables.length, current + TABLE_RENDER_BATCH_STEP);
+            });
+        });
+    }, [isExpanded, loadingTables, renderedTableCount, visibleTables.length]);
+
+    const renderedTables = useMemo(() => {
+        if (!isExpanded) {
+            return [];
+        }
+
+        return visibleTables.slice(0, renderedTableCount);
+    }, [isExpanded, visibleTables, renderedTableCount]);
 
     const handleOpenTableMenu = useCallback((
         event: React.MouseEvent,
@@ -249,7 +340,7 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
                             </Text>
                         </div>
                     ) : visibleTables.length > 0 ? (
-                        visibleTables.map((table) => {
+                        renderedTables.map((table) => {
                             const tableKey = `${connectionId}:${schema}:${table.table_name}`;
 
                             return (
