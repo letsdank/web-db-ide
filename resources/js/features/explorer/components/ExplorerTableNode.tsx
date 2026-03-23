@@ -1,7 +1,7 @@
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
-import React from "react";
-import {Button, ClipboardButton, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
-import {ChevronDown, ChevronRight, Ellipsis, LayoutHeaderCellsLargeFill} from "@gravity-ui/icons";
+import React, {useCallback} from "react";
+import {Button, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
+import {ChevronDown, ChevronRight, Copy, Ellipsis, LayoutHeaderCellsLargeFill} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
 
 interface Props {
@@ -22,14 +22,15 @@ interface Props {
             details?: ExplorerTableDetailsDto;
         }
     ) => void;
-    onOpenSelect: () => void;
-    onOpenCount: () => void;
-    onOpenMetadata: (details?: ExplorerTableDetailsDto) => void;
-    onCopyFullName: () => void;
-    onCopySelect: () => void;
-    onExportDump: () => void;
-    onQuickExportSchema: () => void;
-    onQuickExportData: () => void;
+    onOpenActionsMenu: (
+        event: React.MouseEvent,
+        payload: {
+            connectionId: number;
+            schema: string;
+            table: ExplorerTableDto;
+            details?: ExplorerTableDetailsDto;
+        }
+    ) => void;
 }
 
 export const ExplorerTableNode =
@@ -40,19 +41,43 @@ export const ExplorerTableNode =
                                               isExpanded,
                                               details,
                                               isLoadingDetails,
-                                              canExportDump,
                                               onToggle,
                                               onOpenContextMenu,
-                                              onOpenSelect,
-                                              onOpenCount,
-                                              onOpenMetadata,
-                                              onCopyFullName,
-                                              onCopySelect,
-                                              onExportDump,
-                                              onQuickExportSchema,
-                                              onQuickExportData,
+                                              onOpenActionsMenu,
                                           }: Props) {
         const {t} = useI18n();
+
+        const handleToggle = useCallback(() => {
+            onToggle(schema, table.table_name);
+        }, [onToggle, schema, table.table_name]);
+
+        const handleOpenContextMenu = useCallback((event: React.MouseEvent) => {
+            onOpenContextMenu(event, {
+                connectionId,
+                schema,
+                table,
+                details,
+            });
+        }, [connectionId, details, onOpenContextMenu, schema, table]);
+
+        const handleOpenActionsMenu = useCallback((event: React.MouseEvent) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            onOpenActionsMenu(event, {
+                connectionId,
+                schema,
+                table,
+                details,
+            });
+        }, [connectionId, details, onOpenActionsMenu, schema, table]);
+
+        const handleCopyTableName = useCallback((event: React.MouseEvent) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            void navigator.clipboard.writeText(table.table_name);
+        }, [table.table_name]);
 
         return (
             <div className="explorer-table-node">
@@ -60,88 +85,42 @@ export const ExplorerTableNode =
                     <button
                         type="button"
                         className="explorer-table-node__toggle"
-                        onClick={() => onToggle(schema, table.table_name)}
-                        onContextMenu={(event) => onOpenContextMenu(event, {
-                            connectionId,
-                            schema,
-                            table,
-                            details,
-                        })}
+                        onClick={handleToggle}
+                        onContextMenu={handleOpenContextMenu}
                     >
-                    <span className="explorer-table-node__title-left">
-                        <span className="explorer-table-node__chevron">
-                            <Icon data={isExpanded ? ChevronDown : ChevronRight} size={14}/>
-                        </span>
+                        <span className="explorer-table-node__title-left">
+                            <span className="explorer-table-node__chevron">
+                                <Icon data={isExpanded ? ChevronDown : ChevronRight} size={14}/>
+                            </span>
 
-                        <span className="explorer-table-node__icon">
-                            <Icon data={LayoutHeaderCellsLargeFill} size={14}/>
-                        </span>
+                            <span className="explorer-table-node__icon">
+                                <Icon data={LayoutHeaderCellsLargeFill} size={14}/>
+                            </span>
 
-                        <span className="explorer-table-node__title-row">
-                            <Text variant="body-2">{table.table_name}</Text>
+                            <span className="explorer-table-node__title-row">
+                                <Text variant="body-2">{table.table_name}</Text>
+                            </span>
                         </span>
-                    </span>
                     </button>
 
                     <div className="explorer-table-node__actions">
-                        <ClipboardButton
-                            size="m"
-                            text={table.table_name}
-                            tooltipInitialText={t('explorer.copyTableName')}
-                            tooltipSuccessText={t('explorer.copied')}
-                        />
+                        <Button
+                            size="s"
+                            view="flat-secondary"
+                            onClick={handleCopyTableName}
+                            aria-label={t('explorer.copyTableName')}
+                        >
+                            <Icon data={Copy} size={16}/>
+                        </Button>
 
-                        <DropdownMenu
-                            items={[
-                                {
-                                    text: t('explorer.exportTableDump'),
-                                    action: onExportDump,
-                                },
-                                {
-                                    text: t('explorer.quickExportTableSchema'),
-                                    action: onQuickExportSchema,
-                                    disabled: !canExportDump,
-                                },
-                                {
-                                    text: t('explorer.quickExportTableData'),
-                                    action: onQuickExportData,
-                                    disabled: !canExportDump,
-                                },
-                                {
-                                    text: t('explorer.openPreview'),
-                                    action: onOpenSelect,
-                                },
-                                {
-                                    text: t('explorer.countRows'),
-                                    action: onOpenCount,
-                                },
-                                {
-                                    text: t('explorer.copySelectToEditor'),
-                                    action: onCopySelect,
-                                },
-                                {
-                                    text: t('explorer.openMetadata'),
-                                    action: () => onOpenMetadata(details),
-                                },
-                                {
-                                    text: t('explorer.copyFullName'),
-                                    action: onCopyFullName,
-                                },
-                            ]}
-                            renderSwitcher={({onClick, onKeyDown}) => (
-                                <Button
-                                    size="s"
-                                    view="flat-secondary"
-                                    onClick={(event) => {
-                                        event.stopPropagation();
-                                        onClick?.(event);
-                                    }}
-                                    onKeyDown={onKeyDown}
-                                >
-                                    <Icon data={Ellipsis} size={16}/>
-                                </Button>
-                            )}
-                        />
+                        <Button
+                            size="s"
+                            view="flat-secondary"
+                            onClick={handleOpenActionsMenu}
+                            aria-label="Table actions"
+                        >
+                            <Icon data={Ellipsis} size={16}/>
+                        </Button>
                     </div>
                 </div>
 

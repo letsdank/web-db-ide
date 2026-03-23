@@ -6,6 +6,15 @@ import {ChevronDown, ChevronRight, Ellipsis, Folder} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
 import type {DatabaseDriver} from "../../../types/connection";
 import {getExplorerGroupLabelKey} from "../lib/driverPresentation";
+import {useContextMenu} from "../../../hooks/useContextMenu";
+import {WorkspaceContextAction, WorkspaceContextMenu} from "../../../components/workspace/WorkspaceContextMenu";
+
+interface ExplorerTableMenuPayload {
+    connectionId: number;
+    schema: string;
+    table: ExplorerTableDto;
+    details?: ExplorerTableDetailsDto;
+}
 
 interface Props {
     driver: DatabaseDriver;
@@ -70,6 +79,14 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
                                                                          }: Props) {
     const {t} = useI18n();
 
+    const {
+        state: tableMenuState,
+        anchorRef: tableMenuAnchorRef,
+        anchorStyle: tableMenuAnchorStyle,
+        openContextMenu: openTableMenu,
+        closeContextMenu: closeTableMenu,
+    } = useContextMenu<ExplorerTableMenuPayload>();
+
     const visibleTables = useMemo(() => {
         if (!filter) {
             return tables;
@@ -80,16 +97,84 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
         );
     }, [filter, tables]);
 
-    const schemaDetailsByTable = useMemo(() => {
-        const prefix = `${connectionId}:${schema}:`
-        const result: Record<string, ExplorerTableDetailsDto> = {};
-        for (const [key, val] of Object.entries(detailsByTableKey)) {
-            if (key.startsWith(prefix)) {
-                result[key] = val;
-            }
+    const handleOpenTableMenu = useCallback((
+        event: React.MouseEvent,
+        payload: ExplorerTableMenuPayload,
+    ) => {
+        openTableMenu(event, payload);
+        onOpenTableContextMenu(event, payload);
+    }, [onOpenTableContextMenu, openTableMenu]);
+
+    const tableMenuActions = useMemo<WorkspaceContextAction[]>(() => {
+        const payload = tableMenuState.payload;
+
+        if (!payload) {
+            return [];
         }
-        return result;
-    }, [detailsByTableKey, connectionId, schema]);
+
+        const {
+            schema: payloadSchema,
+            table,
+            details,
+        } = payload;
+
+        return [
+            {
+                key: 'export-dump',
+                text: t('explorer.exportTableDump'),
+                onClick: () => onExportTableDump(payloadSchema, table),
+            },
+            {
+                key: 'quick-export-schema',
+                text: t('explorer.quickExportTableSchema'),
+                disabled: !canExportDump,
+                onClick: () => onQuickExportTableSchema(payloadSchema, table),
+            },
+            {
+                key: 'quick-export-data',
+                text: t('explorer.quickExportTableData'),
+                disabled: !canExportDump,
+                onClick: () => onQuickExportTableData(payloadSchema, table),
+            },
+            {
+                key: 'select-top',
+                text: t('explorer.openPreview'),
+                onClick: () => onOpenSelect(payloadSchema, table),
+            },
+            {
+                key: 'count',
+                text: t('explorer.countRows'),
+                onClick: () => onOpenCount(payloadSchema, table),
+            },
+            {
+                key: 'copy-select',
+                text: t('explorer.copySelectToEditor'),
+                onClick: () => onCopySelect(payloadSchema, table),
+            },
+            {
+                key: 'metadata',
+                text: t('explorer.openMetadata'),
+                onClick: () => onOpenMetadata(payloadSchema, table, details),
+            },
+            {
+                key: 'copy-full-name',
+                text: t('explorer.copyFullName'),
+                onClick: () => onCopyFullName(payloadSchema, table),
+            },
+        ];
+    }, [
+        canExportDump,
+        onCopyFullName,
+        onCopySelect,
+        onExportTableDump,
+        onOpenCount,
+        onOpenMetadata,
+        onOpenSelect,
+        onQuickExportTableData,
+        onQuickExportTableSchema,
+        t,
+        tableMenuState.payload,
+    ]);
 
     return (
         <div className="explorer-schema-node">
@@ -174,19 +259,12 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
                                     schema={schema}
                                     table={table}
                                     isExpanded={expandedTableKeySet.has(tableKey)}
-                                    details={schemaDetailsByTable[tableKey]}
+                                    details={detailsByTableKey[tableKey]}
                                     isLoadingDetails={loadingDetailsFor === tableKey}
                                     canExportDump={canExportDump}
                                     onToggle={onToggleTable}
-                                    onOpenContextMenu={onOpenTableContextMenu}
-                                    onOpenSelect={() => onOpenSelect(schema, table)}
-                                    onOpenCount={() => onOpenCount(schema, table)}
-                                    onOpenMetadata={(details) => onOpenMetadata(schema, table, details)}
-                                    onCopyFullName={() => onCopyFullName(schema, table)}
-                                    onCopySelect={() => onCopySelect(schema, table)}
-                                    onExportDump={() => onExportTableDump(schema, table)}
-                                    onQuickExportSchema={() => onQuickExportTableSchema(schema, table)}
-                                    onQuickExportData={() => onQuickExportTableData(schema, table)}
+                                    onOpenContextMenu={handleOpenTableMenu}
+                                    onOpenActionsMenu={handleOpenTableMenu}
                                 />
                             );
                         })
@@ -199,6 +277,15 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
                     )}
                 </div>
             ) : null}
+
+            <div ref={tableMenuAnchorRef} style={tableMenuAnchorStyle}/>
+
+            <WorkspaceContextMenu
+                open={tableMenuState.open}
+                anchorElement={tableMenuAnchorRef.current}
+                actions={tableMenuActions}
+                onClose={closeTableMenu}
+            />
         </div>
     );
 });
