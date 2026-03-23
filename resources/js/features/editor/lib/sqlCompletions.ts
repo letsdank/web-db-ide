@@ -1,4 +1,4 @@
-import {DatabaseDriver} from "../../../types/connection";
+import type {DatabaseDriver} from "../../../types/connection";
 
 export interface SchemaCompletionItem {
     schema: string;

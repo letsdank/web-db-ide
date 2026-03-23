@@ -24,7 +24,7 @@ interface Props {
     schemas: string[];
     loadingSchemas: boolean;
     expandedSchemaKeys: string[];
-    expandedTableKeys: string[];
+    expandedTableKeySet: Set<string>;
     tablesBySchemaKey: Record<string, ExplorerTableDto[]>;
     detailsByTableKey: Record<string, ExplorerTableDetailsDto>;
     loadingTablesFor: string | null;
@@ -64,7 +64,7 @@ export const ExplorerConnectionCard = React.memo(function ExplorerConnectionCard
                                                                                      schemas,
                                                                                      loadingSchemas,
                                                                                      expandedSchemaKeys,
-                                                                                     expandedTableKeys,
+                                                                                     expandedTableKeySet,
                                                                                      tablesBySchemaKey,
                                                                                      detailsByTableKey,
                                                                                      loadingTablesFor,
@@ -267,7 +267,7 @@ export const ExplorerConnectionCard = React.memo(function ExplorerConnectionCard
                                     isExpanded={expandedSchemaKeys.includes(schemaKey)}
                                     tables={tablesBySchemaKey[schemaKey] ?? EMPTY_TABLES}
                                     loadingTables={loadingTablesFor === schemaKey}
-                                    expandedTableKeys={expandedTableKeys}
+                                    expandedTableKeySet={expandedTableKeySet}
                                     detailsByTableKey={connectionDetailsByTableKey}
                                     loadingDetailsFor={loadingDetailsFor}
                                     canExportDump={canExportDump}

@@ -7,9 +7,9 @@ import {
     getKeywordSnippets,
     isSelectContext,
     isTableContext,
-    SchemaCompletionItem
+    type SchemaCompletionItem
 } from "../lib/sqlCompletions";
-import {DatabaseDriver} from "../../../types/connection";
+import type {DatabaseDriver} from "../../../types/connection";
 
 function buildCompletions(
     monaco: typeof MonacoNamespace,

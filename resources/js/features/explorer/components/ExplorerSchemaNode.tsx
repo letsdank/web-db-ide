@@ -1,5 +1,5 @@
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
-import React, {useMemo} from "react";
+import React, {useCallback, useMemo} from "react";
 import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
 import {ExplorerTableNode} from "./ExplorerTableNode";
 import {ChevronDown, ChevronRight, Ellipsis, Folder} from "@gravity-ui/icons";
@@ -15,7 +15,7 @@ interface Props {
     isExpanded: boolean;
     tables: ExplorerTableDto[];
     loadingTables: boolean;
-    expandedTableKeys: string[];
+    expandedTableKeySet: Set<string>;
     detailsByTableKey: Record<string, ExplorerTableDetailsDto>;
     loadingDetailsFor: string | null;
     canExportDump: boolean;
@@ -50,7 +50,7 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
                                                                              isExpanded,
                                                                              tables,
                                                                              loadingTables,
-                                                                             expandedTableKeys,
+                                                                             expandedTableKeySet,
                                                                              detailsByTableKey,
                                                                              loadingDetailsFor,
                                                                              canExportDump,
@@ -80,6 +80,17 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
         );
     }, [filter, tables]);
 
+    const schemaDetailsByTable = useMemo(() => {
+        const prefix = `${connectionId}:${schema}:`
+        const result: Record<string, ExplorerTableDetailsDto> = {};
+        for (const [key, val] of Object.entries(detailsByTableKey)) {
+            if (key.startsWith(prefix)) {
+                result[key] = val;
+            }
+        }
+        return result;
+    }, [detailsByTableKey, connectionId, schema]);
+
     return (
         <div className="explorer-schema-node">
             <div className="explorer-schema-node__row">
@@ -87,7 +98,7 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
                     role="button"
                     tabIndex={0}
                     className="explorer-schema-node__toggle"
-                    onClick={()=>onToggleSchema(schema)}
+                    onClick={() => onToggleSchema(schema)}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
@@ -118,11 +129,11 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
                         items={[
                             {
                                 text: 'ERD',
-                                action: ()=>onOpenErd(schema),
+                                action: () => onOpenErd(schema),
                             },
                             {
                                 text: t('explorer.exportSchemaDump'),
-                                action: ()=>onExportSchemaDump(schema),
+                                action: () => onExportSchemaDump(schema),
                                 disabled: !canExportDump,
                             },
                         ]}
@@ -162,11 +173,11 @@ export const ExplorerSchemaNode = React.memo(function ExplorerSchemaNode({
                                     connectionId={connectionId}
                                     schema={schema}
                                     table={table}
-                                    isExpanded={expandedTableKeys.includes(tableKey)}
-                                    details={detailsByTableKey[tableKey]}
+                                    isExpanded={expandedTableKeySet.has(tableKey)}
+                                    details={schemaDetailsByTable[tableKey]}
                                     isLoadingDetails={loadingDetailsFor === tableKey}
                                     canExportDump={canExportDump}
-                                    onToggle={() => onToggleTable(schema, table.table_name)}
+                                    onToggle={onToggleTable}
                                     onOpenContextMenu={onOpenTableContextMenu}
                                     onOpenSelect={() => onOpenSelect(schema, table)}
                                     onOpenCount={() => onOpenCount(schema, table)}

@@ -96,8 +96,8 @@ export function useExplorerTree({
     const [expandedSchemaKeys, setExpandedSchemaKeys] = useState<string[]>(
         persistedTreeState.expandedSchemaKeys,
     );
-    const [expandedTableKeys, setExpandedTableKeys] = useState<string[]>(
-        persistedTreeState.expandedTableKeys,
+    const [expandedTableKeySet, setExpandedTableKeySet] = useState<Set<string>>(
+        () => new Set(persistedTreeState.expandedTableKeys),
     );
 
     // Persist expanded state to localStorage
@@ -109,9 +109,9 @@ export function useExplorerTree({
         window.localStorage.setItem(EXPLORER_TREE_STORAGE_KEY, JSON.stringify({
             expandedConnectionIds,
             expandedSchemaKeys,
-            expandedTableKeys,
+            expandedTableKeys: Array.from(expandedTableKeySet),
         }));
-    }, [expandedConnectionIds, expandedSchemaKeys, expandedTableKeys]);
+    }, [expandedConnectionIds, expandedSchemaKeys, expandedTableKeySet]);
 
     const activeConnection = useMemo(
         () => connections.find((connection) => connection.id === activeConnectionId) ?? null,
@@ -254,10 +254,11 @@ export function useExplorerTree({
 
     const toggleTable = useCallback((connectionId: number, schema: string, tableName: string) => {
         const tableKey = `${connectionId}:${schema}:${tableName}`;
-        setExpandedTableKeys((prev) =>
-            prev.includes(tableKey)
-                ? prev.filter((key) => key !== tableKey)
-                : [...prev, tableKey],
+        setExpandedTableKeySet((prev) => {
+                const next = new Set(prev);
+                next.has(tableKey) ? next.delete(tableKey) : next.add(tableKey);
+                return next;
+            }
         );
     }, []);
 
@@ -268,7 +269,7 @@ export function useExplorerTree({
         detailsByTableKey,
         expandedConnectionIds,
         expandedSchemaKeys,
-        expandedTableKeys,
+        expandedTableKeySet,
         loadingSchemasFor,
         loadingTablesFor,
         loadingDetailsFor,

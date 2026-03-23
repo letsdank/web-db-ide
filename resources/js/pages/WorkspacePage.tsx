@@ -362,7 +362,7 @@ export function WorkspacePage() {
         detailsByTableKey,
         expandedConnectionIds,
         expandedSchemaKeys,
-        expandedTableKeys,
+        expandedTableKeySet,
         loadingSchemasFor,
         loadingTablesFor,
         loadingDetailsFor,
@@ -706,7 +706,7 @@ export function WorkspacePage() {
                         schemasByConnectionId={schemasByConnectionId}
                         expandedConnectionIds={expandedConnectionIds}
                         expandedSchemaKeys={expandedSchemaKeys}
-                        expandedTableKeys={expandedTableKeys}
+                        expandedTableKeySet={expandedTableKeySet}
                         tablesBySchemaKey={tablesBySchemaKey}
                         detailsByTableKey={detailsByTableKey}
                         loadingTablesFor={loadingTablesFor}

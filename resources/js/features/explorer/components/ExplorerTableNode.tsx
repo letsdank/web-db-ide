@@ -12,7 +12,7 @@ interface Props {
     isExpanded: boolean;
     isLoadingDetails: boolean;
     canExportDump: boolean;
-    onToggle: () => void;
+    onToggle: (schema: string, tableName: string) => void;
     onOpenContextMenu: (
         event: React.MouseEvent,
         payload: {
@@ -34,40 +34,40 @@ interface Props {
 
 export const ExplorerTableNode =
     React.memo(function ExplorerTableNode({
-                                                                           connectionId,
-                                                                           schema,
-                                                                           table,
-                                                                           isExpanded,
-                                                                           details,
-                                                                           isLoadingDetails,
-                                                                           canExportDump,
-                                                                           onToggle,
-                                                                           onOpenContextMenu,
-                                                                           onOpenSelect,
-                                                                           onOpenCount,
-                                                                           onOpenMetadata,
-                                                                           onCopyFullName,
-                                                                           onCopySelect,
-                                                                           onExportDump,
-                                                                           onQuickExportSchema,
-                                                                           onQuickExportData,
-                                                                       }: Props) {
-    const {t} = useI18n();
+                                              connectionId,
+                                              schema,
+                                              table,
+                                              isExpanded,
+                                              details,
+                                              isLoadingDetails,
+                                              canExportDump,
+                                              onToggle,
+                                              onOpenContextMenu,
+                                              onOpenSelect,
+                                              onOpenCount,
+                                              onOpenMetadata,
+                                              onCopyFullName,
+                                              onCopySelect,
+                                              onExportDump,
+                                              onQuickExportSchema,
+                                              onQuickExportData,
+                                          }: Props) {
+        const {t} = useI18n();
 
-    return (
-        <div className="explorer-table-node">
-            <div className="explorer-table-node__row">
-                <button
-                    type="button"
-                    className="explorer-table-node__toggle"
-                    onClick={onToggle}
-                    onContextMenu={(event) => onOpenContextMenu(event, {
-                        connectionId,
-                        schema,
-                        table,
-                        details,
-                    })}
-                >
+        return (
+            <div className="explorer-table-node">
+                <div className="explorer-table-node__row">
+                    <button
+                        type="button"
+                        className="explorer-table-node__toggle"
+                        onClick={() => onToggle(schema, table.table_name)}
+                        onContextMenu={(event) => onOpenContextMenu(event, {
+                            connectionId,
+                            schema,
+                            table,
+                            details,
+                        })}
+                    >
                     <span className="explorer-table-node__title-left">
                         <span className="explorer-table-node__chevron">
                             <Icon data={isExpanded ? ChevronDown : ChevronRight} size={14}/>
@@ -81,114 +81,114 @@ export const ExplorerTableNode =
                             <Text variant="body-2">{table.table_name}</Text>
                         </span>
                     </span>
-                </button>
+                    </button>
 
-                <div className="explorer-table-node__actions">
-                    <ClipboardButton
-                        size="m"
-                        text={table.table_name}
-                        tooltipInitialText={t('explorer.copyTableName')}
-                        tooltipSuccessText={t('explorer.copied')}
-                    />
+                    <div className="explorer-table-node__actions">
+                        <ClipboardButton
+                            size="m"
+                            text={table.table_name}
+                            tooltipInitialText={t('explorer.copyTableName')}
+                            tooltipSuccessText={t('explorer.copied')}
+                        />
 
-                    <DropdownMenu
-                        items={[
-                            {
-                                text: t('explorer.exportTableDump'),
-                                action: onExportDump,
-                            },
-                            {
-                                text: t('explorer.quickExportTableSchema'),
-                                action: onQuickExportSchema,
-                                disabled: !canExportDump,
-                            },
-                            {
-                                text: t('explorer.quickExportTableData'),
-                                action: onQuickExportData,
-                                disabled: !canExportDump,
-                            },
-                            {
-                                text: t('explorer.openPreview'),
-                                action: onOpenSelect,
-                            },
-                            {
-                                text: t('explorer.countRows'),
-                                action: onOpenCount,
-                            },
-                            {
-                                text: t('explorer.copySelectToEditor'),
-                                action: onCopySelect,
-                            },
-                            {
-                                text: t('explorer.openMetadata'),
-                                action: () => onOpenMetadata(details),
-                            },
-                            {
-                                text: t('explorer.copyFullName'),
-                                action: onCopyFullName,
-                            },
-                        ]}
-                        renderSwitcher={({onClick, onKeyDown}) => (
-                            <Button
-                                size="s"
-                                view="flat-secondary"
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    onClick?.(event);
-                                }}
-                                onKeyDown={onKeyDown}
-                            >
-                                <Icon data={Ellipsis} size={16}/>
-                            </Button>
-                        )}
-                    />
+                        <DropdownMenu
+                            items={[
+                                {
+                                    text: t('explorer.exportTableDump'),
+                                    action: onExportDump,
+                                },
+                                {
+                                    text: t('explorer.quickExportTableSchema'),
+                                    action: onQuickExportSchema,
+                                    disabled: !canExportDump,
+                                },
+                                {
+                                    text: t('explorer.quickExportTableData'),
+                                    action: onQuickExportData,
+                                    disabled: !canExportDump,
+                                },
+                                {
+                                    text: t('explorer.openPreview'),
+                                    action: onOpenSelect,
+                                },
+                                {
+                                    text: t('explorer.countRows'),
+                                    action: onOpenCount,
+                                },
+                                {
+                                    text: t('explorer.copySelectToEditor'),
+                                    action: onCopySelect,
+                                },
+                                {
+                                    text: t('explorer.openMetadata'),
+                                    action: () => onOpenMetadata(details),
+                                },
+                                {
+                                    text: t('explorer.copyFullName'),
+                                    action: onCopyFullName,
+                                },
+                            ]}
+                            renderSwitcher={({onClick, onKeyDown}) => (
+                                <Button
+                                    size="s"
+                                    view="flat-secondary"
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        onClick?.(event);
+                                    }}
+                                    onKeyDown={onKeyDown}
+                                >
+                                    <Icon data={Ellipsis} size={16}/>
+                                </Button>
+                            )}
+                        />
+                    </div>
                 </div>
-            </div>
 
-            {isExpanded ? (
-                <div className="explorer-table-node__details">
-                    {isLoadingDetails ? (
-                        <div className="explorer-table-node__loading">
-                            <Loader size="s"/>
-                            <Text variant="body-2" color="secondary">
-                                {t('explorer.loadingColumns')}
-                            </Text>
-                        </div>
-                    ) : details ? (
-                        <>
-                            <div className="explorer-table-node__columns">
-                                {details.columns.map((column) => (
-                                    <div key={column.column_name} className="explorer-table-node__column">
-                                        <Text variant="caption-2">{column.column_name}</Text>
+                {isExpanded ? (
+                    <div className="explorer-table-node__details">
+                        {isLoadingDetails ? (
+                            <div className="explorer-table-node__loading">
+                                <Loader size="s"/>
+                                <Text variant="body-2" color="secondary">
+                                    {t('explorer.loadingColumns')}
+                                </Text>
+                            </div>
+                        ) : details ? (
+                            <>
+                                <div className="explorer-table-node__columns">
+                                    {details.columns.map((column) => (
+                                        <div key={column.column_name} className="explorer-table-node__column">
+                                            <Text variant="caption-2">{column.column_name}</Text>
 
-                                        <div className="explorer-table-node__column-meta">
-                                            <Text variant="caption-2" color="secondary">
-                                                {column.data_type}
-                                            </Text>
+                                            <div className="explorer-table-node__column-meta">
+                                                <Text variant="caption-2" color="secondary">
+                                                    {column.data_type}
+                                                </Text>
 
-                                            {column.is_nullable === 'NO' ? (
-                                                <Label theme="warning">not null</Label>
-                                            ) : null}
+                                                {column.is_nullable === 'NO' ? (
+                                                    <Label theme="warning">not null</Label>
+                                                ) : null}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
 
-                            <div className="explorer-table-node__meta">
-                                <Label theme="unknown">
-                                    {t('explorer.columnsCount', {count: details.columns.length})}
-                                </Label>
-
-                                {details.indexes.length > 0 ? (
-                                    <Label theme="info">
-                                        {t('explorer.indexesCount', {count: details.indexes.length})}
+                                <div className="explorer-table-node__meta">
+                                    <Label theme="unknown">
+                                        {t('explorer.columnsCount', {count: details.columns.length})}
                                     </Label>
-                                ) : null}
-                            </div>
-                        </>
-                    ) : null}
-                </div>
-            ) : null}
-        </div>
-    );
-});
+
+                                    {details.indexes.length > 0 ? (
+                                        <Label theme="info">
+                                            {t('explorer.indexesCount', {count: details.indexes.length})}
+                                        </Label>
+                                    ) : null}
+                                </div>
+                            </>
+                        ) : null}
+                    </div>
+                ) : null}
+            </div>
+        );
+    });

@@ -18,7 +18,7 @@ interface Props {
     schemasByConnectionId: Record<number, string[]>;
     expandedConnectionIds: number[];
     expandedSchemaKeys: string[];
-    expandedTableKeys: string[];
+    expandedTableKeySet: Set<string>;
     tablesBySchemaKey: Record<string, ExplorerTableDto[]>;
     detailsByTableKey: Record<string, ExplorerTableDetailsDto>;
     loadingTablesFor: string | null;
@@ -64,7 +64,7 @@ export const ExplorerSidebar = React.memo(function ExplorerSidebar({
                                                                        schemasByConnectionId,
                                                                        expandedConnectionIds,
                                                                        expandedSchemaKeys,
-                                                                       expandedTableKeys,
+                                                                       expandedTableKeySet,
                                                                        tablesBySchemaKey,
                                                                        detailsByTableKey,
                                                                        loadingTablesFor,
@@ -95,7 +95,7 @@ export const ExplorerSidebar = React.memo(function ExplorerSidebar({
 
     const safeExpandedConnectionIds = expandedConnectionIds ?? [];
     const safeExpandedSchemaKeys = expandedSchemaKeys ?? [];
-    const safeExpandedTableKeys = expandedTableKeys ?? [];
+    const safeExpandedTableKeySet = expandedTableKeySet ?? new Set();
 
     const safeLoadingSchemasByConnectionId = loadingSchemasByConnectionId ?? {};
     const safeSchemasByConnectionId = schemasByConnectionId ?? {};
@@ -191,7 +191,7 @@ export const ExplorerSidebar = React.memo(function ExplorerSidebar({
                                     schemas={safeSchemasByConnectionId[connection.id] ?? EMPTY_SCHEMAS}
                                     loadingSchemas={Boolean(safeLoadingSchemasByConnectionId[connection.id])}
                                     expandedSchemaKeys={safeExpandedSchemaKeys}
-                                    expandedTableKeys={safeExpandedTableKeys}
+                                    expandedTableKeySet={safeExpandedTableKeySet}
                                     tablesBySchemaKey={safeTablesBySchemaKey}
                                     detailsByTableKey={safeDetailsByTableKey}
                                     loadingTablesFor={loadingTablesFor}
