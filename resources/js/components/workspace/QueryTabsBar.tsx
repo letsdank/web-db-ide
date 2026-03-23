@@ -3,7 +3,7 @@ import {useContextMenu} from "../../hooks/useContextMenu";
 import {WorkspaceContextMenu} from "./WorkspaceContextMenu";
 import {Button, DropdownMenu, Icon, Tab, TabList, TabProvider, Text, TextInput} from "@gravity-ui/uikit";
 import {CirclePlus, Ellipsis} from "@gravity-ui/icons";
-import {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useI18n} from "../../i18n";
 
 interface Props {
@@ -21,20 +21,20 @@ interface Props {
     onRename: (tab: QueryTabDto, title: string) => void;
 }
 
-export function QueryTabsBar({
-                                 tabs,
-                                 activeTabId,
-                                 dirtyTabIds,
-                                 onSelect,
-                                 onCreate,
-                                 onClose,
-                                 onCloseOthers,
-                                 onTogglePin,
-                                 onDuplicate,
-                                 onMoveLeft,
-                                 onMoveRight,
-                                 onRename,
-                             }: Props) {
+export const QueryTabsBar = React.memo(function QueryTabsBar({
+                                                                 tabs,
+                                                                 activeTabId,
+                                                                 dirtyTabIds,
+                                                                 onSelect,
+                                                                 onCreate,
+                                                                 onClose,
+                                                                 onCloseOthers,
+                                                                 onTogglePin,
+                                                                 onDuplicate,
+                                                                 onMoveLeft,
+                                                                 onMoveRight,
+                                                                 onRename,
+                                                             }: Props) {
     const {t} = useI18n();
 
     const {
@@ -299,4 +299,4 @@ export function QueryTabsBar({
             </Button>
         </div>
     );
-}
+});

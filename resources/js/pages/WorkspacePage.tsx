@@ -1,5 +1,5 @@
 import {useWorkspaceStore} from "../stores/workspaceStore";
-import React, {useCallback, useRef, useState} from "react";
+import React, {useCallback, useMemo, useRef, useState} from "react";
 import {ConnectionFormDialog} from "../components/workspace/ConnectionFormDialog";
 import {QueryTabsBar} from "../components/workspace/QueryTabsBar";
 import {EditorToolbar} from "../components/workspace/EditorToolbar";
@@ -41,6 +41,8 @@ import {
 import {useSqlCompletionProvider} from "../features/editor/hooks/useSqlCompletionProvider";
 import type {ErdTabMeta} from "../types/queryTab";
 import {ErdPane} from "../features/erd/components/ErdPane";
+
+const EMPTY_LOADING_SCHEMAS_BY_CONNECTION_ID: Record<number, boolean> = {};
 
 export function WorkspacePage() {
     const {
@@ -434,6 +436,50 @@ export function WorkspacePage() {
         await handleCreateTab(buildErdTabInput({connectionId, schema}));
     }, [tabs, handleSelectTab, handleCreateTab]);
 
+    const loadingSchemasByConnectionId = useMemo<Record<number, boolean>>(() => {
+        if (loadingSchemasFor === null) {
+            return EMPTY_LOADING_SCHEMAS_BY_CONNECTION_ID;
+        }
+
+        return {
+            [loadingSchemasFor]: true,
+        };
+    }, [loadingSchemasFor]);
+
+    const handleExplorerOpenSelect = useCallback((connectionId: number, schema: string, table: ExplorerTableDto) => {
+        void handleOpenTablePreview({
+            connectionId,
+            schema,
+            table: table.table_name,
+        });
+    }, [handleOpenTablePreview]);
+
+    const handleExplorerOpenCount = useCallback((connectionId: number, schema: string, table: ExplorerTableDto) => {
+        void handleOpenTableCount({
+            connectionId,
+            schema,
+            table: table.table_name,
+        });
+    }, [handleOpenTableCount]);
+
+    const handleCopyTableFullName = useCallback((_connectionId: number, schema: string, table: ExplorerTableDto) => {
+        void navigator.clipboard.writeText(
+            schema ? `${schema}.${table.table_name}` : table.table_name,
+        );
+    }, []);
+
+    const handleExplorerCopySelect = useCallback((connectionId: number, schema: string, table: ExplorerTableDto) => {
+        void handleCopyTableSelect({
+            connectionId,
+            schema,
+            table: table.table_name,
+        });
+    }, [handleCopyTableSelect]);
+
+    const handleExplorerOpenSchemaErd = useCallback((connectionId: number, schema: string) => {
+        void handleOpenSchemaErd(connectionId, schema);
+    }, [handleOpenSchemaErd]);
+
     const openConnectionDumpDialog = useCallback((connection: ConnectionDto) => {
         setExportDumpError(null);
         setExportDumpTarget({
@@ -698,11 +744,7 @@ export function WorkspacePage() {
                     <ExplorerSidebar
                         connections={connections}
                         activeConnectionId={activeConnectionId}
-                        loadingSchemasByConnectionId={
-                            loadingSchemasFor !== null
-                                ? {[loadingSchemasFor]: true}
-                                : {}
-                        }
+                        loadingSchemasByConnectionId={loadingSchemasByConnectionId}
                         schemasByConnectionId={schemasByConnectionId}
                         expandedConnectionIds={expandedConnectionIds}
                         expandedSchemaKeys={expandedSchemaKeys}
@@ -719,36 +761,12 @@ export function WorkspacePage() {
                         onToggleSchema={toggleSchema}
                         onToggleTable={toggleTable}
                         onOpenTableContextMenu={handleOpenTableContextMenu}
-                        onOpenSelect={(connectionId, schema, table) =>
-                            handleOpenTablePreview({
-                                connectionId,
-                                schema,
-                                table: table.table_name,
-                            })
-                        }
-                        onOpenCount={(connectionId, schema, table) =>
-                            handleOpenTableCount({
-                                connectionId,
-                                schema,
-                                table: table.table_name,
-                            })
-                        }
+                        onOpenSelect={handleExplorerOpenSelect}
+                        onOpenCount={handleExplorerOpenCount}
                         onOpenMetadata={handleOpenTableMetadata}
-                        onCopyFullName={(_connectionId, schema, table) => {
-                            void navigator.clipboard.writeText(
-                                schema ? `${schema}.${table.table_name}` : table.table_name,
-                            );
-                        }}
-                        onCopySelect={(connectionId, schema, table) =>
-                            handleCopyTableSelect({
-                                connectionId,
-                                schema,
-                                table: table.table_name,
-                            })
-                        }
-                        onOpenSchemaErd={(connectionId, schema) =>
-                            handleOpenSchemaErd(connectionId, schema)
-                        }
+                        onCopyFullName={handleCopyTableFullName}
+                        onCopySelect={handleExplorerCopySelect}
+                        onOpenSchemaErd={handleExplorerOpenSchemaErd}
                         onExportConnectionDump={openConnectionDumpDialog}
                         onExportSchemaDump={openSchemaDumpDialog}
                         onExportTableDump={openTableDumpDialog}

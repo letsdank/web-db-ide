@@ -9,7 +9,7 @@ import {
     isOwnedResource,
     matchesVisibilityFilter
 } from "../../lib/resourceMarkers";
-import {useMemo, useState} from "react";
+import React, {useMemo, useState} from "react";
 import type {ResourceVisibilityFilter} from "../../types/resourceFilter";
 import {Ellipsis} from "@gravity-ui/icons";
 
@@ -25,17 +25,17 @@ interface Props {
     onEditSavedQuery: (item: SavedQueryDto) => void;
 }
 
-export function RightSidebarPanels({
-                                       panel,
-                                       history,
-                                       savedQueries,
-                                       canSaveCurrentQuery,
-                                       onChangePanel,
-                                       onOpenHistoryItem,
-                                       onOpenSavedQuery,
-                                       onOpenSaveQueryDialog,
-                                       onEditSavedQuery,
-                                   }: Props) {
+export const RightSidebarPanels = React.memo(function RightSidebarPanels({
+                                                                             panel,
+                                                                             history,
+                                                                             savedQueries,
+                                                                             canSaveCurrentQuery,
+                                                                             onChangePanel,
+                                                                             onOpenHistoryItem,
+                                                                             onOpenSavedQuery,
+                                                                             onOpenSaveQueryDialog,
+                                                                             onEditSavedQuery,
+                                                                         }: Props) {
     const {t} = useI18n();
     const [visibilityFilter, setVisibilityFilter] = useState<ResourceVisibilityFilter>('all');
 
@@ -206,4 +206,4 @@ export function RightSidebarPanels({
             </div>
         </Card>
     );
-}
+});

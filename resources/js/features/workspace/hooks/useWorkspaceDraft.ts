@@ -17,6 +17,49 @@ interface EditorSelectionPayload {
     } | null;
 }
 
+function isSamePosition(
+    left: { lineNumber: number, column: number } | null | undefined,
+    right: { lineNumber: number, column: number } | null | undefined,
+): boolean {
+    if (left === right) {
+        return true;
+    }
+
+    if (!left || !right) {
+        return left === right;
+    }
+
+    return left.lineNumber === right.lineNumber && left.column === right.column;
+}
+
+function isSameSelectionRange(
+    left: {
+        startLineNumber: number;
+        startColumn: number;
+        endLineNumber: number;
+        endColumn: number;
+    } | null | undefined,
+    right: {
+        startLineNumber: number;
+        startColumn: number,
+        endLineNumber: number;
+        endColumn: number;
+    } | null | undefined,
+): boolean {
+    if (left === right) {
+        return true;
+    }
+
+    if (!left || !right) {
+        return left === right;
+    }
+
+    return left.startLineNumber === right.startLineNumber
+        && left.startColumn === right.startColumn
+        && left.endLineNumber === right.endLineNumber
+        && left.endColumn === right.endColumn;
+}
+
 interface Params {
     activeTab: QueryTabDto | null;
     activeConnectionId: number | null;
@@ -54,7 +97,7 @@ export function useWorkspaceDraft({
     }, [persistTabDraft]);
 
     const handleChangeSql = useCallback(async (value: string) => {
-        if (!activeTab) {
+        if (!activeTab || value === activeTab.sql_text) {
             return;
         }
 
@@ -86,6 +129,25 @@ export function useWorkspaceDraft({
             return;
         }
 
+        if (
+            activeTab.selected_text === payload.selectedText
+            && isSamePosition(
+                activeTab.cursor_position as { lineNumber: number; column: number },
+                payload.cursorPosition,
+            )
+            && isSameSelectionRange(
+                activeTab.selection_range as {
+                    startLineNumber: number;
+                    startColumn: number;
+                    endLineNumber: number;
+                    endColumn: number;
+                } | null | undefined,
+                payload.selectionRange,
+            )
+        ) {
+            return;
+        }
+
         const nextTab: QueryTabDto = {
             ...activeTab,
             selected_text: payload.selectedText,
@@ -94,7 +156,6 @@ export function useWorkspaceDraft({
         };
 
         upsertTab(nextTab);
-        markTabDirty(nextTab.id);
 
         scheduleTabDraftPersist(nextTab, {
             sql_text: nextTab.sql_text,
@@ -106,7 +167,6 @@ export function useWorkspaceDraft({
     }, [
         activeConnectionId,
         activeTab,
-        markTabDirty,
         scheduleTabDraftPersist,
         upsertTab,
     ]);
