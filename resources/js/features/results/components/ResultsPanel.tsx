@@ -235,9 +235,6 @@ export function ResultsPanel({
                 sortState={sortState}
                 hiddenColumnCount={hiddenColumnNames.length}
                 filterValue={filterValue}
-                activeConnectionName={activeConnectionName}
-                activeDatabaseName={activeDatabaseName}
-                activeTabTitle={activeTabTitle}
                 onFilterChange={setFilterValue}
                 onCopyAll={() => {
                     void copyText(buildTsv(visibleColumns, visibleRows));
