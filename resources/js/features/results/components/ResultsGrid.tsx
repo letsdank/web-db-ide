@@ -1,5 +1,6 @@
 import React from "react";
 import {Label, Text} from "@gravity-ui/uikit";
+import {useI18n} from "../../../i18n";
 
 interface VisibleColumn {
     name: string;
@@ -30,6 +31,18 @@ export function ResultsGrid({
                                 onCellContextMenu,
                                 onCellDoubleClick,
                             }: Props) {
+    const{t}=useI18n();
+
+    if(rows.length===0){
+        return(
+            <div className="results-grid results-grid--empty">
+                <Text variant="body-2" color="secondary">
+                    {t('workspace.noMatchingRows')}
+                </Text>
+            </div>
+        );
+    }
+
     return (
         <div className="results-grid">
             <table className="results-grid__table">
@@ -86,7 +99,7 @@ export function ResultsGrid({
                                         columnName: columns[cellIndex]?.name ?? `column_${cellIndex + 1}`,
                                     })
                                 }
-                                title="Double click to copy cell"
+                                title={t('workspace.doubleClickToCopyCell')}
                                 className="results-grid__cell"
                             >
                                 {cell === null ? (

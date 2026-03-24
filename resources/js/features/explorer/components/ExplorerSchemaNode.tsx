@@ -7,7 +7,7 @@ import {useI18n} from "../../../i18n";
 import type {DatabaseDriver} from "../../../types/connection";
 import {getExplorerGroupLabelKey} from "../lib/driverPresentation";
 import {useContextMenu} from "../../../hooks/useContextMenu";
-import {WorkspaceContextAction, WorkspaceContextMenu} from "../../../components/workspace/WorkspaceContextMenu";
+import {type WorkspaceContextAction, WorkspaceContextMenu} from "../../../components/workspace/WorkspaceContextMenu";
 
 const INITIAL_TABLE_RENDER_BATCH = 60;
 const TABLE_RENDER_BATCH_STEP = 80;

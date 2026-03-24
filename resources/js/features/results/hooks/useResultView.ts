@@ -1,5 +1,6 @@
 import type {ExecuteQueryResponse} from "../../../types/queryResult";
 import {useMemo, useState} from "react";
+import {rowMatchesResultFilter} from "../lib/resultFilter";
 
 type SortDirection = 'asc' | 'desc';
 
@@ -39,6 +40,7 @@ export function useResultView(result: ExecuteQueryResponse | null) {
         columnName: string;
         direction: SortDirection;
     } | null>(null);
+    const [filterValue, setFilterValue] = useState('');
 
     const visibleResult = useMemo(() => {
         if (!result || result.status !== 'success') {
@@ -49,7 +51,9 @@ export function useResultView(result: ExecuteQueryResponse | null) {
             .map((column, index) => ({...column, originalIndex: index}))
             .filter((column) => !hiddenColumnNames.includes(column.name));
 
-        const nextRows = [...result.rows];
+        const nextRows = result.rows.filter((row) =>
+            rowMatchesResultFilter(row, visibleColumns, filterValue),
+        );
 
         if (sortState) {
             const sourceColumnIndex = result.columns.findIndex(
@@ -75,8 +79,9 @@ export function useResultView(result: ExecuteQueryResponse | null) {
         return {
             visibleColumns,
             rows: projectedRows,
+            filteredRowCount: nextRows.length,
         };
-    }, [result, hiddenColumnNames, sortState]);
+    }, [result, hiddenColumnNames, sortState, filterValue]);
 
     function hideColumn(columnName: string) {
         setHiddenColumnNames((prev) =>
@@ -95,12 +100,15 @@ export function useResultView(result: ExecuteQueryResponse | null) {
     function resetView() {
         setHiddenColumnNames([]);
         setSortState(null);
+        setFilterValue('');
     }
 
     return {
         hiddenColumnNames,
         sortState,
+        filterValue,
         visibleResult,
+        setFilterValue,
         setSortState,
         hideColumn,
         resetColumns,

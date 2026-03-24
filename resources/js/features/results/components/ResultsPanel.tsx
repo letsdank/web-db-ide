@@ -16,6 +16,7 @@ import {Card} from "@gravity-ui/uikit";
 import {WorkspaceContextMenu} from "../../../components/workspace/WorkspaceContextMenu";
 import {ResultsToolbar} from "./ResultsToolbar";
 import {ResultsGrid} from "./ResultsGrid";
+import {useI18n} from "../../../i18n";
 
 interface Props {
     result: ExecuteQueryResponse | null;
@@ -45,10 +46,14 @@ export function ResultsPanel({
                                  resultLimit,
                                  onChangeResultLimit,
                              }: Props) {
+    const {t} = useI18n();
+
     const {
         hiddenColumnNames,
         sortState,
+        filterValue,
         visibleResult,
+        setFilterValue,
         setSortState,
         hideColumn,
         resetColumns,
@@ -95,6 +100,7 @@ export function ResultsPanel({
 
     const visibleColumns = visibleResult?.visibleColumns ?? [];
     const visibleRows = visibleResult?.rows ?? [];
+    const filteredRowCount = visibleResult?.filteredRowCount ?? 0;
     const visibleColumnNames = visibleColumns.map((column) => column.name);
 
     const contextCell = cellMenuState.payload;
@@ -133,19 +139,19 @@ export function ResultsPanel({
                         ? [
                             {
                                 key: 'copy',
-                                text: 'Copy cell',
+                                text: t('workspace.copyCell'),
                                 onClick: () =>
                                     void copyText(contextCell.cell === null ? 'NULL' : String(contextCell.cell)),
                             },
                             {
                                 key: 'copy-row-tsv',
-                                text: 'Copy row as TSV',
+                                text: t('workspace.copyRowAsTsv'),
                                 onClick: () =>
                                     void copyText(buildRowTsv(contextCell.row)),
                             },
                             {
                                 key: 'copy-row-json',
-                                text: 'Copy row as JSON',
+                                text: t('workspace.copyRowAsJson'),
                                 onClick: () =>
                                     void copyText(buildRowJson(contextCell.row, visibleColumnNames)),
                             },
@@ -154,7 +160,7 @@ export function ResultsPanel({
                             },
                             {
                                 key: 'copy-column',
-                                text: 'Copy column name',
+                                text: t('workspace.copyColumnName'),
                                 onClick: () =>
                                     void copyText(contextCell.columnName),
                             },
@@ -172,7 +178,7 @@ export function ResultsPanel({
                         ? [
                             {
                                 key: 'sort-asc',
-                                text: 'Sort ascending',
+                                text: t('workspace.sortAscending'),
                                 onClick: () =>
                                     setSortState({
                                         columnName: contextHeader.columnName,
@@ -181,7 +187,7 @@ export function ResultsPanel({
                             },
                             {
                                 key: 'sort-desc',
-                                text: 'Sort descending',
+                                text: t('workspace.sortDescending'),
                                 onClick: () =>
                                     setSortState({
                                         columnName: contextHeader.columnName,
@@ -193,7 +199,7 @@ export function ResultsPanel({
                             },
                             {
                                 key: 'copy-column',
-                                text: 'Copy column name',
+                                text: t('workspace.copyColumnName'),
                                 onClick: () =>
                                     void copyText(contextHeader.columnName),
                             },
@@ -202,17 +208,17 @@ export function ResultsPanel({
                             },
                             {
                                 key: 'hide-column',
-                                text: 'Hide column',
+                                text: t('workspace.hideColumn'),
                                 onClick: () => hideColumn(contextHeader.columnName),
                             },
                             {
                                 key: 'reset-columns',
-                                text: 'Reset hidden columns',
+                                text: t('workspace.resetHiddenColumns'),
                                 onClick: resetColumns,
                             },
                             {
                                 key: 'reset-sort',
-                                text: 'Reset sorting',
+                                text: t('workspace.resetSorting'),
                                 onClick: resetSorting,
                             },
                         ]
@@ -222,14 +228,17 @@ export function ResultsPanel({
 
             <ResultsToolbar
                 rowCount={result.row_count}
+                visibleRowCount={filteredRowCount}
                 hasMore={result.has_more}
                 durationMs={result.duration_ms}
                 resultLimit={resultLimit}
                 sortState={sortState}
                 hiddenColumnCount={hiddenColumnNames.length}
+                filterValue={filterValue}
                 activeConnectionName={activeConnectionName}
                 activeDatabaseName={activeDatabaseName}
                 activeTabTitle={activeTabTitle}
+                onFilterChange={setFilterValue}
                 onCopyAll={() => {
                     void copyText(buildTsv(visibleColumns, visibleRows));
                 }}

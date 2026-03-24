@@ -1,4 +1,5 @@
 import {Card, Label, Text} from "@gravity-ui/uikit";
+import {useI18n} from "../../../i18n";
 
 interface Props {
     error: string;
@@ -13,6 +14,8 @@ export function ResultsErrorState({
                                       activeDatabaseName,
                                       activeTabTitle
                                   }: Props) {
+    const{t}=useI18n();
+
     return (
         <Card
             view="filled"
@@ -20,8 +23,8 @@ export function ResultsErrorState({
         >
             <div className="results-panel__header results-panel__header-wrap">
                 <div className="results-panel__title-group">
-                    <Text variant="subheader-2">Results</Text>
-                    <Label theme="danger">Error</Label>
+                    <Text variant="subheader-2">{t('workspace.results')}</Text>
+                    <Label theme="danger">{t('workspace.error')}</Label>
                 </div>
 
                 <div className="results-panel__meta">

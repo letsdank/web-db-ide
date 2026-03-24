@@ -1,16 +1,20 @@
-import {Button, DropdownMenu, Icon, Label, Text} from "@gravity-ui/uikit";
-import {ChevronDown} from "@gravity-ui/icons";
+import {Button, DropdownMenu, Icon, Label, Text, TextInput} from "@gravity-ui/uikit";
+import {ChevronDown, Magnifier} from "@gravity-ui/icons";
+import {useI18n} from "../../../i18n";
 
 interface Props {
     rowCount: number;
+    visibleRowCount: number;
     hasMore: boolean;
     durationMs: number;
     resultLimit: 100 | 500 | 1000;
     sortState: { columnName: string; direction: 'asc' | 'desc' } | null;
     hiddenColumnCount: number;
+    filterValue: string;
     activeConnectionName?: string | null;
     activeDatabaseName?: string | null;
     activeTabTitle?: string | null;
+    onFilterChange: (value: string) => void;
     onCopyAll: () => void;
     onResetView: () => void;
     onExportCsv: () => void;
@@ -21,14 +25,14 @@ interface Props {
 
 export function ResultsToolbar({
                                    rowCount,
+                                   visibleRowCount,
                                    hasMore,
                                    durationMs,
                                    resultLimit,
                                    sortState,
                                    hiddenColumnCount,
-                                   activeConnectionName,
-                                   activeDatabaseName,
-                                   activeTabTitle,
+                                   filterValue,
+                                   onFilterChange,
                                    onCopyAll,
                                    onResetView,
                                    onExportCsv,
@@ -36,48 +40,55 @@ export function ResultsToolbar({
                                    onExportTsv,
                                    onChangeResultLimit,
                                }: Props) {
+    const {t} = useI18n();
+    const hasFilter = filterValue.trim().length > 0;
+
     return (
         <div className="results-toolbar">
             <div className="results-toolbar__meta">
-                <Text variant="subheader-2">Results</Text>
-                <Label theme="success">Success</Label>
+                <Text variant="subheader-2">{t('workspace.results')}</Text>
+                <Label theme="success">{t('workspace.success')}</Label>
                 <Label theme="info">
-                    {hasMore ? `${rowCount}+ rows` : `${rowCount} rows`}
+                    {hasMore ? `${rowCount}+ ${t('workspace.rowsLabel')}` : `${rowCount} ${t('workspace.rowsLabel')}`}
                 </Label>
                 <Label theme="utility">{durationMs} ms</Label>
 
+                {hasFilter ? (
+                    <Label theme="warning">
+                        {t('workspace.filtered')}: {visibleRowCount}
+                    </Label>
+                ) : null}
+
                 {sortState ? (
                     <Text variant="body-1" color="secondary">
-                        sorted: {sortState.columnName} {sortState.direction}
+                        {t('workspace.sortedBy', {
+                            column: sortState.columnName,
+                            direction: sortState.direction,
+                        })}
                     </Text>
                 ) : null}
 
                 {hiddenColumnCount > 0 ? (
                     <Text variant="body-1" color="secondary">
-                        hidden: {hiddenColumnCount}
-                    </Text>
-                ) : null}
-
-                {activeConnectionName ? (
-                    <Text variant="body-1" color="secondary">
-                        {activeConnectionName}
-                    </Text>
-                ) : null}
-
-                {activeDatabaseName ? (
-                    <Text variant="body-1" color="secondary">
-                        {activeDatabaseName}
-                    </Text>
-                ) : null}
-
-                {activeTabTitle ? (
-                    <Text variant="body-1" color="secondary">
-                        {activeTabTitle}
+                        {t('workspace.hiddenColumnsCount', {count: hiddenColumnCount})}
                     </Text>
                 ) : null}
             </div>
 
             <div className="results-toolbar__actions">
+                <div className="results-toolbar__search">
+                    <TextInput
+                        value={filterValue}
+                        size="m"
+                        placeholder={t('workspace.resultsFilterPlaceholder')}
+                        onUpdate={onFilterChange}
+                        startContent={<Icon data={Magnifier} size={16}/>}
+                    />
+                    <Text variant="caption-2" color="secondary">
+                        {t('workspace.resultsFilterHint')}
+                    </Text>
+                </div>
+
                 <DropdownMenu
                     items={[
                         {
@@ -95,17 +106,17 @@ export function ResultsToolbar({
                     ]}
                     renderSwitcher={(props) => (
                         <Button {...props} view="flat-secondary">
-                            Limit: {resultLimit}
+                            {t('workspace.limit')}: {resultLimit}
                         </Button>
                     )}
                 />
 
                 <Button view="flat-secondary" onClick={onCopyAll}>
-                    Copy all
+                    {t('workspace.copyAll')}
                 </Button>
 
                 <Button view="flat-secondary" onClick={onResetView}>
-                    Reset view
+                    {t('workspace.resetView')}
                 </Button>
 
                 <DropdownMenu
@@ -116,7 +127,7 @@ export function ResultsToolbar({
                     ]}
                     renderSwitcher={(props) => (
                         <Button {...props} view="flat-secondary">
-                            Export
+                            {t('workspace.export')}
                             <Icon data={ChevronDown} size={14}/>
                         </Button>
                     )}

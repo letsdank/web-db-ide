@@ -1,4 +1,5 @@
 import {Card, Label, Text} from "@gravity-ui/uikit";
+import {useI18n} from "../../../i18n";
 
 interface Props {
     activeConnectionName?: string | null;
@@ -11,13 +12,15 @@ export function ResultsEmptyState({
                                       activeDatabaseName,
                                       activeTabTitle,
                                   }: Props) {
+    const {t}=useI18n();
+
     return (
         <Card
             view="filled"
             className="workspace-card workspace-card--hidden results-panel"
         >
             <div className="results-panel__header">
-                <Text variant="subheader-2">Results</Text>
+                <Text variant="subheader-2">{t('workspace.results')}</Text>
 
                 <div className="results-panel__meta">
                     {activeConnectionName ? <Label theme="utility">{activeConnectionName}</Label> : null}
@@ -28,7 +31,7 @@ export function ResultsEmptyState({
 
             <div className="results-panel__empty">
                 <Text variant="body-2" color="secondary">
-                    No results yet.
+                    {t('workspace.noResultsYet')}
                 </Text>
             </div>
         </Card>
