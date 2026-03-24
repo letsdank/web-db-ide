@@ -20,3 +20,14 @@ export interface ExecuteQueryError {
 }
 
 export type ExecuteQueryResponse = ExecuteQuerySuccess | ExecuteQueryError;
+
+export type ResultSortDirection = 'asc' | 'desc';
+
+export interface QueryResultViewState {
+    filterValue: string;
+    hiddenColumnNames: string[];
+    sortState: {
+        columnName: string;
+        direction: ResultSortDirection;
+    } | null;
+}

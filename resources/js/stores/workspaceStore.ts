@@ -1,6 +1,6 @@
 import type {ConnectionDto} from "../types/connection";
 import type {QueryTabDto} from "../types/queryTab";
-import type {ExecuteQueryResponse} from "../types/queryResult";
+import type {ExecuteQueryResponse, QueryResultViewState, ResultSortDirection} from "../types/queryResult";
 import {create} from "zustand";
 import type {QueryHistoryDto} from "../types/queryHistory";
 import type {SavedQueryDto} from "../types/savedQuery";
@@ -25,6 +25,7 @@ interface WorkspaceState {
     rightPanel: WorkspaceRightPanel;
 
     tabStateById: Record<number, TabExecutionState>;
+    resultViewStateByTabId: Record<number, QueryResultViewState>;
     dirtyTabIds: number[];
 
     isConnectionDialogOpen: boolean;
@@ -58,6 +59,17 @@ interface WorkspaceState {
     setTabResult: (tabId: number, result: ExecuteQueryResponse | null) => void;
     ensureTabState: (tabId: number) => void;
 
+    ensureResultViewState: (tabId: number) => void;
+    setResultFilterValue: (tabId: number, value: string) => void;
+    hideResultColumn: (tabId: number, columnName: string) => void;
+    resetResultColumns: (tabId: number) => void;
+    setResultSortState: (
+        tabId: number,
+        sortState: { columnName: string; direction: ResultSortDirection } | null,
+    ) => void;
+    resetResultSorting: (tabId: number) => void;
+    resetResultViewState: (tabId: number) => void;
+
     markTabDirty: (tabId: number) => void;
     clearTabDirty: (tabId: number) => void;
 
@@ -69,6 +81,14 @@ interface WorkspaceState {
 
     updateConnectionInList: (connection: ConnectionDto) => void;
     removeConnection: (connectionId: number) => void;
+}
+
+function createDefaultResultViewState(): QueryResultViewState {
+    return {
+        filterValue: '',
+        hiddenColumnNames: [],
+        sortState: null,
+    };
 }
 
 function ensureTabStateRecord(
@@ -88,7 +108,25 @@ function ensureTabStateRecord(
     };
 }
 
-function pickNextActiveTabId(tabs: QueryTabDto[], removedTabId: number, currentActiveTabId: number | null): number | null {
+function ensureResultViewStateRecord(
+    state: WorkspaceState,
+    tabId: number,
+): Record<number, QueryResultViewState> {
+    if (state.resultViewStateByTabId[tabId]) {
+        return state.resultViewStateByTabId;
+    }
+
+    return {
+        ...state.resultViewStateByTabId,
+        [tabId]: createDefaultResultViewState(),
+    };
+}
+
+function pickNextActiveTabId(
+    tabs: QueryTabDto[],
+    removedTabId: number,
+    currentActiveTabId: number | null,
+): number | null {
     if (tabs.length === 0) {
         return null;
     }
@@ -119,6 +157,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     rightPanel: 'history',
 
     tabStateById: {},
+    resultViewStateByTabId: {},
     dirtyTabIds: [],
 
     isConnectionDialogOpen: false,
@@ -155,6 +194,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     setTabs: (tabs) =>
         set((state) => {
             const nextTabState = {...state.tabStateById};
+            const nextResultViewState = {...state.resultViewStateByTabId};
 
             for (const tab of tabs) {
                 if (!nextTabState[tab.id]) {
@@ -163,24 +203,33 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
                         result: null,
                     };
                 }
+
+                if (!nextResultViewState[tab.id]) {
+                    nextResultViewState[tab.id] = createDefaultResultViewState();
+                }
             }
 
             return {
                 tabs,
                 activeTabId: state.activeTabId ?? tabs[0]?.id ?? null,
                 tabStateById: nextTabState,
+                resultViewStateByTabId: nextResultViewState,
             };
         }),
 
     replaceTabs: (tabs) =>
         set((state) => {
             const nextTabState: Record<number, TabExecutionState> = {};
+            const nextResultViewState: Record<number, QueryResultViewState> = {};
 
             for (const tab of tabs) {
                 nextTabState[tab.id] = state.tabStateById[tab.id] ?? {
                     isExecuting: false,
                     result: null,
                 };
+
+                nextResultViewState[tab.id] =
+                    state.resultViewStateByTabId[tab.id] ?? createDefaultResultViewState();
             }
 
             return {
@@ -189,6 +238,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
                     ? state.activeTabId
                     : tabs[0]?.id ?? null,
                 tabStateById: nextTabState,
+                resultViewStateByTabId: nextResultViewState,
                 dirtyTabIds: state.dirtyTabIds.filter((id) => tabs.some((tab) => tab.id === id)),
             };
         }),
@@ -196,12 +246,16 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     reorderTabs: (tabs) =>
         set((state) => {
             const nextTabState: Record<number, TabExecutionState> = {};
+            const nextResultViewState: Record<number, QueryResultViewState> = {};
 
             for (const tab of tabs) {
                 nextTabState[tab.id] = state.tabStateById[tab.id] ?? {
                     isExecuting: false,
                     result: null,
                 };
+
+                nextResultViewState[tab.id] =
+                    state.resultViewStateByTabId[tab.id] ?? createDefaultResultViewState();
             }
 
             return {
@@ -210,6 +264,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
                     ? state.activeTabId
                     : tabs[0]?.id ?? null,
                 tabStateById: nextTabState,
+                resultViewStateByTabId: nextResultViewState,
                 dirtyTabIds: state.dirtyTabIds.filter((id) => tabs.some((tab) => tab.id === id)),
             };
         }),
@@ -225,6 +280,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
                     isExecuting: false,
                     result: null,
                 },
+            },
+            resultViewStateByTabId: {
+                ...state.resultViewStateByTabId,
+                [tab.id]: state.resultViewStateByTabId[tab.id] ?? createDefaultResultViewState(),
             },
         })),
 
@@ -248,6 +307,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
                         result: null,
                     },
                 },
+                resultViewStateByTabId: {
+                    ...state.resultViewStateByTabId,
+                    [tab.id]: state.resultViewStateByTabId[tab.id] ?? createDefaultResultViewState(),
+                },
             };
         }),
 
@@ -260,12 +323,16 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
             const nextTabState = {...state.tabStateById};
             delete nextTabState[tabId];
 
+            const nextResultViewState = {...state.resultViewStateByTabId};
+            delete nextResultViewState[tabId];
+
             return {
                 tabs: nextTabs,
                 activeTabId: nextActiveTabId,
                 activeConnectionId:
                     nextTabs.find((tab) => tab.id === nextActiveTabId)?.db_connection_id ?? state.activeConnectionId,
                 tabStateById: nextTabState,
+                resultViewStateByTabId: nextResultViewState,
                 dirtyTabIds: state.dirtyTabIds.filter((id) => id !== tabId),
             };
         }),
@@ -289,30 +356,131 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     setRightPanel: (panel) => set({rightPanel: panel}),
 
     setTabExecuting: (tabId, value) =>
-        set((state) => ({
-            tabStateById: {
-                ...ensureTabStateRecord(state, tabId),
-                [tabId]: {
-                    ...(ensureTabStateRecord(state, tabId)[tabId]),
-                    isExecuting: value,
+        set((state) => {
+            const nextTabState = ensureTabStateRecord(state, tabId);
+
+            return {
+                tabStateById: {
+                    ...nextTabState,
+                    [tabId]: {
+                        ...nextTabState[tabId],
+                        isExecuting: value,
+                    },
                 },
-            },
-        })),
+            };
+        }),
 
     setTabResult: (tabId, result) =>
-        set((state) => ({
-            tabStateById: {
-                ...ensureTabStateRecord(state, tabId),
-                [tabId]: {
-                    ...(ensureTabStateRecord(state, tabId)[tabId]),
-                    result,
+        set((state) => {
+            const nextTabState = ensureTabStateRecord(state, tabId);
+
+            return {
+                tabStateById: {
+                    ...nextTabState,
+                    [tabId]: {
+                        ...nextTabState[tabId],
+                        result,
+                    },
                 },
-            }
-        })),
+            };
+        }),
 
     ensureTabState: (tabId) =>
         set((state) => ({
             tabStateById: ensureTabStateRecord(state, tabId),
+        })),
+
+    ensureResultViewState: (tabId) =>
+        set((state) => ({
+            resultViewStateByTabId: ensureResultViewStateRecord(state, tabId),
+        })),
+
+    setResultFilterValue: (tabId, value) =>
+        set((state) => {
+            const nextResultViewState = ensureResultViewStateRecord(state, tabId);
+
+            return {
+                resultViewStateByTabId: {
+                    ...nextResultViewState,
+                    [tabId]: {
+                        ...nextResultViewState[tabId],
+                        filterValue: value,
+                    },
+                },
+            };
+        }),
+
+    hideResultColumn: (tabId, columnName) =>
+        set((state) => {
+            const nextResultViewState = ensureResultViewStateRecord(state, tabId);
+            const currentState = nextResultViewState[tabId];
+
+            if (currentState.hiddenColumnNames.includes(columnName)) {
+                return state;
+            }
+
+            return {
+                resultViewStateByTabId: {
+                    ...nextResultViewState,
+                    [tabId]: {
+                        ...currentState,
+                        hiddenColumnNames: [...currentState.hiddenColumnNames, columnName],
+                    },
+                },
+            };
+        }),
+
+    resetResultColumns: (tabId) =>
+        set((state) => {
+            const nextResultViewState = ensureResultViewStateRecord(state, tabId);
+
+            return {
+                resultViewStateByTabId: {
+                    ...nextResultViewState,
+                    [tabId]: {
+                        ...nextResultViewState[tabId],
+                        hiddenColumnNames: [],
+                    },
+                },
+            };
+        }),
+
+    setResultSortState: (tabId, sortState) =>
+        set((state) => {
+            const nextResultViewState = ensureResultViewStateRecord(state, tabId);
+
+            return {
+                resultViewStateByTabId: {
+                    ...nextResultViewState,
+                    [tabId]: {
+                        ...nextResultViewState[tabId],
+                        sortState,
+                    },
+                },
+            };
+        }),
+
+    resetResultSorting: (tabId) =>
+        set((state) => {
+            const nextResultViewState = ensureResultViewStateRecord(state, tabId);
+
+            return {
+                resultViewStateByTabId: {
+                    ...nextResultViewState,
+                    [tabId]: {
+                        ...nextResultViewState[tabId],
+                        sortState: null,
+                    },
+                },
+            };
+        }),
+
+    resetResultViewState: (tabId) =>
+        set((state) => ({
+            resultViewStateByTabId: {
+                ...state.resultViewStateByTabId,
+                [tabId]: createDefaultResultViewState(),
+            },
         })),
 
     markTabDirty: (tabId) =>

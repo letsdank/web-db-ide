@@ -1,8 +1,15 @@
-import type {ExecuteQueryResponse} from "../../../types/queryResult";
-import {useMemo, useState} from "react";
+import type {ExecuteQueryResponse, QueryResultViewState} from "../../../types/queryResult";
+import {useEffect, useMemo} from "react";
 import {rowMatchesResultFilter} from "../lib/resultFilter";
+import {useWorkspaceStore} from "../../../stores/workspaceStore";
 
 type SortDirection = 'asc' | 'desc';
+
+const EMPTY_RESULT_VIEW_STATE: QueryResultViewState = {
+    filterValue: '',
+    hiddenColumnNames: [],
+    sortState: null,
+};
 
 function compareValues(a: unknown, b: unknown): number {
     if (a === null && b === null) {
@@ -35,12 +42,33 @@ function compareValues(a: unknown, b: unknown): number {
 }
 
 export function useResultView(result: ExecuteQueryResponse | null) {
-    const [hiddenColumnNames, setHiddenColumnNames] = useState<string[]>([]);
-    const [sortState, setSortState] = useState<{
+    const activeTabId = useWorkspaceStore((state) => state.activeTabId);
+
+    const resultViewState =
+        useWorkspaceStore((state) =>
+            activeTabId ? state.resultViewStateByTabId[activeTabId] : undefined,
+        ) ?? EMPTY_RESULT_VIEW_STATE;
+
+    const ensureResultViewState = useWorkspaceStore((state) => state.ensureResultViewState);
+    const setResultFilterValue = useWorkspaceStore((state) => state.setResultFilterValue);
+    const hideResultColumn = useWorkspaceStore((state) => state.hideResultColumn);
+    const resetResultColumns = useWorkspaceStore((state) => state.resetResultColumns);
+    const setResultSortState = useWorkspaceStore((state) => state.setResultSortState);
+    const resetResultSorting = useWorkspaceStore((state) => state.resetResultSorting);
+    const resetResultViewState = useWorkspaceStore((state) => state.resetResultViewState);
+
+    useEffect(() => {
+        if (activeTabId) {
+            ensureResultViewState(activeTabId);
+        }
+    }, [activeTabId, ensureResultViewState]);
+
+    const hiddenColumnNames = resultViewState.hiddenColumnNames;
+    const sortState = resultViewState.sortState as {
         columnName: string;
         direction: SortDirection;
-    } | null>(null);
-    const [filterValue, setFilterValue] = useState('');
+    } | null;
+    const filterValue = resultViewState.filterValue;
 
     const visibleResult = useMemo(() => {
         if (!result || result.status !== 'success') {
@@ -83,24 +111,54 @@ export function useResultView(result: ExecuteQueryResponse | null) {
         };
     }, [result, hiddenColumnNames, sortState, filterValue]);
 
-    function hideColumn(columnName: string) {
-        setHiddenColumnNames((prev) =>
-            prev.includes(columnName) ? prev : [...prev, columnName],
-        );
+    function handleSetFilterValue(value: string) {
+        if (!activeTabId) {
+            return;
+        }
+
+        setResultFilterValue(activeTabId, value);
     }
 
-    function resetColumns() {
-        setHiddenColumnNames([]);
+    function handleHideColumn(columnName: string) {
+        if (!activeTabId) {
+            return;
+        }
+
+        hideResultColumn(activeTabId, columnName);
     }
 
-    function resetSorting() {
-        setSortState(null);
+    function handleResetColumns() {
+        if (!activeTabId) {
+            return;
+        }
+
+        resetResultColumns(activeTabId);
     }
 
-    function resetView() {
-        setHiddenColumnNames([]);
-        setSortState(null);
-        setFilterValue('');
+    function handleSetSortState(
+        nextSortState: { columnName: string; direction: SortDirection } | null,
+    ) {
+        if (!activeTabId) {
+            return;
+        }
+
+        setResultSortState(activeTabId, nextSortState);
+    }
+
+    function handleResetSorting() {
+        if (!activeTabId) {
+            return;
+        }
+
+        resetResultSorting(activeTabId);
+    }
+
+    function handleResetView() {
+        if (!activeTabId) {
+            return;
+        }
+
+        resetResultViewState(activeTabId);
     }
 
     return {
@@ -108,11 +166,11 @@ export function useResultView(result: ExecuteQueryResponse | null) {
         sortState,
         filterValue,
         visibleResult,
-        setFilterValue,
-        setSortState,
-        hideColumn,
-        resetColumns,
-        resetSorting,
-        resetView,
+        setFilterValue: handleSetFilterValue,
+        setSortState: handleSetSortState,
+        hideColumn: handleHideColumn,
+        resetColumns: handleResetColumns,
+        resetSorting: handleResetSorting,
+        resetView: handleResetView,
     };
 }
