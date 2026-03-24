@@ -159,6 +159,10 @@ const en = {
         noResultsYet: 'No results yet.',
         noMatchingRows: 'No rows match the current filter.',
         doubleClickToCopyCell: 'Double click to copy cell',
+        pinColumn: 'Pin column',
+        unpinColumn: 'Unpin column',
+        resetPinnedColumns: 'Reset pinned columns',
+        pinnedColumnsCount: 'pinned: {count}',
     },
 
     connections: {

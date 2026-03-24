@@ -26,6 +26,7 @@ export type ResultSortDirection = 'asc' | 'desc';
 export interface QueryResultViewState {
     filterValue: string;
     hiddenColumnNames: string[];
+    pinnedColumnNames: string[];
     sortState: {
         columnName: string;
         direction: ResultSortDirection;

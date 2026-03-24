@@ -70,6 +70,10 @@ interface WorkspaceState {
     resetResultSorting: (tabId: number) => void;
     resetResultViewState: (tabId: number) => void;
 
+    pinResultColumn: (tabId: number, columnName: string) => void;
+    unpinResultColumn: (tabId: number, columnName: string) => void;
+    resetPinnedResultColumns: (tabId: number) => void;
+
     markTabDirty: (tabId: number) => void;
     clearTabDirty: (tabId: number) => void;
 
@@ -87,6 +91,7 @@ function createDefaultResultViewState(): QueryResultViewState {
     return {
         filterValue: '',
         hiddenColumnNames: [],
+        pinnedColumnNames: [],
         sortState: null,
     };
 }
@@ -482,6 +487,59 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
                 [tabId]: createDefaultResultViewState(),
             },
         })),
+
+    pinResultColumn: (tabId, columnName) =>
+        set((state) => {
+            const nextResultViewState = ensureResultViewStateRecord(state, tabId);
+            const currentState = nextResultViewState[tabId];
+
+            if (currentState.pinnedColumnNames.includes(columnName)) {
+                return state;
+            }
+
+            return {
+                resultViewStateByTabId: {
+                    ...nextResultViewState,
+                    [tabId]: {
+                        ...currentState,
+                        pinnedColumnNames: [...currentState.pinnedColumnNames, columnName],
+                    },
+                },
+            };
+        }),
+
+    unpinResultColumn: (tabId, columnName) =>
+        set((state) => {
+            const nextResultViewState = ensureResultViewStateRecord(state, tabId);
+            const currentState = nextResultViewState[tabId];
+
+            return {
+                resultViewStateByTabId: {
+                    ...nextResultViewState,
+                    [tabId]: {
+                        ...currentState,
+                        pinnedColumnNames: currentState.pinnedColumnNames.filter(
+                            (name) => name !== columnName,
+                        ),
+                    },
+                },
+            };
+        }),
+
+    resetPinnedResultColumns: (tabId) =>
+        set((state) => {
+            const nextResultViewState = ensureResultViewStateRecord(state, tabId);
+
+            return {
+                resultViewStateByTabId: {
+                    ...nextResultViewState,
+                    [tabId]: {
+                        ...nextResultViewState[tabId],
+                        pinnedColumnNames: [],
+                    },
+                },
+            };
+        }),
 
     markTabDirty: (tabId) =>
         set((state) => ({

@@ -2,12 +2,14 @@ import type {ExecuteQueryResponse, QueryResultViewState} from "../../../types/qu
 import {useEffect, useMemo} from "react";
 import {rowMatchesResultFilter} from "../lib/resultFilter";
 import {useWorkspaceStore} from "../../../stores/workspaceStore";
+import {buildVisibleResultColumns} from "../lib/resultColumns";
 
 type SortDirection = 'asc' | 'desc';
 
 const EMPTY_RESULT_VIEW_STATE: QueryResultViewState = {
     filterValue: '',
     hiddenColumnNames: [],
+    pinnedColumnNames: [],
     sortState: null,
 };
 
@@ -53,6 +55,9 @@ export function useResultView(result: ExecuteQueryResponse | null) {
     const setResultFilterValue = useWorkspaceStore((state) => state.setResultFilterValue);
     const hideResultColumn = useWorkspaceStore((state) => state.hideResultColumn);
     const resetResultColumns = useWorkspaceStore((state) => state.resetResultColumns);
+    const pinResultColumn = useWorkspaceStore((state) => state.pinResultColumn);
+    const unpinResultColumn = useWorkspaceStore((state) => state.unpinResultColumn);
+    const resetPinnedResultColumns = useWorkspaceStore((state) => state.resetPinnedResultColumns);
     const setResultSortState = useWorkspaceStore((state) => state.setResultSortState);
     const resetResultSorting = useWorkspaceStore((state) => state.resetResultSorting);
     const resetResultViewState = useWorkspaceStore((state) => state.resetResultViewState);
@@ -64,6 +69,7 @@ export function useResultView(result: ExecuteQueryResponse | null) {
     }, [activeTabId, ensureResultViewState]);
 
     const hiddenColumnNames = resultViewState.hiddenColumnNames;
+    const pinnedColumnNames = resultViewState.pinnedColumnNames;
     const sortState = resultViewState.sortState as {
         columnName: string;
         direction: SortDirection;
@@ -75,9 +81,11 @@ export function useResultView(result: ExecuteQueryResponse | null) {
             return null;
         }
 
-        const visibleColumns = result.columns
-            .map((column, index) => ({...column, originalIndex: index}))
-            .filter((column) => !hiddenColumnNames.includes(column.name));
+        const visibleColumns = buildVisibleResultColumns(
+            result.columns,
+            hiddenColumnNames,
+            pinnedColumnNames,
+        );
 
         const nextRows = result.rows.filter((row) =>
             rowMatchesResultFilter(row, visibleColumns, filterValue),
@@ -109,7 +117,7 @@ export function useResultView(result: ExecuteQueryResponse | null) {
             rows: projectedRows,
             filteredRowCount: nextRows.length,
         };
-    }, [result, hiddenColumnNames, sortState, filterValue]);
+    }, [result, hiddenColumnNames, pinnedColumnNames, sortState, filterValue]);
 
     function handleSetFilterValue(value: string) {
         if (!activeTabId) {
@@ -133,6 +141,30 @@ export function useResultView(result: ExecuteQueryResponse | null) {
         }
 
         resetResultColumns(activeTabId);
+    }
+
+    function handlePinColumn(columnName: string) {
+        if (!activeTabId) {
+            return;
+        }
+
+        pinResultColumn(activeTabId, columnName);
+    }
+
+    function handleUnpinColumn(columnName: string) {
+        if (!activeTabId) {
+            return;
+        }
+
+        unpinResultColumn(activeTabId, columnName);
+    }
+
+    function handleResetPinnedColumns() {
+        if (!activeTabId) {
+            return;
+        }
+
+        resetPinnedResultColumns(activeTabId);
     }
 
     function handleSetSortState(
@@ -170,6 +202,9 @@ export function useResultView(result: ExecuteQueryResponse | null) {
         setSortState: handleSetSortState,
         hideColumn: handleHideColumn,
         resetColumns: handleResetColumns,
+        pinColumn: handlePinColumn,
+        unpinColumn: handleUnpinColumn,
+        resetPinnedColumns: handleResetPinnedColumns,
         resetSorting: handleResetSorting,
         resetView: handleResetView,
     };

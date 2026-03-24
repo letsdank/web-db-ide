@@ -10,6 +10,7 @@ interface Props {
     resultLimit: 100 | 500 | 1000;
     sortState: { columnName: string; direction: 'asc' | 'desc' } | null;
     hiddenColumnCount: number;
+    pinnedColumnCount: number;
     filterValue: string;
     onFilterChange: (value: string) => void;
     onCopyAll: () => void;
@@ -28,6 +29,7 @@ export function ResultsToolbar({
                                    resultLimit,
                                    sortState,
                                    hiddenColumnCount,
+                                   pinnedColumnCount,
                                    filterValue,
                                    onFilterChange,
                                    onCopyAll,
@@ -73,6 +75,12 @@ export function ResultsToolbar({
                     {hiddenColumnCount > 0 ? (
                         <Text variant="body-1" color="secondary">
                             {t('workspace.hiddenColumnsCount', {count: hiddenColumnCount})}
+                        </Text>
+                    ) : null}
+
+                    {pinnedColumnCount > 0 ? (
+                        <Text variant="body-1" color="secondary">
+                            {t('workspace.pinnedColumnsCount', {count: pinnedColumnCount})}
                         </Text>
                     ) : null}
                 </div>

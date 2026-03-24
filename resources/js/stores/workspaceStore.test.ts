@@ -5,6 +5,7 @@ import {makeQueryTab} from "../test/factories";
 const DEFAULT_RESULT_VIEW_STATE = {
     filterValue: '',
     hiddenColumnNames: [],
+    pinnedColumnNames: [],
     sortState: null,
 };
 
@@ -55,6 +56,7 @@ describe('workspaceStore result view state', () => {
         expect(useWorkspaceStore.getState().resultViewStateByTabId[1]).toEqual({
             filterValue: 'chat',
             hiddenColumnNames: ['email'],
+            pinnedColumnNames: [],
             sortState: {
                 columnName: 'name',
                 direction: 'asc',

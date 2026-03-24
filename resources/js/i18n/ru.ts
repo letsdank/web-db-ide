@@ -159,6 +159,10 @@ const ru = {
         noResultsYet: 'Результатов пока нет.',
         noMatchingRows: 'По текущему фильтру строки не найдены.',
         doubleClickToCopyCell: 'Двойной клик, чтобы скопировать ячейку',
+        pinColumn: 'Закрепить колонку',
+        unpinColumn: 'Открепить колонку',
+        resetPinnedColumns: 'Сбросить закреплённые колонки',
+        pinnedColumnsCount: 'закреплено: {count}',
     },
 
     connections: {
