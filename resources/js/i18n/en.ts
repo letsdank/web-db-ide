@@ -163,6 +163,10 @@ const en = {
         unpinColumn: 'Unpin column',
         resetPinnedColumns: 'Reset pinned columns',
         pinnedColumnsCount: 'pinned: {count}',
+        searchHistoryPlaceholder: 'Search history',
+        searchSavedQueriesPlaceholder: 'Search saved queries',
+        noHistoryMatchingSearch: 'No history entries match the current search.',
+        noSavedQueriesMatchingSearch: 'No saved queries match the current search.',
     },
 
     connections: {

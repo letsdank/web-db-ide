@@ -163,6 +163,10 @@ const ru = {
         unpinColumn: 'Открепить колонку',
         resetPinnedColumns: 'Сбросить закреплённые колонки',
         pinnedColumnsCount: 'закреплено: {count}',
+        searchHistoryPlaceholder: 'Поиск по истории',
+        searchSavedQueriesPlaceholder: 'Поиск по сохранённым запросам',
+        noHistoryMatchingSearch: 'По текущему поиску история не найдена.',
+        noSavedQueriesMatchingSearch: 'По текущему поиска сохранённые запросы не найдены.',
     },
 
     connections: {
