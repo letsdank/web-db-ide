@@ -1,16 +1,38 @@
+/**
+ * Minimal column shape required by the client-side result filter.
+ *
+ * `originalIndex` is used to read the actual cell value from a positional row.
+ */
 interface FilterableColumn {
     name: string;
     originalIndex: number;
 }
 
+/**
+ * Parsed representation of the supported result-filter syntax.
+ *
+ * Supported token kinds:
+ * - plain term: searches across all visible columns
+ * - column:value: limits search to one named column
+ * - is:null / is:not-null: nullability checks across visible columns
+ */
 type ResultFilterToken =
     | { type: 'term'; value: string }
     | { type: 'column'; columnName: string; value: string }
     | { type: 'null' }
     | { type: 'not-null' };
 
+/**
+ * Splits the filter string into tokens while preserving quoted phrases.
+ */
 const TOKEN_PATTERN = /"([^"]+)"|(\S+)/g;
 
+/**
+ * Normalizes cell values into a case-insensitive comparable string.
+ *
+ * `null` and `undefined` are mapped explicitly so filter operators can match
+ * them consistently in the grid.
+ */
 function normalizeValue(value: unknown): string {
     if (value === null) {
         return 'null';
@@ -23,6 +45,11 @@ function normalizeValue(value: unknown): string {
     return String(value).toLowerCase();
 }
 
+/**
+ * Tokenizes raw filter input into plain string segments.
+ *
+ * Quoted substrings are preserved as a single token.
+ */
 function tokenizeFilter(input: string): string[] {
     const tokens: string[] = [];
 
@@ -38,6 +65,15 @@ function tokenizeFilter(input: string): string[] {
     return tokens;
 }
 
+/**
+ * Parses the user-entered filter string into structured filter tokens.
+ *
+ * Examples:
+ * - `alice`
+ * - `name:alice`
+ * - `"alice cooper"`
+ * - `is:null`
+ */
 export function parseResultFilter(input: string): ResultFilterToken[] {
     return tokenizeFilter(input).map((token) => {
         const normalizedToken = token.toLowerCase();
@@ -67,6 +103,12 @@ export function parseResultFilter(input: string): ResultFilterToken[] {
     });
 }
 
+/**
+ * Returns true when a row satisfies every token in the parsed filter.
+ *
+ * Matching is performed only against currently visible columns so hidden
+ * columns do not unexpectedly affect the filtered result set.
+ */
 export function rowMatchesResultFilter(
     row: unknown[],
     columns: FilterableColumn[],

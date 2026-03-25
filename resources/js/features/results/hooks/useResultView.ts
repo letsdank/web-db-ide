@@ -6,6 +6,11 @@ import {buildVisibleResultColumns} from "../lib/resultColumns";
 
 type SortDirection = 'asc' | 'desc';
 
+/**
+ * Fallback view state used before a tab-specific persisted bucket is created.
+ *
+ * The actual source of truth still lives in the workspace store.
+ */
 const EMPTY_RESULT_VIEW_STATE: QueryResultViewState = {
     filterValue: '',
     hiddenColumnNames: [],
@@ -13,6 +18,15 @@ const EMPTY_RESULT_VIEW_STATE: QueryResultViewState = {
     sortState: null,
 };
 
+/**
+ * Compares two cell values for client-side sorting.
+ *
+ * Rules:
+ * - nulls are pushed to the bottom
+ * - numbers are compared numerically
+ * - numeric-looking strings also try numeric comparison
+ * - everything else falls back to localeCompare with numeric awareness
+ */
 function compareValues(a: unknown, b: unknown): number {
     if (a === null && b === null) {
         return 0;
@@ -43,6 +57,16 @@ function compareValues(a: unknown, b: unknown): number {
     });
 }
 
+/**
+ * Derives the render-ready result-grid view for the active workspace tab.
+ *
+ * The hook bridges two layers:
+ * - persisted view preferences from the workspace store
+ * - the latest execution payload returned by the backend
+ *
+ * It never mutates the query result itself. Instead it projects that result
+ * into a UI-specific view: visible columns, filtered rows and client-side sort.
+ */
 export function useResultView(result: ExecuteQueryResponse | null) {
     const activeTabId = useWorkspaceStore((state) => state.activeTabId);
 
@@ -62,6 +86,12 @@ export function useResultView(result: ExecuteQueryResponse | null) {
     const resetResultSorting = useWorkspaceStore((state) => state.resetResultSorting);
     const resetResultViewState = useWorkspaceStore((state) => state.resetResultViewState);
 
+    /**
+     * Lazily initializes persisted result-view state for the active tab.
+     *
+     * Tabs can exist before they ever produce a query result, so this bucket is
+     * created on demand when the results layer becomes active.
+     */
     useEffect(() => {
         if (activeTabId) {
             ensureResultViewState(activeTabId);
@@ -76,6 +106,16 @@ export function useResultView(result: ExecuteQueryResponse | null) {
     } | null;
     const filterValue = resultViewState.filterValue;
 
+    /**
+     * Memoized render projection of the raw backend result.
+     *
+     * Pipeline:
+     * 1. bail out for null/error results
+     * 2. build visible columns from hidden/pinned preferences
+     * 3. filter rows against the current tokenized filter string
+     * 4. apply client-side sorting, if configured
+     * 5. remap each row to the projected visible column order
+     */
     const visibleResult = useMemo(() => {
         if (!result || result.status !== 'success') {
             return null;
@@ -119,6 +159,11 @@ export function useResultView(result: ExecuteQueryResponse | null) {
         };
     }, [result, hiddenColumnNames, pinnedColumnNames, sortState, filterValue]);
 
+    /**
+     * Wrapper actions below keep store writes safely scoped to the active tab.
+     *
+     * If there is no active tab, the results layer becomes effectively read-only.
+     */
     function handleSetFilterValue(value: string) {
         if (!activeTabId) {
             return;
