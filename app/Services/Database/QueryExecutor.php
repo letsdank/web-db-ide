@@ -4,8 +4,13 @@ namespace App\Services\Database;
 
 use App\Enums\DatabaseDriver;
 use App\Models\DbConnection;
+use LogicException;
 use PDO;
 
+/**
+ * Executes ad-hoc SQL against a saved connection and converts the PDO result
+ * into the response shape expected by the IDE result grid.
+ */
 class QueryExecutor
 {
     public function __construct(
@@ -15,13 +20,20 @@ class QueryExecutor
     }
 
     /**
-     * Executes a raw SQL query against the given connection and returns
-     * structured results with column metadata.
+     * Executes raw SQL against the given connection and returns structured
+     * column metadata plus fetched rows.
      *
-     * @param DbConnection $connection Target database connection
-     * @param string $sql Raw SQL to execute
-     * @param int $maxRows Maximum rows to fetch before truncating
-     * @return array{columns: array, rows: array, row_count: int, has_more: bool, duration_ms: int}
+     * The fetch loop intentionally reads at most $maxRows + 1 records so the
+     * caller can tell whether the result was truncated without materializing
+     * the full dataset in memory.
+     *
+     * @return array{
+     *     columns: list<array{name: string, native_type: string|null}>,
+     *     rows: list<list<mixed>>,
+     *     row_count: int,
+     *     has_more: bool,
+     *     duration_ms: int
+     * }
      */
     public function execute(DbConnection $connection, string $sql, int $maxRows = 500): array
     {
@@ -77,6 +89,9 @@ class QueryExecutor
         }
     }
 
+    /**
+     * Creates a configured PDO instance for the target driver.
+     */
     protected function createPdo(
         DbConnection   $connection,
         DatabaseDriver $driver,
@@ -109,6 +124,7 @@ class QueryExecutor
                 $port,
                 $connection->database_name,
             ),
+            DatabaseDriver::Sqlite => throw new LogicException('SQLite DSL is handled separately.'),
         };
 
         return new PDO(
@@ -122,6 +138,12 @@ class QueryExecutor
         );
     }
 
+    /**
+     * Applies per-session settings that affect query execution semantics.
+     *
+     * Right now only PostgreSQL exposes the knobs we care about in the IDE:
+     * default schema, statement timeout and read-only mode.
+     */
     protected function applySessionSettings(PDO $pdo, DatabaseDriver $driver, DbConnection $connection): void
     {
         if ($driver !== DatabaseDriver::Postgres) {
@@ -142,6 +164,12 @@ class QueryExecutor
         }
     }
 
+    /**
+     * Quotes a potentially dotted identifier for PostgreSQL search_path usage.
+     *
+     * Empty values fall back to "public" so bad input does not generate invalid
+     * SQL during session initialization.
+     */
     protected function quoteIdentifier(string $identifier): string
     {
         $parts = array_filter(array_map('trim', explode('.', $identifier)));

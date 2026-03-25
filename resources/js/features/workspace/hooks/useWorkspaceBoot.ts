@@ -8,6 +8,12 @@ import type {QueryTabDto} from "../../../types/queryTab";
 import type {QueryHistoryDto} from "../../../types/queryHistory";
 import type {SavedQueryDto} from "../../../types/savedQuery";
 
+/**
+ * Mutable workspace boot actions injected from the store layer.
+ *
+ * The hook deliberately depends on actions instead of importing the store
+ * directly so it stays easy to test in isolation.
+ */
 interface Params {
     setBooting: (value: boolean) => void;
 
@@ -21,6 +27,13 @@ interface Params {
     ensureTabState: (tabId: number) => void;
 }
 
+/**
+ * Boots the initial workspace state on page load.
+ *
+ * This hook fetches the primary IDE datasets in parallel, drives the initial
+ * active tab/connection pair and guards against late async writes after
+ * unmount via a local cancellation flag.
+ */
 export function useWorkspaceBoot({
                                      setBooting,
                                      setConnections,

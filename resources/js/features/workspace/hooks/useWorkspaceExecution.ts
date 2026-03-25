@@ -7,6 +7,12 @@ import {useI18n} from "../../../i18n";
 import type {ExecuteQueryError, ExecuteQueryResponse} from "../../../types/queryResult";
 import type {QueryHistoryDto} from "../../../types/queryHistory";
 
+/**
+ * Keywords treated as potentially destructive in the editor UX.
+ *
+ * This list intentionally leans conservative; the goal is to catch common
+ * schema/data mutations before execution and ask for explicit confirmation.
+ */
 const DESTRUCTIVE_SQL_KEYWORDS = [
     'drop',
     'truncate',
@@ -19,6 +25,12 @@ const DESTRUCTIVE_SQL_KEYWORDS = [
     'revoke',
 ] as const;
 
+/**
+ * Removes SQL comments before keyword inspection.
+ *
+ * This keeps the destructive-query detector from firing on commented-out
+ * statements or notes inside the editor.
+ */
 export function stripSqlComments(sql: string): string {
     return sql
         // block comments
@@ -28,6 +40,11 @@ export function stripSqlComments(sql: string): string {
         .trim();
 }
 
+/**
+ * Returns true when the statement appears to mutate schema or data.
+ *
+ * this is a heuristic for UX confirmation only, not a security boundary.
+ */
 export function isPotentiallyDestructiveSql(sql: string): boolean {
     const normalized = stripSqlComments(sql).toLowerCase();
 
@@ -40,6 +57,9 @@ export function isPotentiallyDestructiveSql(sql: string): boolean {
     );
 }
 
+/**
+ * Produces a compact single-line preview for confirmation dialogs.
+ */
 export function truncateSqlPreview(sql: string, maxLength = 220): string {
     const compact = sql.replace(/\s+/g, ' ').trim();
 
@@ -50,6 +70,10 @@ export function truncateSqlPreview(sql: string, maxLength = 220): string {
     return `${compact.slice(0, maxLength)}...`;
 }
 
+/**
+ * Store actions and current editor state required to run queries from the
+ * active workspace tab.
+ */
 interface Params {
     activeTab: QueryTabDto | null;
     activeConnectionId: number | null;
@@ -62,6 +86,16 @@ interface Params {
     setRightPanel: (panel: 'history' | 'saved') => void;
 }
 
+/**
+ * Encapsulates query execution flows for the SQL editor.
+ *
+ * The hook owns:
+ * - destructive query confirmation
+ * - execution lifecycle flags
+ * - result propagation into the store
+ * - tab metadata refresh after execution
+ * - history panel refresh
+ */
 export function useWorkspaceExecution({
                                           activeTab,
                                           activeConnectionId,
@@ -74,6 +108,9 @@ export function useWorkspaceExecution({
                                       }: Params) {
     const {t} = useI18n();
 
+    /**
+     * Shows an extra confirmation prompt for statement that look destructive.
+     */
     const confirmDestructiveQuery = useCallback((sql: string): boolean => {
         if (!isPotentiallyDestructiveSql(sql)) {
             return true;
@@ -91,6 +128,10 @@ export function useWorkspaceExecution({
         );
     }, [t]);
 
+    /**
+     * Executes either the full editor contents or the current selection,
+     * depending on the requested target.
+     */
     const handleRun = useCallback(async (target: 'auto' | 'selection' | 'full' = 'auto') => {
         if (!activeTab || !activeConnectionId) {
             return;
@@ -183,6 +224,9 @@ export function useWorkspaceExecution({
         t,
     ]);
 
+    /**
+     * Executes only the current editor selection, if one exists.
+     */
     const handleRunSelection = useCallback(async () => {
         if (!activeTab?.selected_text?.trim()) {
             return;
@@ -191,6 +235,9 @@ export function useWorkspaceExecution({
         await handleRun('selection');
     }, [activeTab?.selected_text, handleRun]);
 
+    /**
+     * Persists a new result limit without re-running the query.
+     */
     const handleChangeResultLimit = useCallback(async (limit: 100 | 500 | 1000) => {
         if (!activeTab) {
             return;
@@ -203,6 +250,10 @@ export function useWorkspaceExecution({
         upsertTab(updatedTab);
     }, [activeTab, upsertTab]);
 
+    /**
+     * Persists the result limit and immediately re-runs the current statement
+     * so the result grid reflects the new cap.
+     */
     const handleChangeResultLimitAndRerun = useCallback(async (limit: 100 | 500 | 1000) => {
         if (!activeTab) {
             return;

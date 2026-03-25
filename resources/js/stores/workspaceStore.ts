@@ -5,13 +5,37 @@ import {create} from "zustand";
 import type {QueryHistoryDto} from "../types/queryHistory";
 import type {SavedQueryDto} from "../types/savedQuery";
 
+/**
+ * Right sidebar mode in the workspace shell.
+ */
 export type WorkspaceRightPanel = 'history' | 'saved';
 
+/**
+ * Per-tab volatile execution state.
+ *
+ * This state is intentionally kept separate from persisted tab DTOs because
+ * execution flags and result payloads are UI/session concerns, not tab model
+ * fields stored in the backend.
+ */
 export interface TabExecutionState {
     isExecuting: boolean;
     result: ExecuteQueryResponse | null;
 }
 
+/**
+ * Central workspace store contract for the IDE workspace.
+ *
+ * The store combines four layers of state:
+ * - bootstrapped backend data (connections, tabs, history, saved queries)
+ * - transient shell/UI state (dialogs, active selections, sidebar mode)
+ * - per-tab runtime execution state (loading flags and last query result)
+ * - per-tab persisted result-view state (filters, hidden columns, sorting, pinning)
+ *
+ * The split between execution state and result-view state is intentional:
+ * execution payloads are replaced whenever a query is re-run, while result-view
+ * preferences should survive tab switches and continue to shape the same result
+ * grid UX for that tab.
+ */
 interface WorkspaceState {
     isBooting: boolean;
 
@@ -25,6 +49,14 @@ interface WorkspaceState {
     rightPanel: WorkspaceRightPanel;
 
     tabStateById: Record<number, TabExecutionState>;
+
+    /**
+     * Persisted per-tab result grid preferences.
+     *
+     * Unlike TabExecutionState, this bucket is not about the last execution
+     * lifecycle itself. It stores how the user wants to look at the result:
+     * current filter, hidden columns, pinned columns and active sort.
+     */
     resultViewStateByTabId: Record<number, QueryResultViewState>;
     dirtyTabIds: number[];
 
@@ -87,6 +119,14 @@ interface WorkspaceState {
     removeConnection: (connectionId: number) => void;
 }
 
+/**
+ * Creates an empty result-view state for a tab.
+ *
+ * This is the canonical baseline used when:
+ * - a tab is created for the first time
+ * - result-view state is lazily initialized
+ * - the user performs a full "reset view" action
+ */
 function createDefaultResultViewState(): QueryResultViewState {
     return {
         filterValue: '',
@@ -96,6 +136,12 @@ function createDefaultResultViewState(): QueryResultViewState {
     };
 }
 
+/**
+ * Ensures that the store contains a runtime execution bucket for the tab.
+ *
+ * This helper is used by execution-related actions so callers do not have to
+ * care whether a tab was already initialized in tabStateById.
+ */
 function ensureTabStateRecord(
     state: WorkspaceState,
     tabId: number,
@@ -113,6 +159,13 @@ function ensureTabStateRecord(
     };
 }
 
+/**
+ * Ensures that the store contains a persisted result-view bucket for the tab.
+ *
+ * Unlike tabStateById, this record stores user-facing grid preferences rather
+ * than execution lifecycle data. It is lazily initialized because not every
+ * tab needs result state immediately.
+ */
 function ensureResultViewStateRecord(
     state: WorkspaceState,
     tabId: number,
@@ -127,6 +180,14 @@ function ensureResultViewStateRecord(
     };
 }
 
+/**
+ * Resolves the next active tab after one tab has been removed.
+ *
+ * Strategy:
+ * - keep the current active tab if some other tab was removed
+ * - otherwise prefer the previous visual neighbor
+ * - fall back to the first remaining tab
+ */
 function pickNextActiveTabId(
     tabs: QueryTabDto[],
     removedTabId: number,
@@ -149,6 +210,17 @@ function pickNextActiveTabId(
     return tabs[Math.max(0, removedIndex - 1)]?.id ?? tabs[0].id ?? null;
 }
 
+/**
+ * Main Zustand store for the database IDE workspace.
+ *
+ * The store intentionally keeps query execution state and result-view state
+ * side-by-side:
+ * - tabStateById answers "what happened when this tab last ran?"
+ * - resultViewStateByTabId answers "how should this tab's result be displayed?"
+ *
+ * That separation makes it possible to re-run queries without losing view
+ * preferences and to preserve grid UX while switching between tabs.
+ */
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     isBooting: true,
 
@@ -319,6 +391,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
             };
         }),
 
+    /**
+     * Removes a tab and cleans up all state buckets owned by that tab.
+     *
+     * This includes both volatile execution data and persisted result-view
+     * preferences so closed tabs do not leave orphaned UI state in memory.
+     */
     removeTab: (tabId) =>
         set((state) => {
             const previousTabs = state.tabs;
@@ -395,6 +473,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
             tabStateById: ensureTabStateRecord(state, tabId),
         })),
 
+    /**
+     * Result-grid view state actions bound to a specific tab.
+     *
+     * These actions mutate only presentation preferences for an already loaded
+     * result set. They must not affect the underlying query text or execution
+     * state and are expected to survive tab switches.
+     */
     ensureResultViewState: (tabId) =>
         set((state) => ({
             resultViewStateByTabId: ensureResultViewStateRecord(state, tabId),
@@ -480,6 +565,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
             };
         }),
 
+    /**
+     * Fully resets result-grid preferences for the tab back to defaults.
+     *
+     * This clears filtering, hidden columns, pinned columns and sorting in one
+     * shot without touching the underlying query result payload.
+     */
     resetResultViewState: (tabId) =>
         set((state) => ({
             resultViewStateByTabId: {

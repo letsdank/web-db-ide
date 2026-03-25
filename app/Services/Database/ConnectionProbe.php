@@ -7,6 +7,12 @@ use App\Models\DbConnection;
 use App\Services\Database\Ssh\SshTunnelManager;
 use PDO;
 
+/**
+ * Performs lightweight connectivity checks against a database connection.
+ *
+ * This service is used by "test connection" flows and intentionally executes a
+ * very small driver-specific probe query after opening a PDO connection.
+ */
 class ConnectionProbe
 {
     public function __construct(
@@ -15,6 +21,12 @@ class ConnectionProbe
     {
     }
 
+    /**
+     * Opens the target connection, executes a minimal identity query and
+     * returns a normalized associative payload from the database server.
+     *
+     * @return array<string, mixed>
+     */
     public function probe(DbConnection $connection): array
     {
         $host = $connection->host;
@@ -49,6 +61,9 @@ class ConnectionProbe
         }
     }
 
+    /**
+     * Builds a driver-specific DSN for connectivity probes.
+     */
     protected function buildDsn(
         DatabaseDriver $driver,
         DbConnection   $connection,
@@ -70,14 +85,23 @@ class ConnectionProbe
                 $port,
                 $connection->database_name,
             ),
+            DatabaseDriver::Sqlite => sprintf(
+                'sqlite:%s',
+                $connection->database_name,
+            ),
         };
     }
 
+    /**
+     * Returns a minimal query that proves connectivity and identifies the
+     * current database/user for the active driver.
+     */
     protected function probeSql(DatabaseDriver $driver): string
     {
         return match ($driver) {
             DatabaseDriver::Postgres => 'select current_database() as database_name, current_user as user_name',
             DatabaseDriver::MySql => 'select database() as database_name, current_user() as user_name',
+            DatabaseDriver::Sqlite => "select 'main' as database_name, 'sqlite' as user_name",
         };
     }
 }
