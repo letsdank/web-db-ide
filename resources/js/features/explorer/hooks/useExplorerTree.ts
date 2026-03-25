@@ -520,7 +520,10 @@ export function useExplorerTree({
 
         setExpandedTableKeySet((prev) => {
                 const next = new Set(prev);
-                next.has(tableKey) ? next.delete(tableKey) : next.add(tableKey);
+                if(next.has(tableKey))
+                    next.delete(tableKey);
+                else
+                    next.add(tableKey);
                 return next;
             }
         );

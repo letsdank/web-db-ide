@@ -1,6 +1,6 @@
-import {ExplorerColumnDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
-import {DatabaseDriver} from "../../../types/connection";
-import React, {useCallback, useMemo} from "react";
+import type {ExplorerColumnDto, ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
+import type {DatabaseDriver} from "../../../types/connection";
+import React, {useMemo} from "react";
 import {useI18n} from "../../../i18n";
 import {unstable_ListItemView as ListItemView,} from "@gravity-ui/uikit/unstable";
 import {getExplorerGroupLabelKey} from "../lib/driverPresentation";
@@ -116,7 +116,7 @@ function ExplorerTreeRow({
     depth: number;
     driver: DatabaseDriver;
     connectionId: number;
-    t: (key: string, params?: Record<string, unknown>) => string;
+    t: (key: string, params?: Record<string, string | number | null | undefined>) => string;
     onToggleSchema: (schema: string) => void;
     onToggleTable: (schema: string, tableName: string) => void;
     onOpenTableContextMenu: (
@@ -506,7 +506,7 @@ export const ExplorerObjectTree = React.memo(function ExplorerObjectTree({
 
     return (
         <div className="explorer-object-tree">
-            {tree.map((schemaBranch)=>(
+            {tree.map((schemaBranch) => (
                 <div key={schemaBranch.node.id} className="explorer-object-tree__branch">
                     <ExplorerTreeRow
                         node={schemaBranch.node}
@@ -529,7 +529,7 @@ export const ExplorerObjectTree = React.memo(function ExplorerObjectTree({
                         onQuickExportTableData={onQuickExportTableData}
                     />
 
-                    {schemaBranch.children?.map((tableBranch)=>(
+                    {schemaBranch.children?.map((tableBranch) => (
                         <React.Fragment key={tableBranch.node.id}>
                             <ExplorerTreeRow
                                 node={tableBranch.node}
