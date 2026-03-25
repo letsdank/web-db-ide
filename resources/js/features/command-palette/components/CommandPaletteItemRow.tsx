@@ -1,6 +1,9 @@
 import type {CommandPaletteItem} from "../../../types/commandPalette";
 import {Label, Text} from "@gravity-ui/uikit";
 
+/**
+ * Visual label for each palette item kind.
+ */
 const KIND_LABELS: Record<CommandPaletteItem['kind'], string> = {
     action: 'Actions',
     tab: 'Tabs',
@@ -15,6 +18,14 @@ interface Props {
     showKindBadge?: boolean;
 }
 
+/**
+ * Renders a single selectable command-palette row.
+ *
+ * The row is intentionally presentation-only:
+ * - selection styling is controlled from above
+ * - click behavior is delegated through `onSelect`
+ * - grouping and keyboard navigation live in parent components
+ */
 export function CommandPaletteItemRow({
                                           item,
                                           selected,

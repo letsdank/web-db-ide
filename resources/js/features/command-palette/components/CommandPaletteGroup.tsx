@@ -2,6 +2,9 @@ import type {CommandPaletteItem} from "../../../types/commandPalette";
 import {Text} from "@gravity-ui/uikit";
 import {CommandPaletteItemRow} from "./CommandPaletteItemRow";
 
+/**
+ * Default visible label for each palette group kind.
+ */
 const KIND_LABELS: Record<CommandPaletteItem['kind'], string> = {
     action: 'Actions',
     tab: 'Tabs',
@@ -19,6 +22,12 @@ interface Props {
     showKindBadges?: boolean;
 }
 
+/**
+ * Renders one grouped section inside the command palette list.
+ *
+ * `startIndex` is the absolute index offset of this group inside the full list,
+ * so selected-row highlighting can be computed without flattening the UI again.
+ */
 export function CommandPaletteGroup({
                                         kind,
                                         items,

@@ -11,6 +11,15 @@ interface Props {
     onSelectItem: (item: CommandPaletteItem) => void;
 }
 
+/**
+ * Grouped list renderer for command-palette items.
+ *
+ * Behavior:
+ * - items are grouped by kind for readability
+ * - recent items are shown only when the query is empty
+ * - items already shown in "Recent" are removed from later groups
+ * - `selectedIndex` is interpreted against the full visible list order
+ */
 export function CommandPaletteList({
                                        items,
                                        recentItems,

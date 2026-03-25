@@ -13,6 +13,9 @@ interface Props {
     hasMoreRows: boolean;
 }
 
+/**
+ * Small reusable key/value block used inside the editor status bar.
+ */
 function StatusMeta({
                         label,
                         value
@@ -33,6 +36,18 @@ function StatusMeta({
     );
 }
 
+/**
+ * Bottom status bar for the SQL editor area.
+ *
+ * It surfaces lightweight runtime/editor metadata without depending on the full
+ * results grid:
+ * - active connection
+ * - result limit
+ * - cursor position
+ * - selection summary
+ * - result row count
+ * - execution status
+ */
 export function EditorStatusBar({
                                     connectionName,
                                     resultLimit,

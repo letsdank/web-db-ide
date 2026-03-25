@@ -7,6 +7,16 @@ interface Props {
     children: React.ReactNode;
 }
 
+/**
+ * Lightweight modal shell for the command palette.
+ *
+ * Responsibilities:
+ * - render nothing when the palette is closed
+ * - close on backdrop click
+ * - stop click propagation inside the palette card
+ *
+ * Keyboard handling and focus management live outside this component.
+ */
 export function CommandPaletteOverlay({
                                           open,
                                           onClose,

@@ -13,6 +13,14 @@ interface Props {
     onRunSelection: () => void;
 }
 
+/**
+ * Main editor action bar above the SQL editor.
+ *
+ * Responsibilities:
+ * - run current SQL or current selection
+ * - rebind the active tab to a connection
+ * - expose the most important editor hotkeys in the UI
+ */
 export function EditorToolbar({
                                   connections,
                                   activeConnectionId,

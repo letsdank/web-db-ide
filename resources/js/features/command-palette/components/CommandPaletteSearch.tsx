@@ -7,6 +7,9 @@ interface Props {
     onUpdateQuery: (value: string) => void;
 }
 
+/**
+ * Maps the currently forced mode into a human-readable badge label.
+ */
 function getModeLabel(kind: CommandPaletteItemKind | null): string {
     switch (kind) {
         case 'action':
@@ -22,6 +25,15 @@ function getModeLabel(kind: CommandPaletteItemKind | null): string {
     }
 }
 
+/**
+ * Header and search box for the command palette.
+ *
+ * The search input supports prefix-based modes:
+ * - `>` actions
+ * - `@` tabs
+ * - `#` connections
+ * - `/` saved queries
+ */
 export function CommandPaletteSearch({
                                          query,
                                          forcedKind,

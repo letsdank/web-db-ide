@@ -6,6 +6,12 @@ import {CirclePlus, Ellipsis} from "@gravity-ui/icons";
 import React, {useEffect, useRef, useState} from "react";
 import {useI18n} from "../../i18n";
 
+/**
+ * Props for the workspace tab strip.
+ *
+ * The component itself is presentation-heavy, but it also owns a small amount
+ * of local interaction state for inline rename and context-menu invocation.
+ */
 interface Props {
     tabs: QueryTabDto[];
     activeTabId: number | null;
@@ -21,6 +27,21 @@ interface Props {
     onRename: (tab: QueryTabDto, title: string) => void;
 }
 
+/**
+ * Main tab strip for the workspace shell.
+ *
+ * Supported interactions:
+ * - select tab
+ * - create tab
+ * - inline rename
+ * - context-menu actions
+ * - pin/unpin
+ * - duplicate
+ * - close / close others
+ * - move inside the current pin group
+ *
+ * Persisted tab mutations are delegated upward through callbacks.
+ */
 export const QueryTabsBar = React.memo(function QueryTabsBar({
                                                                  tabs,
                                                                  activeTabId,
@@ -59,16 +80,27 @@ export const QueryTabsBar = React.memo(function QueryTabsBar({
         }
     }, [editingTabId]);
 
+    /**
+     * Enters inline rename mode for the requested tab.
+     */
     function startRename(tab: QueryTabDto) {
         setEditingTabId(tab.id);
         setEditingTitle(tab.title || t('workspace.newQuery'));
     }
 
+    /**
+     * Leaves inline rename mode without persisting changes.
+     */
     function cancelRename() {
         setEditingTabId(null);
         setEditingTitle('');
     }
 
+    /**
+     * Normalizes and submits the inline rename value.
+     *
+     * Empty titles fall back to the localized default tab name.
+     */
     function submitRename(tab: QueryTabDto) {
         const normalizedTitle = editingTitle.trim() || t('workspace.newQuery');
 
@@ -81,6 +113,9 @@ export const QueryTabsBar = React.memo(function QueryTabsBar({
         onRename(tab, normalizedTitle);
     }
 
+    /**
+     * Returns true when the tab can move left inside its current pin group.
+     */
     function canMoveLeft(tab: QueryTabDto): boolean {
         const groupTabs = tabs.filter((item) => item.is_pinned === tab.is_pinned);
         const index = groupTabs.findIndex((item) => item.id === tab.id);
@@ -88,6 +123,9 @@ export const QueryTabsBar = React.memo(function QueryTabsBar({
         return index > 0;
     }
 
+    /**
+     * Returns true when the tab can move right inside its current pin group.
+     */
     function canMoveRight(tab: QueryTabDto): boolean {
         const groupTabs = tabs.filter((item) => item.is_pinned === tab.is_pinned);
         const index = groupTabs.findIndex((item) => item.id === tab.id);
