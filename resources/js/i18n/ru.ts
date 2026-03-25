@@ -261,6 +261,7 @@ const ru = {
         loadingColumns: 'Загрузка колонок...',
         columnsCount: '{count} колонок',
         indexesCount: '{count} индексов',
+        noColumnsInTable: 'Для этой таблицы не найдено колонок.',
     },
 
     status: {

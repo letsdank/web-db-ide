@@ -261,6 +261,7 @@ const en = {
         loadingColumns: 'Loading columns...',
         columnsCount: '{count} columns',
         indexesCount: '{count} indexes',
+        noColumnsInTable: 'No columns found for this table.',
     },
 
     status: {

@@ -2,7 +2,6 @@ import type {ConnectionDto} from "../../../types/connection";
 import type {ExplorerTableDetailsDto, ExplorerTableDto} from "../../../types/explorer";
 import React, {useCallback, useMemo} from "react";
 import {Button, DropdownMenu, Icon, Label, Loader, Text} from "@gravity-ui/uikit";
-import {ExplorerSchemaNode} from "./ExplorerSchemaNode";
 import {ChevronDown, ChevronRight, Ellipsis} from "@gravity-ui/icons";
 import {useI18n} from "../../../i18n";
 import {getResourceMarker, getResourceMarkerLabelKey, isOwnedResource} from "../../../lib/resourceMarkers";
@@ -14,8 +13,7 @@ import {
     getExplorerGroupCollectionLabelKey,
     getExplorerLoadingGroupLabelKey
 } from "../lib/driverPresentation";
-
-const EMPTY_TABLES: ExplorerTableDto[] = [];
+import {ExplorerObjectTree} from "./ExplorerObjectTree";
 
 interface Props {
     connection: ConnectionDto;
@@ -46,7 +44,12 @@ interface Props {
     ) => void;
     onOpenSelect: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
     onOpenCount: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
-    onOpenMetadata: (connectionId: number, schema: string, table: ExplorerTableDto, details?: ExplorerTableDetailsDto) => void;
+    onOpenMetadata: (
+        connectionId: number,
+        schema: string,
+        table: ExplorerTableDto,
+        details?: ExplorerTableDetailsDto
+    ) => void;
     onCopyFullName: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
     onCopySelect: (connectionId: number, schema: string, table: ExplorerTableDto) => void;
     onOpenSchemaErd: (connectionId: number, schema: string) => void;
@@ -254,39 +257,32 @@ export const ExplorerConnectionCard = React.memo(function ExplorerConnectionCard
                             </Text>
                         </div>
                     ) : visibleSchemas.length > 0 ? (
-                        visibleSchemas.map((schema) => {
-                            const schemaKey = `${connection.id}:${schema}`;
-
-                            return (
-                                <ExplorerSchemaNode
-                                    key={schemaKey}
-                                    driver={connection.driver}
-                                    connectionId={connection.id}
-                                    schema={schema}
-                                    filter={filter}
-                                    isExpanded={expandedSchemaKeys.includes(schemaKey)}
-                                    tables={tablesBySchemaKey[schemaKey] ?? EMPTY_TABLES}
-                                    loadingTables={loadingTablesFor === schemaKey}
-                                    expandedTableKeySet={expandedTableKeySet}
-                                    detailsByTableKey={connectionDetailsByTableKey}
-                                    loadingDetailsFor={loadingDetailsFor}
-                                    canExportDump={canExportDump}
-                                    onToggleSchema={handleToggleSchema}
-                                    onToggleTable={handleToggleTable}
-                                    onOpenTableContextMenu={onOpenTableContextMenu}
-                                    onOpenSelect={handleOpenSelect}
-                                    onOpenCount={handleOpenCount}
-                                    onOpenMetadata={handleOpenMetadata}
-                                    onCopyFullName={handleCopyFullName}
-                                    onCopySelect={handleCopySelect}
-                                    onOpenErd={handleOpenSchemaErd}
-                                    onExportSchemaDump={handleExportSchemaDump}
-                                    onExportTableDump={handleExportTableDump}
-                                    onQuickExportTableSchema={handleQuickExportTableSchema}
-                                    onQuickExportTableData={handleQuickExportTableData}
-                                />
-                            );
-                        })
+                        <ExplorerObjectTree
+                            driver={connection.driver}
+                            connectionId={connection.id}
+                            schemas={visibleSchemas}
+                            filter={filter}
+                            expandedSchemaKeys={expandedSchemaKeys}
+                            expandedTableKeySet={expandedTableKeySet}
+                            tablesBySchemaKey={tablesBySchemaKey}
+                            detailsByTableKey={connectionDetailsByTableKey}
+                            loadingTablesFor={loadingTablesFor}
+                            loadingDetailsFor={loadingDetailsFor}
+                            canExportDump={canExportDump}
+                            onToggleSchema={handleToggleSchema}
+                            onToggleTable={handleToggleTable}
+                            onOpenTableContextMenu={onOpenTableContextMenu}
+                            onOpenSelect={handleOpenSelect}
+                            onOpenCount={handleOpenCount}
+                            onOpenMetadata={handleOpenMetadata}
+                            onCopyFullName={handleCopyFullName}
+                            onCopySelect={handleCopySelect}
+                            onOpenErd={handleOpenSchemaErd}
+                            onExportSchemaDump={handleExportSchemaDump}
+                            onExportTableDump={handleExportTableDump}
+                            onQuickExportTableSchema={handleQuickExportTableSchema}
+                            onQuickExportTableData={handleQuickExportTableData}
+                        />
                     ) : (
                         <div className="explorer-connection-card__empty">
                             <Text variant="body-2" color="secondary">

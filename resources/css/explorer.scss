@@ -183,8 +183,9 @@
         border-top: 1px solic var(--g-color-line-generic);
         padding: 10px 12px 12px;
         display: grid;
-        gap: 6px;
+        gap: 8px;
         background: color-mix(in srgb, var(--g-color-base-background) 72%, transparent);
+        min-width: 0;
     }
 
     &__loading,
@@ -197,6 +198,72 @@
 
     &__section-caption {
         padding: 2px 0 6px;
+    }
+}
+
+.explorer-object-tree {
+    min-width: 0;
+
+    &__branch {
+        display: grid;
+        gap: 2px;
+    }
+
+    &__item {
+        min-width: 0;
+
+        .g-list-item-view {
+            border-radius: 10px;
+        }
+
+        .g-list-item-view:hover {
+            background: var(--g-color-base-simple-hover);
+        }
+    }
+
+    &__item--table {
+        .g-list-item-view {
+            background: color-mix(in srgb, var(--g-color-base-float) 92%, transparent);
+        }
+    }
+
+    &__item--column {
+        .g-list-item-view {
+            background: transparent;
+        }
+    }
+
+    &__item--status {
+        .g-list-item-view {
+            background: transparent;
+            cursor: default;
+        }
+    }
+
+    &__start-slot {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    &__spacer {
+        width: 14px;
+        height: 14px;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    &__end-slot {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    &__status-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
     }
 }
 
