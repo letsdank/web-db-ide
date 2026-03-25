@@ -8,10 +8,11 @@ import type {ExecuteQueryError, ExecuteQueryResponse} from "../../../types/query
 import type {QueryHistoryDto} from "../../../types/queryHistory";
 
 /**
- * Keywords treated as potentially destructive in the editor UX.
+ * Keywords that are treated as potentially destructive for the editor UX.
  *
- * This list intentionally leans conservative; the goal is to catch common
- * schema/data mutations before execution and ask for explicit confirmation.
+ * This is a conservative heuristic for confirmation prompts, not a security
+ * mechanism. The goal is to catch the most common data/schema mutations before
+ * they are fired from the IDE.
  */
 const DESTRUCTIVE_SQL_KEYWORDS = [
     'drop',
@@ -26,10 +27,10 @@ const DESTRUCTIVE_SQL_KEYWORDS = [
 ] as const;
 
 /**
- * Removes SQL comments before keyword inspection.
+ * Removes block and line comments from SQL before keyword inspection.
  *
- * This keeps the destructive-query detector from firing on commented-out
- * statements or notes inside the editor.
+ * This prevents the destructive-query detector from reacting to commented-out
+ * statements or notes inside the editor text.
  */
 export function stripSqlComments(sql: string): string {
     return sql
@@ -41,9 +42,10 @@ export function stripSqlComments(sql: string): string {
 }
 
 /**
- * Returns true when the statement appears to mutate schema or data.
+ * Returns true when SQL appears to contain a destructive statement.
  *
- * this is a heuristic for UX confirmation only, not a security boundary.
+ * The check is intentionally lightweight and is used only to decide whether the
+ * UI should ask the user for an extra confirmation step.
  */
 export function isPotentiallyDestructiveSql(sql: string): boolean {
     const normalized = stripSqlComments(sql).toLowerCase();
@@ -58,7 +60,7 @@ export function isPotentiallyDestructiveSql(sql: string): boolean {
 }
 
 /**
- * Produces a compact single-line preview for confirmation dialogs.
+ * Builds a compact single-line preview of SQL for confirmation dialogs.
  */
 export function truncateSqlPreview(sql: string, maxLength = 220): string {
     const compact = sql.replace(/\s+/g, ' ').trim();
@@ -71,7 +73,7 @@ export function truncateSqlPreview(sql: string, maxLength = 220): string {
 }
 
 /**
- * Store actions and current editor state required to run queries from the
+ * Store actions and current editor state required to execute SQL from the
  * active workspace tab.
  */
 interface Params {
@@ -87,14 +89,15 @@ interface Params {
 }
 
 /**
- * Encapsulates query execution flows for the SQL editor.
+ * Encapsulates SQL execution flows for the active workspace tab.
  *
  * The hook owns:
- * - destructive query confirmation
+ * - destructive-query confirmation
  * - execution lifecycle flags
  * - result propagation into the store
  * - tab metadata refresh after execution
- * - history panel refresh
+ * - query history refresh
+ * - result limit updates with optional re-run
  */
 export function useWorkspaceExecution({
                                           activeTab,
@@ -109,7 +112,7 @@ export function useWorkspaceExecution({
     const {t} = useI18n();
 
     /**
-     * Shows an extra confirmation prompt for statement that look destructive.
+     * Shows a confirmation dialog for statements that look destructive.
      */
     const confirmDestructiveQuery = useCallback((sql: string): boolean => {
         if (!isPotentiallyDestructiveSql(sql)) {
@@ -129,8 +132,8 @@ export function useWorkspaceExecution({
     }, [t]);
 
     /**
-     * Executes either the full editor contents or the current selection,
-     * depending on the requested target.
+     * Executes either the full editor text or only the selected fragment,
+     * depending on the requested target mode.
      */
     const handleRun = useCallback(async (target: 'auto' | 'selection' | 'full' = 'auto') => {
         if (!activeTab || !activeConnectionId) {
@@ -236,7 +239,7 @@ export function useWorkspaceExecution({
     }, [activeTab?.selected_text, handleRun]);
 
     /**
-     * Persists a new result limit without re-running the query.
+     * Persists a new result limit for the tab without re-running the query.
      */
     const handleChangeResultLimit = useCallback(async (limit: 100 | 500 | 1000) => {
         if (!activeTab) {
@@ -251,7 +254,7 @@ export function useWorkspaceExecution({
     }, [activeTab, upsertTab]);
 
     /**
-     * Persists the result limit and immediately re-runs the current statement
+     * Persists a new result limit and immediately re-runs the active statement
      * so the result grid reflects the new cap.
      */
     const handleChangeResultLimitAndRerun = useCallback(async (limit: 100 | 500 | 1000) => {

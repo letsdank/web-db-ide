@@ -4,10 +4,10 @@ import {createQueryTab, deleteQueryTab, reorderQueryTabs, updateQueryTab} from "
 import {useI18n} from "../../../i18n";
 
 /**
- * Dependencies injected from the workspace store and surrounding hooks.
+ * Store actions and state required for tab orchestration.
  *
- * Keeping this interface explicit makes tab behavior easier to test and avoids
- * hard-coupling the hook to a specific store implementation.
+ * The hook receives everything from outside so it remains testable and can
+ * focus only on orchestration logic, optimistic updates and API sync.
  */
 interface Params {
     tabs: QueryTabDto[];
@@ -27,7 +27,7 @@ interface Params {
 }
 
 /**
- * Optional values used when creating a new tab programmatically.
+ * Optional initial values used when creating a new tab programmatically.
  */
 interface CreateTabInitial {
     title?: string;
@@ -38,8 +38,8 @@ interface CreateTabInitial {
 }
 
 /**
- * Payload used when a feature wants to apply a query to the current tab or
- * create a fresh tab if no active one exists.
+ * Payload for flows that want to replace the current tab contents with a query,
+ * or create a new tab when no active tab exists yet.
  */
 interface ApplyQueryToTabPayload {
     title?: string;
@@ -48,8 +48,7 @@ interface ApplyQueryToTabPayload {
 }
 
 /**
- * Recomputes tab sort_order values so the persisted order matches the current
- * in-memory visual order.
+ * Recomputes tab sort_order so persisted order matches the visual order in the UI.
  */
 export function withSequentialSortOrder(nextTabs: QueryTabDto[]): QueryTabDto[] {
     return nextTabs.map((tab, index) => ({
@@ -61,8 +60,8 @@ export function withSequentialSortOrder(nextTabs: QueryTabDto[]): QueryTabDto[] 
 /**
  * Moves a tab left or right inside its current pin group.
  *
- * Pinned and unpinned tabs are intentionally treated as separate segments so a
- * move operation cannot accidentally cross the pin boundary.
+ * Pinned and unpinned tabs are treated as separate segments, so moving a tab
+ * cannot accidentally cross the pin boundary.
  */
 export function moveTabInsideGroup(
     sourceTabs: QueryTabDto[],
@@ -109,11 +108,10 @@ export function moveTabInsideGroup(
 }
 
 /**
- * High-level tab actions for the workspace shell.
+ * Encapsulates high-level workspace tab actions.
  *
- * The hook owns optimistic updates for create/rename/close/reorder pin flows
- * and syncs them back to the API. Consumers get a thin command surface instead
- * of duplicating tab orchestration in components.
+ * The hook owns optimistic updates for create/rename/close/reorder/pin flows
+ * and synchronizes them back to the backend API.
  */
 export function useWorkspaceTabActions({
                                            tabs,
@@ -157,7 +155,7 @@ export function useWorkspaceTabActions({
     }, [activeConnectionId, addTab, setActiveConnectionId, setActiveTabId, t]);
 
     /**
-     * Activates a tab and aligns the active connection with that tab's binding.
+     * Activates a tab and aligns the active connection with that tab binding.
      */
     const handleSelectTab = useCallback(async (id: number) => {
         setActiveTabId(id);
@@ -172,8 +170,8 @@ export function useWorkspaceTabActions({
     }, [ensureTabState, setActiveConnectionId, setActiveTabId, tabs]);
 
     /**
-     * Optimistically closes a tab, then persists the deletion and resolves the
-     * next active tab if the closed one was selected.
+     * Optimistically closes a tab, persists the deletion and resolves the next
+     * active tab if the closed one was selected.
      */
     const handleCloseTab = useCallback(async (tabId: number) => {
         const previousTabs = tabs;
@@ -235,7 +233,7 @@ export function useWorkspaceTabActions({
     }, [handleCloseTab, tabs]);
 
     /**
-     * Creates a new tab prefilled from the source tab.
+     * Creates a new tab prefilled from an existing tab.
      */
     const handleDuplicateTab = useCallback(async (tab: QueryTabDto) => {
         await handleCreateTab({
@@ -248,7 +246,7 @@ export function useWorkspaceTabActions({
     }, [handleCreateTab, t]);
 
     /**
-     * Optimistically renames a tab and rolls back on failure.
+     * Optimistically renames a tab and rolls back if the API update fails.
      */
     const handleRenameTab = useCallback(async (tab: QueryTabDto, title: string) => {
         const normalizedTitle = title.trim() || t('workspace.newQuery');
@@ -301,8 +299,8 @@ export function useWorkspaceTabActions({
     }, [reorderTabs, replaceTabs, tabs]);
 
     /**
-     * Toggles the pinned state for a tab and then normalizes the full visual
-     * order so pinned tabs remain grouped at the start of the list.
+     * Toggles pinning for a tab, then normalizes the full tab order so pinned
+     * tabs remain grouped at the beginning of the list.
      */
     const handleTogglePin = useCallback(async (tab: QueryTabDto) => {
         const nextTab: QueryTabDto = {
@@ -353,7 +351,7 @@ export function useWorkspaceTabActions({
 
     /**
      * Replaces the current tab contents with a query payload or creates a new
-     * tab when there is no active editor yet.
+     * tab when no active editor tab exists yet.
      */
     const handleApplyQueryToActiveTab = useCallback(async (payload: ApplyQueryToTabPayload) => {
         if (!activeTabId) {
