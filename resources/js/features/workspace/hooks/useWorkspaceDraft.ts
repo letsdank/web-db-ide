@@ -3,6 +3,12 @@ import {useDebouncedCallback} from "../../../hooks/useDebouncedCallback";
 import {updateQueryTab} from "../../../api/queryTabs";
 import {useCallback} from "react";
 
+/**
+ * Editor selection payload emitted by the SQL editor integration.
+ *
+ * This is the minimal shape required to persist editor selection state into the
+ * active tab record.
+ */
 interface EditorSelectionPayload {
     selectedText: string | null;
     cursorPosition: {
@@ -17,6 +23,9 @@ interface EditorSelectionPayload {
     } | null;
 }
 
+/**
+ * Compares two cursor positions for semantic equality.
+ */
 function isSamePosition(
     left: { lineNumber: number, column: number } | null | undefined,
     right: { lineNumber: number, column: number } | null | undefined,
@@ -32,6 +41,9 @@ function isSamePosition(
     return left.lineNumber === right.lineNumber && left.column === right.column;
 }
 
+/**
+ * Compares two editor selection ranges for semantic equality.
+ */
 function isSameSelectionRange(
     left: {
         startLineNumber: number;
@@ -60,6 +72,9 @@ function isSameSelectionRange(
         && left.endColumn === right.endColumn;
 }
 
+/**
+ * Store actions and current state required for draft persistence flows.
+ */
 interface Params {
     activeTab: QueryTabDto | null;
     activeConnectionId: number | null;
@@ -69,6 +84,16 @@ interface Params {
     setActiveConnectionId: (id: number | null) => void;
 }
 
+/**
+ * Encapsulates local draft editing and debounced persistence for the active tab.
+ *
+ * Responsibilities:
+ * - optimistic local updates while typing
+ * - dirty-state tracking
+ * - debounced tab persistence
+ * - persistence of cursor/selection metadata
+ * - immediate persistence when rebinding the active connection
+ */
 export function useWorkspaceDraft({
                                       activeTab,
                                       activeConnectionId,
@@ -77,6 +102,12 @@ export function useWorkspaceDraft({
                                       clearTabDirty,
                                       setActiveConnectionId,
                                   }: Params) {
+    /**
+     * Debounced server persistence for tab draft updates.
+     *
+     * The local tab is updated optimistically first; the API write is deferred
+     * so frequent typing does not spam the backend.
+     */
     const persistTabDraft = useDebouncedCallback(
         (tabId: number, payload: Partial<QueryTabDto>) => {
             void (async () => {
@@ -92,10 +123,19 @@ export function useWorkspaceDraft({
         750,
     );
 
+    /**
+     * Schedules a debounced persistence write for a given tab draft payload.
+     */
     const scheduleTabDraftPersist = useCallback((tab: QueryTabDto, payload: Partial<QueryTabDto>) => {
         persistTabDraft(tab.id, payload);
     }, [persistTabDraft]);
 
+    /**
+     * Handles SQL editor text changes for the active tab.
+     *
+     * The hook updates the tab optimistically, marks it dirty, then schedules a
+     * debounced persistence call with the full editor context.
+     */
     const handleChangeSql = useCallback(async (value: string) => {
         if (!activeTab || value === activeTab.sql_text) {
             return;
@@ -124,6 +164,12 @@ export function useWorkspaceDraft({
         upsertTab,
     ]);
 
+    /**
+     * Persists selection/cursor changes emitted by the editor.
+     *
+     * Guard clauses prevent unnecessary store churn and redundant API writes
+     * when the editor reports the same selection metadata repeatedly.
+     */
     const handleEditorSelectionChange = useCallback((payload: EditorSelectionPayload) => {
         if (!activeTab) {
             return;
@@ -171,6 +217,11 @@ export function useWorkspaceDraft({
         upsertTab,
     ]);
 
+    /**
+     * Rebinds the active tab to a connection and persists that binding
+     * immediately, because connection changes are discrete user actions rather
+     * than high-frequency typing events.
+     */
     const handleSelectConnection = useCallback(async (id: number | null) => {
         setActiveConnectionId(id);
 

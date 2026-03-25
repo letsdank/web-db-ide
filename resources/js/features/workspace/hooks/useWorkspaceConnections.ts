@@ -16,6 +16,9 @@ import {
 } from "../../../api/connections";
 import {useI18n} from "../../../i18n";
 
+/**
+ * Store actions and active workspace state required for connection-management flows.
+ */
 interface Params {
     editingConnection: ConnectionDto | null;
     activeConnectionId: number | null;
@@ -35,6 +38,13 @@ interface Params {
     closeConnectionDialog: () => void;
 }
 
+/**
+ * Encapsulates create/update/delete/test flows for database connections.
+ *
+ * The hook also keeps tabs consistent with connection mutations:
+ * - newly created connections can be attached to the active tab
+ * - deleted connections are detached from tabs that referenced them
+ */
 export function useWorkspaceConnections({
                                             editingConnection,
                                             activeConnectionId,
@@ -52,6 +62,9 @@ export function useWorkspaceConnections({
                                         }: Params) {
     const {t} = useI18n();
 
+    /**
+     * Removes a deleted connection binding from every affected tab.
+     */
     const detachTabsFromConnection = useCallback(async (connectionId: number) => {
         const affectedTabs = tabs.filter((tab) => tab.db_connection_id === connectionId);
 
@@ -70,6 +83,13 @@ export function useWorkspaceConnections({
         updatedTabs.forEach((tab) => upsertTab(tab));
     }, [tabs, upsertTab]);
 
+    /**
+     * Creates a new connection or updates an existing one, depending on whether
+     * the dialog is currently in edit mode.
+     *
+     * For newly created connections, the active tab is rebound to the new
+     * connection so the user can start querying immediately.
+     */
     const handleCreateConnection = useCallback(async (
         payload: CreateConnectionPayload | UpdateConnectionPayload,
     ) => {
@@ -140,6 +160,10 @@ export function useWorkspaceConnections({
         t,
     ]);
 
+    /**
+     * Deletes a connection after explicit confirmation and detaches it from
+     * tabs that were bound to it.
+     */
     const handleDeleteConnection = useCallback(async (connection: { id: number; name: string }) => {
         const confirmed = window.confirm(
             t('workspace.deleteConnectionConfirm', {name: connection.name}),
@@ -171,6 +195,10 @@ export function useWorkspaceConnections({
         t,
     ]);
 
+    /**
+     * Runs a connectivity test for either a brand-new connection payload or the
+     * currently edited persisted connection.
+     */
     const handleTestConnection = useCallback(async (
         payload: CreateConnectionPayload | UpdateConnectionPayload
     ): Promise<TestConnectionResultDto> => {
